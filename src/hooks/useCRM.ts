@@ -1,0 +1,460 @@
+// src/hooks/useCRM.ts
+import { useState, useCallback } from 'react';
+import useSWR from 'swr';
+import { crmService } from '@/services/crmService';
+import {
+  Lead,
+  LeadStatus,
+  LeadActivity,
+  LeadOrder,
+  LeadsResponse,
+  LeadStatusesResponse,
+  LeadActivitiesResponse,
+  LeadOrdersResponse,
+  LeadsQueryParams,
+  LeadStatusesQueryParams,
+  LeadActivitiesQueryParams,
+  LeadOrdersQueryParams,
+  CreateLeadPayload,
+  UpdateLeadPayload,
+  CreateLeadStatusPayload,
+  UpdateLeadStatusPayload,
+  CreateLeadActivityPayload,
+  UpdateLeadActivityPayload,
+  CreateLeadOrderPayload,
+  UpdateLeadOrderPayload
+} from '@/types/crmTypes';
+import { useAuth } from './useAuth';
+
+export const useCRM = () => {
+  const { hasModuleAccess } = useAuth();
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Check if user has CRM access
+  const hasCRMAccess = hasModuleAccess('crm');
+
+  // ==================== LEADS HOOKS ====================
+  
+  // Get leads with SWR caching
+  const useLeads = (params?: LeadsQueryParams) => {
+    const key = ['leads', params];
+    
+    return useSWR<LeadsResponse>(
+      key,
+      () => crmService.getLeads(params),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch leads:', err);
+          setError(err.message || 'Failed to fetch leads');
+        }
+      }
+    );
+  };
+
+  // Get single lead with SWR caching
+  const useLead = (id: number | null) => {
+    const key = id ? ['lead', id] : null;
+    
+    return useSWR<Lead>(
+      key,
+      () => crmService.getLead(id!),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch lead:', err);
+          setError(err.message || 'Failed to fetch lead');
+        }
+      }
+    );
+  };
+
+  // Create lead
+  const createLead = useCallback(async (leadData: CreateLeadPayload) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const newLead = await crmService.createLead(leadData);
+      return newLead;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to create lead';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Update lead
+  const updateLead = useCallback(async (id: number, leadData: UpdateLeadPayload) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const updatedLead = await crmService.updateLead(id, leadData);
+      return updatedLead;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to update lead';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Patch lead
+  const patchLead = useCallback(async (id: number, leadData: Partial<UpdateLeadPayload>) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const updatedLead = await crmService.patchLead(id, leadData);
+      return updatedLead;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to update lead';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Delete lead
+  const deleteLead = useCallback(async (id: number) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await crmService.deleteLead(id);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to delete lead';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // ==================== LEAD STATUSES HOOKS ====================
+  
+  // Get lead statuses with SWR caching
+  const useLeadStatuses = (params?: LeadStatusesQueryParams) => {
+    const key = ['lead-statuses', params];
+    
+    return useSWR<LeadStatusesResponse>(
+      key,
+      () => crmService.getLeadStatuses(params),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch lead statuses:', err);
+          setError(err.message || 'Failed to fetch lead statuses');
+        }
+      }
+    );
+  };
+
+  // Get single lead status with SWR caching
+  const useLeadStatus = (id: number | null) => {
+    const key = id ? ['lead-status', id] : null;
+    
+    return useSWR<LeadStatus>(
+      key,
+      () => crmService.getLeadStatus(id!),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch lead status:', err);
+          setError(err.message || 'Failed to fetch lead status');
+        }
+      }
+    );
+  };
+
+  // Create lead status
+  const createLeadStatus = useCallback(async (statusData: CreateLeadStatusPayload) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const newStatus = await crmService.createLeadStatus(statusData);
+      return newStatus;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to create lead status';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Update lead status
+  const updateLeadStatus = useCallback(async (id: number, statusData: UpdateLeadStatusPayload) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const updatedStatus = await crmService.updateLeadStatus(id, statusData);
+      return updatedStatus;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to update lead status';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Delete lead status
+  const deleteLeadStatus = useCallback(async (id: number) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await crmService.deleteLeadStatus(id);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to delete lead status';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // ==================== LEAD ACTIVITIES HOOKS ====================
+  
+  // Get lead activities with SWR caching
+  const useLeadActivities = (params?: LeadActivitiesQueryParams) => {
+    const key = ['lead-activities', params];
+    
+    return useSWR<LeadActivitiesResponse>(
+      key,
+      () => crmService.getLeadActivities(params),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch lead activities:', err);
+          setError(err.message || 'Failed to fetch lead activities');
+        }
+      }
+    );
+  };
+
+  // Create lead activity
+  const createLeadActivity = useCallback(async (activityData: CreateLeadActivityPayload) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const newActivity = await crmService.createLeadActivity(activityData);
+      return newActivity;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to create lead activity';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Update lead activity
+  const updateLeadActivity = useCallback(async (id: number, activityData: UpdateLeadActivityPayload) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const updatedActivity = await crmService.updateLeadActivity(id, activityData);
+      return updatedActivity;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to update lead activity';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Delete lead activity
+  const deleteLeadActivity = useCallback(async (id: number) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await crmService.deleteLeadActivity(id);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to delete lead activity';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // ==================== LEAD ORDERS HOOKS ====================
+  
+  // Get lead orders with SWR caching
+  const useLeadOrders = (params?: LeadOrdersQueryParams) => {
+    const key = ['lead-orders', params];
+    
+    return useSWR<LeadOrdersResponse>(
+      key,
+      () => crmService.getLeadOrders(params),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch lead orders:', err);
+          setError(err.message || 'Failed to fetch lead orders');
+        }
+      }
+    );
+  };
+
+  // Create lead order
+  const createLeadOrder = useCallback(async (orderData: CreateLeadOrderPayload) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const newOrder = await crmService.createLeadOrder(orderData);
+      return newOrder;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to create lead order';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Update lead order
+  const updateLeadOrder = useCallback(async (id: number, orderData: UpdateLeadOrderPayload) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const updatedOrder = await crmService.updateLeadOrder(id, orderData);
+      return updatedOrder;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to update lead order';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Delete lead order
+  const deleteLeadOrder = useCallback(async (id: number) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await crmService.deleteLeadOrder(id);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to delete lead order';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  return {
+    hasCRMAccess,
+    isLoading,
+    error,
+    
+    // Leads
+    useLeads,
+    useLead,
+    createLead,
+    updateLead,
+    patchLead,
+    deleteLead,
+    
+    // Lead Statuses
+    useLeadStatuses,
+    useLeadStatus,
+    createLeadStatus,
+    updateLeadStatus,
+    deleteLeadStatus,
+    
+    // Lead Activities
+    useLeadActivities,
+    createLeadActivity,
+    updateLeadActivity,
+    deleteLeadActivity,
+    
+    // Lead Orders
+    useLeadOrders,
+    createLeadOrder,
+    updateLeadOrder,
+    deleteLeadOrder,
+  };
+};
