@@ -23,7 +23,7 @@ import Chats from "./pages/Chats";
 import Groups from "./pages/Groups";
 import Templates from "./pages/Templates";
 import Campaigns from "./pages/Campaigns";
-
+import { useWhatsappSocket } from "@/hooks/whatsapp/useWhatsappSocket";
 
 const queryClient = new QueryClient();
 
@@ -31,7 +31,8 @@ const AppLayout = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
   const isMobile = useIsMobile();
-
+  // Ensure WhatsApp socket stays connected app-wide (persists across route changes)
+  useWhatsappSocket();
   return (
     <div className="min-h-screen flex bg-background text-foreground">
       {/* Universal Sidebar */}

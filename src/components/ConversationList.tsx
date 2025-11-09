@@ -12,6 +12,7 @@ type ConversationItem = {
   time: string;
   channel: string;
   unread: boolean;
+  unreadCount?: number;
 };
 
 const channelIcon = (channel: string) => {
@@ -110,10 +111,16 @@ export const ConversationList = ({ conversations, selectedId, onSelect, isMobile
                   {channelIcon(c.channel)}
                   <span className="font-medium text-sm">{c.name}</span>
                 </div>
-                <span className="text-xs text-muted-foreground">{c.time}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">{c.time}</span>
+                  {(c.unreadCount ?? 0) > 0 && (
+                    <span className="inline-flex items-center justify-center min-w-5 h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-semibold">
+                      {c.unreadCount}
+                    </span>
+                  )}
+                </div>
               </div>
               <span className="text-xs text-muted-foreground truncate">{c.lastMessage}</span>
-              {c.unread && <span className="w-2 h-2 rounded-full bg-primary inline-block mt-1" />}
             </li>
           ))}
         </ul>

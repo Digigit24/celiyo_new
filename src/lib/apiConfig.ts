@@ -7,15 +7,19 @@
 export const API_CONFIG = {
   // ==================== BASE URLS ====================
   // You can override these via Vite env vars in .env/.env.local
-  // VITE_AUTH_BASE_URL, VITE_CRM_BASE_URL, VITE_WHATSAPP_BASE_URL
+  // VITE_AUTH_BASE_URL, VITE_CRM_BASE_URL, VITE_WHATSAPP_BASE_URL, VITE_WHATSAPP_WS_URL
   AUTH_BASE_URL: import.meta.env.VITE_AUTH_BASE_URL || 'http://127.0.0.1:8000/api',
   CRM_BASE_URL: import.meta.env.VITE_CRM_BASE_URL || 'http://127.0.0.1:8001/api',
   WHATSAPP_BASE_URL: import.meta.env.VITE_WHATSAPP_BASE_URL || 'https://whatsapp.dglinkup.com/api',
+  
+  // ✅ WebSocket URL for real-time WhatsApp updates
+  WHATSAPP_WS_URL: import.meta.env.VITE_WHATSAPP_WS_URL || 'wss://whatsapp.dglinkup.com',
   
   // For development, set in .env.local instead of editing code:
   // VITE_AUTH_BASE_URL=http://localhost:8000/api
   // VITE_CRM_BASE_URL=http://localhost:8001/api
   // VITE_WHATSAPP_BASE_URL=http://localhost:8002/api
+  // VITE_WHATSAPP_WS_URL=ws://localhost:8002
 
   // ==================== AUTHENTICATION ====================
   AUTH: {

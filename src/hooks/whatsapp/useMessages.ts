@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { messagesService } from '@/services/whatsapp/messagesService';
 import type { WhatsAppMessage, ConversationDetail } from '@/types/whatsappTypes';
+import { useWhatsappSocket } from '@/hooks/whatsapp/useWhatsappSocket';
 
 export interface UseMessagesReturn {
   messages: WhatsAppMessage[];
@@ -16,18 +17,59 @@ export function useMessages(conversationPhone: string | null): UseMessagesReturn
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSending, setIsSending] = useState(false);
-    const tenantId = 'bc531d42-ac91-41df-817e-26c339af6b3a';
 
+  const normalizePhone = (p?: string | null) => (p ? String(p).replace(/^\+/, '') : '');
+
+  // ✅ Call the hook at the top level of the custom hook (not inside useEffect)
+  const { subscribe } = useWhatsappSocket();
+
+  // Subscribe to persistent WhatsApp socket and append messages for the selected conversation
   useEffect(() => {
-  const ws = new WebSocket(`ws://whatsapp.dglinkup.com/ws/${tenantId}`);
-  
-  ws.onmessage = (event) => {
-    const newMessage = JSON.parse(event.data);
-    setMessages(prev => [...prev, newMessage]);
-  };
-  
-  return () => ws.close();
-}, [tenantId]);
+    const phoneSelected = normalizePhone(conversationPhone || undefined);
+
+    const unsubscribe = subscribe((payload: any) => {
+      try {
+        const evt = payload?.event as string;
+        const data = payload?.data;
+        if (!evt || !data) return;
+
+        if (evt === 'message_incoming' || evt === 'message_outgoing') {
+          const phoneFromEvt = normalizePhone(data.phone);
+          if (phoneSelected && phoneFromEvt !== phoneSelected) return;
+
+          const m = data.message || {};
+          const id =
+            m.id ||
+            m.message_id ||
+            `ws-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+          const msg: WhatsAppMessage = {
+            id,
+            from: evt === 'message_outgoing' ? 'me' : (data.phone as string),
+            to: evt === 'message_outgoing' ? (data.phone as string) : null,
+            text: m.text || m.message_text || '',
+            type: (m.type as any) || 'text',
+            direction:
+              (m.direction as any) ||
+              (evt === 'message_outgoing' ? 'outgoing' : 'incoming'),
+            timestamp: m.timestamp || m.created_at || new Date().toISOString(),
+            metadata: m.metadata || m.meta_data || undefined,
+          };
+
+          setMessages((prev) => {
+            if (prev.some((x) => x.id === msg.id)) return prev;
+            return [...prev, msg];
+          });
+        }
+      } catch (err) {
+        console.error('❌ Failed to handle socket event:', err);
+      }
+    });
+
+    return () => {
+      unsubscribe?.();
+    };
+  }, [conversationPhone, subscribe]);
 
   const loadMessages = useCallback(async () => {
     if (!conversationPhone) {
@@ -56,16 +98,13 @@ export function useMessages(conversationPhone: string | null): UseMessagesReturn
     const messageText = text.trim();
     const tempMessage: WhatsAppMessage = {
       id: `temp-${Date.now()}`,
-      from: 'me', // This will be replaced with actual user phone in real implementation
+      from: 'me',
       to: conversationPhone,
       text: messageText,
       type: 'text',
       direction: 'outgoing',
       timestamp: new Date().toISOString(),
     };
-
-
-    
 
     // Optimistically add message to UI
     setMessages(prev => [...prev, tempMessage]);
@@ -85,19 +124,19 @@ export function useMessages(conversationPhone: string | null): UseMessagesReturn
             ? {
                 ...tempMessage,
                 id: response.message_id,
-                timestamp: response.timestamp,
+                timestamp: response.timestamp || new Date().toISOString(),
               }
             : msg
         )
       );
 
-      console.log('Message sent successfully:', response);
+      console.log('✅ Message sent successfully:', response);
     } catch (err: any) {
-      console.error('Failed to send message:', err);
+      console.error('❌ Failed to send message:', err);
       // Remove the optimistic message on error
       setMessages(prev => prev.filter(msg => msg.id !== tempMessage.id));
       setError(err.message || 'Failed to send message');
-      throw err; // Re-throw so the UI can handle it
+      throw err;
     } finally {
       setIsSending(false);
     }

@@ -5,6 +5,7 @@ import type { Conversation } from '@/types/whatsappTypes';
 import { ConversationList } from '@/components/ConversationList';
 import { ChatWindow } from '@/components/ChatWindow';
 import { useIsMobile } from '@/hooks/use-is-mobile';
+import { useWhatsappSocket } from '@/hooks/whatsapp/useWhatsappSocket';
 
 export default function Chats() {
   const [conversations, setConversations] = useState<Conversation[] | null>(null);
@@ -12,6 +13,12 @@ export default function Chats() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const isMobile = useIsMobile();
+
+  const normalize = (p?: string) => (p ? String(p).replace(/^\+/, '') : '');
+  const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+  
+  // ✅ Call the hook at the top level (not inside useEffect)
+  const { subscribe } = useWhatsappSocket();
 
   // Load conversations on mount
   useEffect(() => {
@@ -37,6 +44,12 @@ export default function Chats() {
 
   const handleConversationSelect = (phone: string) => {
     setSelectedConversationId(phone);
+    // Reset unread counter for this conversation
+    setUnreadCounts(prev => {
+      const copy = { ...prev };
+      copy[normalize(phone)] = 0;
+      return copy;
+    });
   };
 
   const handleBackToList = () => {
@@ -44,6 +57,74 @@ export default function Chats() {
       setSelectedConversationId('');
     }
   };
+
+  // Live updates via persistent WhatsApp WebSocket
+  useEffect(() => {
+    // ✅ Now we just use the subscribe function returned from the hook
+    const unsub = subscribe((payload: any) => {
+      try {
+        const evt = payload?.event as string;
+        const data = payload?.data;
+        if (!evt || !data) return;
+
+        if (evt === 'message_incoming' || evt === 'message_outgoing') {
+          const phoneKey = normalize(data.phone);
+          const m = data.message || {};
+          const last_message = m.text || m.message_text || '';
+          const last_timestamp = m.timestamp || m.created_at || new Date().toISOString();
+          const direction: 'incoming' | 'outgoing' = evt === 'message_outgoing' ? 'outgoing' : 'incoming';
+
+          // Update conversations list (insert new or update existing and move to top)
+          setConversations(prev => {
+            const list = prev ? [...prev] : [];
+            const idx = list.findIndex(c => normalize(c.phone) === phoneKey);
+            if (idx === -1) {
+              const name = data.contact_name || data.name || data.phone || phoneKey;
+              list.unshift({
+                phone: data.phone || phoneKey,
+                name,
+                last_message,
+                last_timestamp,
+                message_count: 1,
+                direction,
+              });
+            } else {
+              const existing = list[idx];
+              const updated: Conversation = {
+                ...existing,
+                last_message,
+                last_timestamp,
+                message_count: (existing.message_count || 0) + 1,
+                direction,
+              };
+              list.splice(idx, 1);
+              list.unshift(updated);
+            }
+            return list;
+          });
+
+          // Update unread counts for incoming messages if not the currently open chat
+          if (direction === 'incoming') {
+            setUnreadCounts(prev => {
+              const next = { ...prev };
+              if (normalize(selectedConversationId) === phoneKey) {
+                next[phoneKey] = 0;
+              } else {
+                next[phoneKey] = (next[phoneKey] || 0) + 1;
+              }
+              return next;
+            });
+          }
+        }
+      } catch (e) {
+        console.error('Failed to handle socket event in Chats:', e);
+      }
+    });
+
+    return () => {
+      unsub?.();
+    };
+  }, [subscribe, selectedConversationId]);
 
   if (isLoading) {
     return (
@@ -77,15 +158,20 @@ export default function Chats() {
     );
   }
 
-  // Transform API conversations to match ConversationList format
-  const transformedConversations = conversations?.map(conv => ({
-    id: conv.phone,
-    name: conv.name || conv.phone,
-    lastMessage: conv.last_message,
-    time: new Date(conv.last_timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-    channel: 'whatsapp' as const,
-    unread: false, // API doesn't provide unread status in the sample
-  })) || [];
+  // Transform API conversations to match ConversationList format with unread counters
+  const transformedConversations = (conversations || []).map(conv => {
+    const key = normalize(conv.phone);
+    const unreadCount = unreadCounts[key] || 0;
+    return {
+      id: conv.phone,
+      name: conv.name || conv.phone,
+      lastMessage: conv.last_message,
+      time: new Date(conv.last_timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      channel: 'whatsapp' as const,
+      unread: unreadCount > 0,
+      unreadCount,
+    };
+  });
 
   // Mobile view: show either conversation list or chat window
   if (isMobile) {
