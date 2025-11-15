@@ -59,7 +59,7 @@ export interface Lead {
   email?: string;
   company?: string;
   title?: string;
-  status?: LeadStatus;
+  status?: LeadStatus | number; // Can be either LeadStatus object or number ID
   status_name?: string; // From serializer
   priority: PriorityEnum;
   value_amount?: string; // DecimalField as string
@@ -257,4 +257,26 @@ export const LEAD_ORDERING_OPTIONS = [
   { value: '-value_amount', label: 'Value (High to Low)' },
   { value: 'next_follow_up_at', label: 'Follow-up (Earliest)' },
   { value: '-next_follow_up_at', label: 'Follow-up (Latest)' }
+];
+
+export const LEAD_STATUS_ORDERING_OPTIONS = [
+  { value: 'order_index', label: 'Order (First to Last)' },
+  { value: '-order_index', label: 'Order (Last to First)' },
+  { value: 'name', label: 'Name (A-Z)' },
+  { value: '-name', label: 'Name (Z-A)' },
+  { value: 'created_at', label: 'Created (Oldest)' },
+  { value: '-created_at', label: 'Created (Newest)' },
+  { value: 'updated_at', label: 'Updated (Oldest)' },
+  { value: '-updated_at', label: 'Updated (Newest)' },
+  { value: 'is_active', label: 'Active First' },
+  { value: '-is_active', label: 'Inactive First' }
+];
+
+export const LEAD_ACTIVITY_ORDERING_OPTIONS = [
+  { value: '-happened_at', label: 'Most Recent First' },
+  { value: 'happened_at', label: 'Oldest First' },
+  { value: 'type', label: 'Type (A-Z)' },
+  { value: '-type', label: 'Type (Z-A)' },
+  { value: 'created_at', label: 'Created (Oldest)' },
+  { value: '-created_at', label: 'Created (Newest)' }
 ];

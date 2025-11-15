@@ -110,6 +110,12 @@ const menuItems: MenuItem[] = [
         path: "/crm/activities",
       },
       {
+        id: "crm-statuses",
+        label: "Lead Statuses",
+        icon: ClipboardList,
+        path: "/crm/statuses",
+      },
+      {
         id: "crm-pipeline",
         label: "Pipeline",
         icon: Kanban,

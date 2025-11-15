@@ -100,7 +100,7 @@ const LeadBasicInfo = forwardRef<LeadFormHandle, LeadBasicInfoProps>(
           email: lead.email || '',
           company: lead.company || '',
           title: lead.title || '',
-          status: lead.status?.id,
+          status: typeof lead.status === 'object' ? lead.status?.id : lead.status,
           priority: lead.priority || 'MEDIUM',
           value_amount: lead.value_amount || '',
           value_currency: lead.value_currency || 'USD',

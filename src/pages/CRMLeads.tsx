@@ -4,25 +4,32 @@ import { useCRM } from '@/hooks/useCRM';
 import { useAuth } from '@/hooks/useAuth';
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
 import { LeadsFormDrawer } from '@/components/LeadsFormDrawer';
+import { LeadStatusFormDrawer } from '@/components/LeadStatusFormDrawer';
+import { KanbanBoard } from '@/components/KanbanBoard';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, RefreshCw, Building2, Phone, Mail, DollarSign } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, RefreshCw, Building2, Phone, Mail, DollarSign, LayoutGrid, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
-import type { Lead, LeadsQueryParams, PriorityEnum } from '@/types/crmTypes';
+import type { Lead, LeadsQueryParams, PriorityEnum, LeadStatus } from '@/types/crmTypes';
 import type { RowActions } from '@/components/DataTable';
 
 type DrawerMode = 'view' | 'edit' | 'create';
+type ViewMode = 'list' | 'kanban';
 
 export const CRMLeads: React.FC = () => {
   const { user, hasModuleAccess } = useAuth();
-  const { hasCRMAccess, useLeads, deleteLead } = useCRM();
+  const { hasCRMAccess, useLeads, useLeadStatuses, deleteLead, patchLead, updateLeadStatus, deleteLeadStatus } = useCRM();
+
+  // View mode state
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   // Query parameters state
   const [queryParams, setQueryParams] = useState<LeadsQueryParams>({
     page: 1,
-    page_size: 20,
+    page_size: viewMode === 'kanban' ? 1000 : 20, // Load more leads for kanban view
     ordering: '-created_at',
   });
 
@@ -31,8 +38,18 @@ export const CRMLeads: React.FC = () => {
   const [selectedLeadId, setSelectedLeadId] = useState<number | null>(null);
   const [drawerMode, setDrawerMode] = useState<DrawerMode>('view');
 
-  // Fetch leads
+  // Status drawer state
+  const [statusDrawerOpen, setStatusDrawerOpen] = useState(false);
+  const [selectedStatusId, setSelectedStatusId] = useState<number | null>(null);
+  const [statusDrawerMode, setStatusDrawerMode] = useState<DrawerMode>('view');
+
+  // Fetch leads and statuses
   const { data: leadsData, error, isLoading, mutate } = useLeads(queryParams);
+  const { data: statusesData, mutate: mutateStatuses } = useLeadStatuses({
+    page_size: 100,
+    ordering: 'order_index',
+    is_active: true
+  });
 
   // Check access
   if (!hasCRMAccess) {
@@ -53,11 +70,16 @@ export const CRMLeads: React.FC = () => {
   }
 
   // Handlers
-  const handleCreateLead = useCallback(() => {
+  const handleCreateLead = useCallback((statusId?: number) => {
     setSelectedLeadId(null);
     setDrawerMode('create');
     setDrawerOpen(true);
+    // TODO: Pass statusId to the drawer for pre-selecting status
   }, []);
+
+  const handleCreateLeadClick = useCallback(() => {
+    handleCreateLead();
+  }, [handleCreateLead]);
 
   const handleViewLead = useCallback((lead: Lead) => {
     setSelectedLeadId(lead.id);
@@ -87,10 +109,127 @@ export const CRMLeads: React.FC = () => {
 
   const handleDrawerSuccess = useCallback(() => {
     mutate(); // Refresh the list
-  }, [mutate]);
+    mutateStatuses(); // Refresh statuses too
+  }, [mutate, mutateStatuses]);
 
   const handleModeChange = useCallback((mode: DrawerMode) => {
     setDrawerMode(mode);
+  }, []);
+
+  // Kanban-specific handlers with optimistic updates
+  const handleUpdateLeadStatus = useCallback(
+    async (leadId: number, newStatusId: number) => {
+      // Get current data
+      const currentData = leadsData;
+      if (!currentData) {
+        throw new Error('No leads data available');
+      }
+
+      // Create optimistic update
+      const optimisticData = {
+        ...currentData,
+        results: currentData.results.map(lead =>
+          lead.id === leadId
+            ? { ...lead, status: newStatusId, updated_at: new Date().toISOString() }
+            : lead
+        )
+      };
+
+      try {
+        // Optimistically update the cache immediately
+        await mutate(optimisticData, false); // false = don't revalidate immediately
+        
+        // Make the API call
+        await patchLead(leadId, { status: newStatusId });
+        
+        // Revalidate to get fresh data from server
+        await mutate();
+      } catch (error: any) {
+        // Rollback on error by revalidating with current server data
+        await mutate();
+        throw new Error(error?.message || 'Failed to update lead status');
+      }
+    },
+    [patchLead, mutate, leadsData]
+  );
+
+  const handleEditStatus = useCallback((status: LeadStatus) => {
+    setSelectedStatusId(status.id);
+    setStatusDrawerMode('edit');
+    setStatusDrawerOpen(true);
+  }, []);
+
+  const handleDeleteStatus = useCallback(
+    async (status: LeadStatus) => {
+      if (window.confirm(`Are you sure you want to delete status "${status.name}"?`)) {
+        try {
+          await deleteLeadStatus(status.id);
+          toast.success(`Status "${status.name}" deleted successfully`);
+          mutateStatuses();
+        } catch (error: any) {
+          toast.error(error?.message || 'Failed to delete status');
+        }
+      }
+    },
+    [deleteLeadStatus, mutateStatuses]
+  );
+
+  const handleCreateStatus = useCallback(() => {
+    setSelectedStatusId(null);
+    setStatusDrawerMode('create');
+    setStatusDrawerOpen(true);
+  }, []);
+
+  const handleStatusDrawerSuccess = useCallback(() => {
+    mutateStatuses(); // Refresh statuses
+  }, [mutateStatuses]);
+
+  const handleStatusModeChange = useCallback((mode: DrawerMode) => {
+    setStatusDrawerMode(mode);
+  }, []);
+
+  const handleMoveStatus = useCallback(
+    async (status: LeadStatus, direction: 'up' | 'down') => {
+      const statuses = statusesData?.results || [];
+      const currentIndex = statuses.findIndex(s => s.id === status.id);
+      
+      if (currentIndex === -1) return;
+      
+      const targetIndex = direction === 'up' ? currentIndex - 1 : currentIndex + 1;
+      if (targetIndex < 0 || targetIndex >= statuses.length) return;
+
+      const targetStatus = statuses[targetIndex];
+      
+      try {
+        // Swap order_index values
+        await Promise.all([
+          updateLeadStatus(status.id, {
+            ...status,
+            order_index: targetStatus.order_index
+          }),
+          updateLeadStatus(targetStatus.id, {
+            ...targetStatus,
+            order_index: status.order_index
+          })
+        ]);
+        
+        toast.success('Status order updated successfully');
+        mutateStatuses();
+      } catch (error: any) {
+        toast.error(error?.message || 'Failed to update status order');
+      }
+    },
+    [statusesData, updateLeadStatus, mutateStatuses]
+  );
+
+  // View mode change handler
+  const handleViewModeChange = useCallback((newMode: ViewMode) => {
+    setViewMode(newMode);
+    setQueryParams(prev => ({
+      ...prev,
+      page: 1,
+      page_size: newMode === 'kanban' ? 1000 : 20
+    }));
   }, []);
 
   // Priority badge helper
@@ -109,10 +248,20 @@ export const CRMLeads: React.FC = () => {
   };
 
   // Status badge helper
-  const getStatusBadge = (status?: { name: string; color_hex?: string; is_won: boolean; is_lost: boolean }) => {
+  const getStatusBadge = (status?: LeadStatus | number) => {
     if (!status) return <Badge variant="outline">No Status</Badge>;
 
-    const bgColor = status.color_hex || '#6B7280';
+    // If status is a number, find the status object from statusesData
+    let statusObj: LeadStatus | undefined;
+    if (typeof status === 'number') {
+      statusObj = statusesData?.results.find(s => s.id === status);
+    } else {
+      statusObj = status;
+    }
+
+    if (!statusObj) return <Badge variant="outline">Unknown Status</Badge>;
+
+    const bgColor = statusObj.color_hex || '#6B7280';
     const textColor = getContrastColor(bgColor);
 
     return (
@@ -124,7 +273,7 @@ export const CRMLeads: React.FC = () => {
           color: bgColor,
         }}
       >
-        {status.name}
+        {statusObj.name}
       </Badge>
     );
   };
@@ -313,20 +462,36 @@ export const CRMLeads: React.FC = () => {
                 Manage your sales leads and pipeline
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => mutate()}
-                disabled={isLoading}
-              >
-                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
-              </Button>
-              <Button onClick={handleCreateLead} size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                New Lead
-              </Button>
+            <div className="flex items-center gap-4">
+              {/* View Toggle */}
+              <Tabs value={viewMode} onValueChange={(value) => handleViewModeChange(value as ViewMode)}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="list" className="flex items-center gap-2">
+                    <List className="h-4 w-4" />
+                    List
+                  </TabsTrigger>
+                  <TabsTrigger value="kanban" className="flex items-center gap-2">
+                    <LayoutGrid className="h-4 w-4" />
+                    Kanban
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => mutate()}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+                <Button onClick={handleCreateLeadClick} size="sm">
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Lead
+                </Button>
+              </div>
             </div>
           </div>
 
@@ -362,25 +527,48 @@ export const CRMLeads: React.FC = () => {
         </div>
       </div>
 
-      {/* Data Table */}
+      {/* Main Content */}
       <div className="flex-1 overflow-hidden">
-        <DataTable
-          rows={leadsData?.results || []}
-          isLoading={isLoading}
-          columns={columns}
-          renderMobileCard={renderMobileCard}
-          getRowId={(lead) => lead.id}
-          getRowLabel={(lead) => lead.name}
-          onView={handleViewLead}
-          onEdit={handleEditLead}
-          onDelete={handleDeleteLead}
-          emptyTitle="No leads found"
-          emptySubtitle="Get started by creating your first lead"
-        />
+        {viewMode === 'list' ? (
+          <>
+            {/* Data Table */}
+            <DataTable
+              rows={leadsData?.results || []}
+              isLoading={isLoading}
+              columns={columns}
+              renderMobileCard={renderMobileCard}
+              getRowId={(lead) => lead.id}
+              getRowLabel={(lead) => lead.name}
+              onView={handleViewLead}
+              onEdit={handleEditLead}
+              onDelete={handleDeleteLead}
+              emptyTitle="No leads found"
+              emptySubtitle="Get started by creating your first lead"
+            />
+          </>
+        ) : (
+          <>
+            {/* Kanban Board */}
+            <div className="h-full p-4">
+              <KanbanBoard
+                leads={leadsData?.results || []}
+                statuses={statusesData?.results || []}
+                onViewLead={handleViewLead}
+                onCreateLead={handleCreateLead}
+                onEditStatus={handleEditStatus}
+                onDeleteStatus={handleDeleteStatus}
+                onCreateStatus={handleCreateStatus}
+                onMoveStatus={handleMoveStatus}
+                onUpdateLeadStatus={handleUpdateLeadStatus}
+                isLoading={isLoading}
+              />
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Pagination */}
-      {leadsData && leadsData.count > 0 && (
+      {/* Pagination - Only show for list view */}
+      {viewMode === 'list' && leadsData && leadsData.count > 0 && (
         <div className="flex-shrink-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
           <div className="container mx-auto px-4 sm:px-6 py-3">
             <div className="flex justify-center gap-2 items-center">
@@ -424,6 +612,19 @@ export const CRMLeads: React.FC = () => {
           // Already handled in handleDeleteLead
         }}
         onModeChange={handleModeChange}
+      />
+
+      {/* Status Form Drawer */}
+      <LeadStatusFormDrawer
+        open={statusDrawerOpen}
+        onOpenChange={setStatusDrawerOpen}
+        statusId={selectedStatusId}
+        mode={statusDrawerMode}
+        onSuccess={handleStatusDrawerSuccess}
+        onDelete={(id) => {
+          // Already handled in handleDeleteStatus
+        }}
+        onModeChange={handleStatusModeChange}
       />
     </div>
   );
