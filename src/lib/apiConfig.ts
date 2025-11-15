@@ -8,8 +8,9 @@ export const API_CONFIG = {
   // ==================== BASE URLS ====================
   // You can override these via Vite env vars in .env/.env.local
   // VITE_AUTH_BASE_URL, VITE_CRM_BASE_URL, VITE_WHATSAPP_BASE_URL, VITE_WHATSAPP_WS_URL
-  AUTH_BASE_URL: import.meta.env.VITE_AUTH_BASE_URL || 'http://127.0.0.1:8000/api',
-  CRM_BASE_URL: import.meta.env.VITE_CRM_BASE_URL || 'http://127.0.0.1:8001/api',
+  AUTH_BASE_URL: import.meta.env.VITE_AUTH_BASE_URL || 'https://admin.celiyo.com/api',
+  CRM_BASE_URL: import.meta.env.VITE_CRM_BASE_URL || 'https://crm.celiyo.com/api',
+  HMS_BASE_URL: import.meta.env.VITE_HMS_BASE_URL || 'http://127.0.0.1:8000/api',
   WHATSAPP_BASE_URL: import.meta.env.VITE_WHATSAPP_BASE_URL || 'https://whatsapp.dglinkup.com/api',
   
   // ✅ WebSocket URL for real-time WhatsApp updates
@@ -28,6 +29,27 @@ export const API_CONFIG = {
     VERIFY: '/auth/token/verify/',
     LOGOUT: '/auth/logout/',
   },
+
+  // ==================== HMS ====================
+  HMS: {
+    DOCTORS: {
+      PROFILES_LIST: '/doctors/profiles/',
+      PROFILE_DETAIL: '/doctors/profiles/:id/',
+      PROFILE_CREATE: '/doctors/profiles/',
+      PROFILE_UPDATE: '/doctors/profiles/:id/',
+      PROFILE_DELETE: '/doctors/profiles/:id/',
+      REGISTER: '/doctors/profiles/register/',
+      AVAILABILITY_LIST: '/doctors/profiles/:id/availability/',
+      AVAILABILITY_CREATE: '/doctors/profiles/:id/set_availability/',
+      STATISTICS: '/doctors/profiles/statistics/',
+      SPECIALTIES_LIST: '/doctors/specialties/',
+      SPECIALTY_DETAIL: '/doctors/specialties/:id/',
+      SPECIALTY_CREATE: '/doctors/specialties/',
+      SPECIALTY_UPDATE: '/doctors/specialties/:id/',
+      SPECIALTY_DELETE: '/doctors/specialties/:id/',
+    }
+  },
+
 
   // ==================== CRM ====================
   CRM: {
@@ -111,11 +133,12 @@ export const API_CONFIG = {
 export const buildUrl = (
   endpoint: string,
   params?: Record<string, string | number>,
-  apiType: 'auth' | 'crm' | 'whatsapp' = 'auth'
+  apiType: 'auth' | 'crm' | 'hms' | 'whatsapp' = 'auth'
 ): string => {
   const baseUrl =
     apiType === 'auth' ? API_CONFIG.AUTH_BASE_URL :
     apiType === 'crm' ? API_CONFIG.CRM_BASE_URL :
+    apiType === 'hms' ? API_CONFIG.HMS_BASE_URL :
     API_CONFIG.WHATSAPP_BASE_URL;
   
   let url = `${baseUrl}${endpoint}`;
@@ -161,7 +184,7 @@ export const getFullUrl = (
   endpoint: string,
   urlParams?: Record<string, string | number>,
   queryParams?: Record<string, string | number | boolean | undefined>,
-  apiType: 'auth' | 'crm' | 'whatsapp' = 'auth'
+  apiType: 'auth' | 'crm' | 'hms' | 'whatsapp' = 'auth'
 ): string => {
   const baseUrl = buildUrl(endpoint, urlParams, apiType);
   const queryString = buildQueryString(queryParams);

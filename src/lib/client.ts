@@ -72,6 +72,15 @@ const crmClient: AxiosInstance = axios.create({
   },
 });
 
+// Create HMS client for HMS API (port 8000)
+const hmsClient: AxiosInstance = axios.create({
+  baseURL: API_CONFIG.HMS_BASE_URL,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 // Request interceptor for auth client - attach token to requests
 authClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -139,6 +148,65 @@ crmClient.interceptors.request.use(
       }
     } catch (error) {
       console.error('❌ Failed to parse user or attach tenant headers:', error);
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Request interceptor for HMS client - attach token and tenant headers
+hmsClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = tokenManager.getAccessToken();
+    
+    console.log('📤 HMS API Request:', {
+      url: config.url,
+      method: config.method?.toUpperCase(),
+      hasToken: !!token
+    });
+    
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔑 Added Bearer token to HMS request');
+    } else {
+      console.warn('⚠️ No access token found for HMS request!');
+    }
+
+    // Multi-tenant header propagation (read from stored user)
+    try {
+      const userJson = localStorage.getItem(USER_KEY);
+      if (userJson) {
+        const user = JSON.parse(userJson);
+        const tenant = user?.tenant;
+        
+        if (tenant) {
+          // Get tenant ID (could be tenant.id or tenant.tenant_id)
+          const tenantId = tenant.id || tenant.tenant_id;
+          
+          if (tenantId) {
+            config.headers['X-Tenant-Id'] = tenantId;
+            config.headers['tenanttoken'] = tenantId; // Your API uses 'tenanttoken' header
+            
+            console.log('🏢 Added tenant headers to HMS:', {
+              'X-Tenant-Id': tenantId,
+              'tenanttoken': tenantId
+            });
+          }
+          
+          if (tenant.slug) {
+            config.headers['X-Tenant-Slug'] = tenant.slug;
+          }
+        } else {
+          console.warn('⚠️ No tenant found in user object for HMS');
+        }
+      } else {
+        console.warn('⚠️ No user found in localStorage for HMS');
+      }
+    } catch (error) {
+      console.error('❌ Failed to parse user or attach tenant headers for HMS:', error);
     }
     
     return config;
@@ -261,8 +329,83 @@ crmClient.interceptors.response.use(
   }
 );
 
-// Export both clients
-export { authClient, crmClient };
+// Response interceptor for HMS client
+hmsClient.interceptors.response.use(
+  (response) => {
+    console.log('✅ HMS API response:', {
+      status: response.status,
+      url: response.config.url
+    });
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    console.error('❌ HMS API error:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      data: error.response?.data
+    });
+
+    // Handle 401 Unauthorized - try to refresh token
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      console.log('🔄 Attempting to refresh token for HMS...');
+
+      try {
+        const refreshToken = tokenManager.getRefreshToken();
+        if (refreshToken) {
+          // Try to refresh the token using auth client
+          const response = await authClient.post(API_CONFIG.AUTH.REFRESH, {
+            refresh: refreshToken
+          });
+
+          const { access, refresh } = response.data;
+          tokenManager.setAccessToken(access);
+          
+          // Update refresh token if provided
+          if (refresh) {
+            tokenManager.setRefreshToken(refresh);
+          }
+
+          console.log('✅ Token refreshed for HMS, retrying original request');
+
+          // Retry the original request with new token
+          originalRequest.headers.Authorization = `Bearer ${access}`;
+          return hmsClient(originalRequest);
+        }
+      } catch (refreshError) {
+        console.error('❌ Token refresh failed for HMS:', refreshError);
+        
+        // Refresh failed, clear tokens and redirect to login
+        tokenManager.removeTokens();
+        localStorage.removeItem(USER_KEY);
+        
+        if (!window.location.pathname.includes('/login')) {
+          console.log('↪️ Redirecting to login...');
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+      }
+    }
+
+    // Handle 403 Forbidden - HMS module not enabled
+    if (error.response?.status === 403) {
+      console.error('🚫 HMS access forbidden:', error.response.data);
+    }
+    
+    // Handle network errors
+    if (!error.response) {
+      console.error('🌐 Network error:', error.message);
+    }
+    
+    return Promise.reject(error);
+  }
+);
+
+// Export all clients
+export { authClient, crmClient, hmsClient };
 
 // Export auth client as default for backward compatibility
 export default authClient;

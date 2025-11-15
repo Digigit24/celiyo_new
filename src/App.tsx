@@ -18,6 +18,7 @@ import Inbox from "./pages/Inbox";
 import OPD from "./pages/OPD";
 import NotFound from "./pages/NotFound";
 import { CRMLeads } from "./pages/CRMLeads";
+import { Doctors } from "./pages/Doctors";
 import  Contacts from "./pages/Contacts";
 import Chats from "./pages/Chats";
 import Groups from "./pages/Groups";
@@ -66,6 +67,9 @@ const AppLayout = () => {
             {/* CRM Routes */}
             <Route path="/crm" element={<CRMLeads />} />
             <Route path="/crm/leads" element={<CRMLeads />} />
+
+            {/* HMS Routes */}
+            <Route path="/hms/doctors" element={<Doctors />} />
 
             {/* WhatsApp Routes */}
             <Route path="/whatsapp/contacts" element={<Contacts />} />
