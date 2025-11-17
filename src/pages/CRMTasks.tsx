@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { useCRM } from '@/hooks/useCRM';
 import { useAuth } from '@/hooks/useAuth';
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
+import { TaskFormDrawer } from '@/components/TaskFormDrawer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,10 +15,10 @@ import type {
   TasksQueryParams,
   TaskStatusEnum,
   PriorityEnum,
-  TASK_STATUS_OPTIONS,
-  PRIORITY_OPTIONS
 } from '@/types/crmTypes';
 import type { RowActions } from '@/components/DataTable';
+
+type DrawerMode = 'view' | 'edit' | 'create';
 
 export const CRMTasks: React.FC = () => {
   const { user } = useAuth();
@@ -29,6 +30,11 @@ export const CRMTasks: React.FC = () => {
     page_size: 20,
     ordering: '-created_at',
   });
+
+  // Drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [drawerMode, setDrawerMode] = useState<DrawerMode>('view');
 
   // Fetch tasks
   const { data: tasksData, error, isLoading, mutate } = useTasks(queryParams);
@@ -51,14 +57,47 @@ export const CRMTasks: React.FC = () => {
     );
   }
 
-  // Handle delete task
+  // Drawer handlers
+  const handleOpenCreateDrawer = useCallback(() => {
+    setSelectedTaskId(null);
+    setDrawerMode('create');
+    setDrawerOpen(true);
+  }, []);
+
+  const handleOpenViewDrawer = useCallback((taskId: number) => {
+    setSelectedTaskId(taskId);
+    setDrawerMode('view');
+    setDrawerOpen(true);
+  }, []);
+
+  const handleOpenEditDrawer = useCallback((taskId: number) => {
+    setSelectedTaskId(taskId);
+    setDrawerMode('edit');
+    setDrawerOpen(true);
+  }, []);
+
+  const handleDrawerSuccess = useCallback(() => {
+    mutate(); // Refresh the list
+  }, [mutate]);
+
+  const handleDrawerDelete = useCallback(() => {
+    mutate(); // Refresh the list
+  }, [mutate]);
+
+  // Handle delete task (from row actions)
   const handleDelete = useCallback(async (id: number) => {
-    try {
-      await deleteTask(id);
-      toast.success('Task deleted successfully');
-      mutate(); // Refresh the list
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to delete task');
+    if (
+      window.confirm(
+        'Are you sure you want to delete this task? This action cannot be undone.'
+      )
+    ) {
+      try {
+        await deleteTask(id);
+        toast.success('Task deleted successfully');
+        mutate(); // Refresh the list
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to delete task');
+      }
     }
   }, [deleteTask, mutate]);
 
@@ -92,7 +131,12 @@ export const CRMTasks: React.FC = () => {
       label: 'Title',
       sortable: true,
       render: (task) => (
-        <div className="font-medium">{task.title}</div>
+        <div
+          className="font-medium cursor-pointer hover:underline"
+          onClick={() => handleOpenViewDrawer(task.id)}
+        >
+          {task.title}
+        </div>
       ),
     },
     {
@@ -151,17 +195,11 @@ export const CRMTasks: React.FC = () => {
   const rowActions: RowActions<Task> = [
     {
       label: 'View',
-      onClick: (task) => {
-        // TODO: Implement view task modal
-        toast.info('View task feature coming soon');
-      },
+      onClick: (task) => handleOpenViewDrawer(task.id),
     },
     {
       label: 'Edit',
-      onClick: (task) => {
-        // TODO: Implement edit task modal
-        toast.info('Edit task feature coming soon');
-      },
+      onClick: (task) => handleOpenEditDrawer(task.id),
     },
     {
       label: 'Delete',
@@ -171,64 +209,77 @@ export const CRMTasks: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col h-full overflow-hidden">
-      {/* Header */}
-      <div className="px-6 py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckSquare className="h-6 w-6" />
-            <h1 className="text-2xl font-bold">Tasks</h1>
+    <>
+      <div className="flex flex-col h-full overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckSquare className="h-6 w-6" />
+              <h1 className="text-2xl font-bold">Tasks</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => mutate()}
+                disabled={isLoading}
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+                Refresh
+              </Button>
+              <Button size="sm" onClick={handleOpenCreateDrawer}>
+                <Plus className="h-4 w-4 mr-2" />
+                New Task
+              </Button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => mutate()}
-              disabled={isLoading}
-            >
-              <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
-              Refresh
-            </Button>
-            <Button size="sm" onClick={() => toast.info('Create task feature coming soon')}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Task
-            </Button>
-          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-6">
+          {error ? (
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-center text-destructive">
+                  <p>Failed to load tasks</p>
+                  <p className="text-sm mt-2">{error}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <DataTable
+              columns={columns}
+              data={tasksData?.results || []}
+              rowActions={rowActions}
+              pagination={{
+                page: queryParams.page || 1,
+                pageSize: queryParams.page_size || 20,
+                total: tasksData?.count || 0,
+                onPageChange: (page) => setQueryParams({ ...queryParams, page }),
+                onPageSizeChange: (pageSize) =>
+                  setQueryParams({ ...queryParams, page_size: pageSize, page: 1 }),
+              }}
+              sorting={{
+                sortBy: queryParams.ordering || '-created_at',
+                onSortChange: (ordering) => setQueryParams({ ...queryParams, ordering }),
+              }}
+              loading={isLoading}
+            />
+          )}
         </div>
       </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-auto p-6">
-        {error ? (
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-center text-destructive">
-                <p>Failed to load tasks</p>
-                <p className="text-sm mt-2">{error}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={tasksData?.results || []}
-            rowActions={rowActions}
-            pagination={{
-              page: queryParams.page || 1,
-              pageSize: queryParams.page_size || 20,
-              total: tasksData?.count || 0,
-              onPageChange: (page) => setQueryParams({ ...queryParams, page }),
-              onPageSizeChange: (pageSize) =>
-                setQueryParams({ ...queryParams, page_size: pageSize, page: 1 }),
-            }}
-            sorting={{
-              sortBy: queryParams.ordering || '-created_at',
-              onSortChange: (ordering) => setQueryParams({ ...queryParams, ordering }),
-            }}
-            loading={isLoading}
-          />
-        )}
-      </div>
-    </div>
+      {/* Task Form Drawer */}
+      <TaskFormDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        taskId={selectedTaskId}
+        mode={drawerMode}
+        onSuccess={handleDrawerSuccess}
+        onDelete={handleDrawerDelete}
+        onModeChange={setDrawerMode}
+      />
+    </>
   );
 };
