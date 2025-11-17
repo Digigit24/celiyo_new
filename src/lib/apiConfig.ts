@@ -59,27 +59,34 @@ export const API_CONFIG = {
     LEAD_CREATE: '/crm/leads/',
     LEAD_UPDATE: '/crm/leads/:id/',
     LEAD_DELETE: '/crm/leads/:id/',
-    
+
     // Lead Status endpoints
     LEAD_STATUSES: '/crm/statuses/',
     LEAD_STATUS_DETAIL: '/crm/statuses/:id/',
     LEAD_STATUS_CREATE: '/crm/statuses/',
     LEAD_STATUS_UPDATE: '/crm/statuses/:id/',
     LEAD_STATUS_DELETE: '/crm/statuses/:id/',
-    
+
     // Lead Activity endpoints
     LEAD_ACTIVITIES: '/crm/activities/',
     LEAD_ACTIVITY_DETAIL: '/crm/activities/:id/',
     LEAD_ACTIVITY_CREATE: '/crm/activities/',
     LEAD_ACTIVITY_UPDATE: '/crm/activities/:id/',
     LEAD_ACTIVITY_DELETE: '/crm/activities/:id/',
-    
+
     // Lead Order endpoints (Kanban positioning)
     LEAD_ORDERS: '/crm/orders/',
     LEAD_ORDER_DETAIL: '/crm/orders/:id/',
     LEAD_ORDER_CREATE: '/crm/orders/',
     LEAD_ORDER_UPDATE: '/crm/orders/:id/',
     LEAD_ORDER_DELETE: '/crm/orders/:id/',
+
+    // Task endpoints
+    TASKS: '/tasks/',
+    TASK_DETAIL: '/tasks/:id/',
+    TASK_CREATE: '/tasks/',
+    TASK_UPDATE: '/tasks/:id/',
+    TASK_DELETE: '/tasks/:id/',
   },
 
   // ==================== WHATSAPP ====================

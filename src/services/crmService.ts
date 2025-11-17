@@ -6,14 +6,17 @@ import {
   LeadStatus,
   LeadActivity,
   LeadOrder,
+  Task,
   LeadsResponse,
   LeadStatusesResponse,
   LeadActivitiesResponse,
   LeadOrdersResponse,
+  TasksResponse,
   LeadsQueryParams,
   LeadStatusesQueryParams,
   LeadActivitiesQueryParams,
   LeadOrdersQueryParams,
+  TasksQueryParams,
   CreateLeadPayload,
   UpdateLeadPayload,
   CreateLeadStatusPayload,
@@ -21,7 +24,9 @@ import {
   CreateLeadActivityPayload,
   UpdateLeadActivityPayload,
   CreateLeadOrderPayload,
-  UpdateLeadOrderPayload
+  UpdateLeadOrderPayload,
+  CreateTaskPayload,
+  UpdateTaskPayload
 } from '@/types/crmTypes';
 
 class CRMService {
@@ -398,9 +403,104 @@ class CRMService {
         API_CONFIG.CRM.LEAD_ORDER_DELETE.replace(':id', id.toString())
       );
     } catch (error: any) {
-      const message = error.response?.data?.error || 
-                     error.response?.data?.message || 
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
                      'Failed to delete lead order';
+      throw new Error(message);
+    }
+  }
+
+  // ==================== TASKS ====================
+
+  // Get tasks
+  async getTasks(params?: TasksQueryParams): Promise<TasksResponse> {
+    try {
+      const queryString = buildQueryString(params);
+      const response = await crmClient.get<TasksResponse>(
+        `${API_CONFIG.CRM.TASKS}${queryString}`
+      );
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
+                     'Failed to fetch tasks';
+      throw new Error(message);
+    }
+  }
+
+  // Get single task by ID
+  async getTask(id: number): Promise<Task> {
+    try {
+      const response = await crmClient.get<Task>(
+        API_CONFIG.CRM.TASK_DETAIL.replace(':id', id.toString())
+      );
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
+                     'Failed to fetch task';
+      throw new Error(message);
+    }
+  }
+
+  // Create new task
+  async createTask(taskData: CreateTaskPayload): Promise<Task> {
+    try {
+      const response = await crmClient.post<Task>(
+        API_CONFIG.CRM.TASK_CREATE,
+        taskData
+      );
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
+                     'Failed to create task';
+      throw new Error(message);
+    }
+  }
+
+  // Update task (full update)
+  async updateTask(id: number, taskData: UpdateTaskPayload): Promise<Task> {
+    try {
+      const response = await crmClient.put<Task>(
+        API_CONFIG.CRM.TASK_UPDATE.replace(':id', id.toString()),
+        taskData
+      );
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
+                     'Failed to update task';
+      throw new Error(message);
+    }
+  }
+
+  // Partially update task
+  async patchTask(id: number, taskData: Partial<UpdateTaskPayload>): Promise<Task> {
+    try {
+      const response = await crmClient.patch<Task>(
+        API_CONFIG.CRM.TASK_UPDATE.replace(':id', id.toString()),
+        taskData
+      );
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
+                     'Failed to update task';
+      throw new Error(message);
+    }
+  }
+
+  // Delete task
+  async deleteTask(id: number): Promise<void> {
+    try {
+      await crmClient.delete(
+        API_CONFIG.CRM.TASK_DELETE.replace(':id', id.toString())
+      );
+    } catch (error: any) {
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
+                     'Failed to delete task';
       throw new Error(message);
     }
   }

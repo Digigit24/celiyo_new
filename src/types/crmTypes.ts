@@ -15,6 +15,13 @@ export enum ActivityTypeEnum {
   OTHER = 'OTHER'
 }
 
+export enum TaskStatusEnum {
+  TODO = 'TODO',
+  IN_PROGRESS = 'IN_PROGRESS',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED'
+}
+
 export interface LeadStatus {
   id: number;
   tenant_id: string;
@@ -48,6 +55,21 @@ export interface LeadOrder {
   status: number;
   position: string; // DecimalField as string
   board_id?: number;
+  updated_at: string;
+}
+
+export interface Task {
+  id: number;
+  tenant_id: string;
+  title: string;
+  description?: string;
+  status: TaskStatusEnum;
+  priority: PriorityEnum;
+  due_date?: string;
+  assigned_to_user_id?: string;
+  lead?: number;
+  completed_at?: string;
+  created_at: string;
   updated_at: string;
 }
 
@@ -107,6 +129,13 @@ export interface LeadOrdersResponse {
   next: string | null;
   previous: string | null;
   results: LeadOrder[];
+}
+
+export interface TasksResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: Task[];
 }
 
 // Query Parameters Types
@@ -170,6 +199,23 @@ export interface LeadOrdersQueryParams {
   [key: string]: string | number | boolean | undefined;
 }
 
+export interface TasksQueryParams {
+  page?: number;
+  page_size?: number;
+  search?: string;
+  status?: TaskStatusEnum;
+  priority?: PriorityEnum;
+  assigned_to_user_id?: string;
+  lead?: number;
+  due_date?: string;
+  due_date__gte?: string;
+  due_date__lte?: string;
+  created_at__gte?: string;
+  created_at__lte?: string;
+  ordering?: string;
+  [key: string]: string | number | boolean | undefined;
+}
+
 // Create/Update Types
 export interface CreateLeadPayload {
   name: string;
@@ -228,6 +274,18 @@ export interface CreateLeadOrderPayload {
 
 export interface UpdateLeadOrderPayload extends Partial<CreateLeadOrderPayload> {}
 
+export interface CreateTaskPayload {
+  title: string;
+  description?: string;
+  status?: TaskStatusEnum;
+  priority?: PriorityEnum;
+  due_date?: string;
+  assigned_to_user_id?: string;
+  lead?: number;
+}
+
+export interface UpdateTaskPayload extends Partial<CreateTaskPayload> {}
+
 // Filter and Sort Options
 export const PRIORITY_OPTIONS = [
   { value: PriorityEnum.LOW, label: 'Low' },
@@ -279,4 +337,26 @@ export const LEAD_ACTIVITY_ORDERING_OPTIONS = [
   { value: '-type', label: 'Type (Z-A)' },
   { value: 'created_at', label: 'Created (Oldest)' },
   { value: '-created_at', label: 'Created (Newest)' }
+];
+
+export const TASK_STATUS_OPTIONS = [
+  { value: TaskStatusEnum.TODO, label: 'To Do' },
+  { value: TaskStatusEnum.IN_PROGRESS, label: 'In Progress' },
+  { value: TaskStatusEnum.COMPLETED, label: 'Completed' },
+  { value: TaskStatusEnum.CANCELLED, label: 'Cancelled' }
+];
+
+export const TASK_ORDERING_OPTIONS = [
+  { value: 'due_date', label: 'Due Date (Earliest)' },
+  { value: '-due_date', label: 'Due Date (Latest)' },
+  { value: 'priority', label: 'Priority (Low to High)' },
+  { value: '-priority', label: 'Priority (High to Low)' },
+  { value: 'created_at', label: 'Created (Oldest)' },
+  { value: '-created_at', label: 'Created (Newest)' },
+  { value: 'updated_at', label: 'Updated (Oldest)' },
+  { value: '-updated_at', label: 'Updated (Newest)' },
+  { value: 'title', label: 'Title (A-Z)' },
+  { value: '-title', label: 'Title (Z-A)' },
+  { value: 'status', label: 'Status (A-Z)' },
+  { value: '-status', label: 'Status (Z-A)' }
 ];

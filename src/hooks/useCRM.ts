@@ -7,14 +7,17 @@ import {
   LeadStatus,
   LeadActivity,
   LeadOrder,
+  Task,
   LeadsResponse,
   LeadStatusesResponse,
   LeadActivitiesResponse,
   LeadOrdersResponse,
+  TasksResponse,
   LeadsQueryParams,
   LeadStatusesQueryParams,
   LeadActivitiesQueryParams,
   LeadOrdersQueryParams,
+  TasksQueryParams,
   CreateLeadPayload,
   UpdateLeadPayload,
   CreateLeadStatusPayload,
@@ -22,7 +25,9 @@ import {
   CreateLeadActivityPayload,
   UpdateLeadActivityPayload,
   CreateLeadOrderPayload,
-  UpdateLeadOrderPayload
+  UpdateLeadOrderPayload,
+  CreateTaskPayload,
+  UpdateTaskPayload
 } from '@/types/crmTypes';
 import { useAuth } from './useAuth';
 
@@ -425,11 +430,134 @@ export const useCRM = () => {
     }
   }, [hasCRMAccess]);
 
+  // ==================== TASKS HOOKS ====================
+
+  // Get tasks with SWR caching
+  const useTasks = (params?: TasksQueryParams) => {
+    const key = ['tasks', params];
+
+    return useSWR<TasksResponse>(
+      key,
+      () => crmService.getTasks(params),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch tasks:', err);
+          setError(err.message || 'Failed to fetch tasks');
+        }
+      }
+    );
+  };
+
+  // Get single task with SWR caching
+  const useTask = (id: number | null) => {
+    const key = id ? ['task', id] : null;
+
+    return useSWR<Task>(
+      key,
+      () => crmService.getTask(id!),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch task:', err);
+          setError(err.message || 'Failed to fetch task');
+        }
+      }
+    );
+  };
+
+  // Create task
+  const createTask = useCallback(async (taskData: CreateTaskPayload) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const newTask = await crmService.createTask(taskData);
+      return newTask;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to create task';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Update task
+  const updateTask = useCallback(async (id: number, taskData: UpdateTaskPayload) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const updatedTask = await crmService.updateTask(id, taskData);
+      return updatedTask;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to update task';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Patch task
+  const patchTask = useCallback(async (id: number, taskData: Partial<UpdateTaskPayload>) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const updatedTask = await crmService.patchTask(id, taskData);
+      return updatedTask;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to update task';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Delete task
+  const deleteTask = useCallback(async (id: number) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await crmService.deleteTask(id);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to delete task';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
   return {
     hasCRMAccess,
     isLoading,
     error,
-    
+
     // Leads
     useLeads,
     useLead,
@@ -437,24 +565,32 @@ export const useCRM = () => {
     updateLead,
     patchLead,
     deleteLead,
-    
+
     // Lead Statuses
     useLeadStatuses,
     useLeadStatus,
     createLeadStatus,
     updateLeadStatus,
     deleteLeadStatus,
-    
+
     // Lead Activities
     useLeadActivities,
     createLeadActivity,
     updateLeadActivity,
     deleteLeadActivity,
-    
+
     // Lead Orders
     useLeadOrders,
     createLeadOrder,
     updateLeadOrder,
     deleteLeadOrder,
+
+    // Tasks
+    useTasks,
+    useTask,
+    createTask,
+    updateTask,
+    patchTask,
+    deleteTask,
   };
 };
