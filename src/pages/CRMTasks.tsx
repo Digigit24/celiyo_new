@@ -2,12 +2,12 @@
 import { useState, useCallback } from 'react';
 import { useCRM } from '@/hooks/useCRM';
 import { useAuth } from '@/hooks/useAuth';
-import { DataTable, type DataTableColumn } from '@/components/DataTable';
+import { DataTable, type DataTableColumn, type RowActions } from '@/components/DataTable';
 import { TaskFormDrawer } from '@/components/TaskFormDrawer';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, RefreshCw, CheckSquare } from 'lucide-react';
+import { Plus, RefreshCw, CheckSquare, Calendar, User, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow, format } from 'date-fns';
 import type {
@@ -16,7 +16,6 @@ import type {
   TaskStatusEnum,
   PriorityEnum,
 } from '@/types/crmTypes';
-import type { RowActions } from '@/components/DataTable';
 
 type DrawerMode = 'view' | 'edit' | 'create';
 
@@ -58,20 +57,20 @@ export const CRMTasks: React.FC = () => {
   }
 
   // Drawer handlers
-  const handleOpenCreateDrawer = useCallback(() => {
+  const handleCreateTask = useCallback(() => {
     setSelectedTaskId(null);
     setDrawerMode('create');
     setDrawerOpen(true);
   }, []);
 
-  const handleOpenViewDrawer = useCallback((taskId: number) => {
-    setSelectedTaskId(taskId);
+  const handleViewTask = useCallback((task: Task) => {
+    setSelectedTaskId(task.id);
     setDrawerMode('view');
     setDrawerOpen(true);
   }, []);
 
-  const handleOpenEditDrawer = useCallback((taskId: number) => {
-    setSelectedTaskId(taskId);
+  const handleEditTask = useCallback((task: Task) => {
+    setSelectedTaskId(task.id);
     setDrawerMode('edit');
     setDrawerOpen(true);
   }, []);
@@ -84,20 +83,15 @@ export const CRMTasks: React.FC = () => {
     mutate(); // Refresh the list
   }, [mutate]);
 
-  // Handle delete task (from row actions)
-  const handleDelete = useCallback(async (id: number) => {
-    if (
-      window.confirm(
-        'Are you sure you want to delete this task? This action cannot be undone.'
-      )
-    ) {
-      try {
-        await deleteTask(id);
-        toast.success('Task deleted successfully');
-        mutate(); // Refresh the list
-      } catch (err: any) {
-        toast.error(err.message || 'Failed to delete task');
-      }
+  // Handle delete task (from DataTable)
+  const handleDeleteTask = useCallback(async (task: Task) => {
+    try {
+      await deleteTask(task.id);
+      toast.success('Task deleted successfully');
+      mutate(); // Refresh the list
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to delete task');
+      throw err; // Re-throw so DataTable knows it failed
     }
   }, [deleteTask, mutate]);
 
@@ -124,89 +118,140 @@ export const CRMTasks: React.FC = () => {
     return <Badge variant={config.variant}>{config.label}</Badge>;
   };
 
-  // Define table columns
+  // Desktop table columns
   const columns: DataTableColumn<Task>[] = [
     {
+      header: 'Title',
       key: 'title',
-      label: 'Title',
-      sortable: true,
-      render: (task) => (
-        <div
-          className="font-medium cursor-pointer hover:underline"
-          onClick={() => handleOpenViewDrawer(task.id)}
-        >
-          {task.title}
+      cell: (task) => (
+        <div className="flex flex-col">
+          <span className="font-medium text-foreground">{task.title}</span>
+          {task.description && (
+            <span className="text-xs text-muted-foreground line-clamp-1">
+              {task.description}
+            </span>
+          )}
         </div>
       ),
+      className: 'w-[250px]',
     },
     {
-      key: 'description',
-      label: 'Description',
-      render: (task) => (
-        <div className="text-sm text-muted-foreground max-w-md truncate">
-          {task.description || '-'}
-        </div>
-      ),
-    },
-    {
+      header: 'Status',
       key: 'status',
-      label: 'Status',
-      sortable: true,
-      render: (task) => getStatusBadge(task.status),
+      cell: (task) => getStatusBadge(task.status),
     },
     {
+      header: 'Priority',
       key: 'priority',
-      label: 'Priority',
-      sortable: true,
-      render: (task) => getPriorityBadge(task.priority),
+      cell: (task) => getPriorityBadge(task.priority),
     },
     {
+      header: 'Due Date',
       key: 'due_date',
-      label: 'Due Date',
-      sortable: true,
-      render: (task) => (
+      cell: (task) => (
         <div className="text-sm">
           {task.due_date ? (
-            <>
-              <div>{format(new Date(task.due_date), 'MMM dd, yyyy')}</div>
-              <div className="text-xs text-muted-foreground">
-                {formatDistanceToNow(new Date(task.due_date), { addSuffix: true })}
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+              <div className="flex flex-col">
+                <span>{format(new Date(task.due_date), 'MMM dd, yyyy')}</span>
+                <span className="text-xs text-muted-foreground">
+                  {formatDistanceToNow(new Date(task.due_date), { addSuffix: true })}
+                </span>
               </div>
-            </>
+            </div>
           ) : (
-            '-'
+            <span className="text-muted-foreground">-</span>
           )}
         </div>
       ),
     },
     {
-      key: 'created_at',
-      label: 'Created',
-      sortable: true,
-      render: (task) => (
-        <div className="text-sm text-muted-foreground">
-          {formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}
+      header: 'Assigned To',
+      key: 'assigned_to',
+      cell: (task) => (
+        <div className="text-sm">
+          {task.assigned_to_user_id ? (
+            <div className="flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs font-mono">{task.assigned_to_user_id}</span>
+            </div>
+          ) : (
+            <span className="text-muted-foreground">-</span>
+          )}
         </div>
+      ),
+    },
+    {
+      header: 'Created',
+      key: 'created_at',
+      cell: (task) => (
+        <span className="text-xs text-muted-foreground">
+          {formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}
+        </span>
       ),
     },
   ];
 
-  // Define row actions
-  const rowActions: RowActions<Task> = [
-    {
-      label: 'View',
-      onClick: (task) => handleOpenViewDrawer(task.id),
-    },
-    {
-      label: 'Edit',
-      onClick: (task) => handleOpenEditDrawer(task.id),
-    },
-    {
-      label: 'Delete',
-      onClick: (task) => handleDelete(task.id),
-      variant: 'destructive',
-    },
-  ];
+  // Mobile card renderer
+  const renderMobileCard = (task: Task, actions: RowActions<Task>) => (
+    <>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-base truncate">{task.title}</h3>
+          {task.description && (
+            <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+              {task.description}
+            </p>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          {getStatusBadge(task.status)}
+        </div>
+      </div>
+
+      {/* Details */}
+      <div className="flex flex-col gap-2 mt-3">
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Priority:</span>
+          {getPriorityBadge(task.priority)}
+        </div>
+        {task.due_date && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Due:</span>
+            <span>{format(new Date(task.due_date), 'MMM dd, yyyy')}</span>
+          </div>
+        )}
+        {task.assigned_to_user_id && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Assigned:</span>
+            <span className="font-mono text-xs">{task.assigned_to_user_id}</span>
+          </div>
+        )}
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">Created:</span>
+          <span className="text-xs">
+            {formatDistanceToNow(new Date(task.created_at), { addSuffix: true })}
+          </span>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex gap-2 mt-3 pt-3 border-t">
+        {actions.view && (
+          <Button variant="outline" size="sm" onClick={actions.view} className="flex-1">
+            View
+          </Button>
+        )}
+        {actions.edit && (
+          <Button variant="outline" size="sm" onClick={actions.edit} className="flex-1">
+            Edit
+          </Button>
+        )}
+      </div>
+    </>
+  );
 
   return (
     <>
@@ -228,7 +273,7 @@ export const CRMTasks: React.FC = () => {
                 <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                 Refresh
               </Button>
-              <Button size="sm" onClick={handleOpenCreateDrawer}>
+              <Button size="sm" onClick={handleCreateTask}>
                 <Plus className="h-4 w-4 mr-2" />
                 New Task
               </Button>
@@ -237,37 +282,76 @@ export const CRMTasks: React.FC = () => {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
+        <div className="flex-1 overflow-hidden">
           {error ? (
-            <Card>
-              <CardContent className="p-6">
-                <div className="text-center text-destructive">
-                  <p>Failed to load tasks</p>
-                  <p className="text-sm mt-2">{error}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="p-6">
+              <Card>
+                <CardContent className="p-6">
+                  <div className="text-center text-destructive">
+                    <p>Failed to load tasks</p>
+                    <p className="text-sm mt-2">{error}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           ) : (
             <DataTable
+              rows={tasksData?.results || []}
+              isLoading={isLoading}
               columns={columns}
-              data={tasksData?.results || []}
-              rowActions={rowActions}
-              pagination={{
-                page: queryParams.page || 1,
-                pageSize: queryParams.page_size || 20,
-                total: tasksData?.count || 0,
-                onPageChange: (page) => setQueryParams({ ...queryParams, page }),
-                onPageSizeChange: (pageSize) =>
-                  setQueryParams({ ...queryParams, page_size: pageSize, page: 1 }),
-              }}
-              sorting={{
-                sortBy: queryParams.ordering || '-created_at',
-                onSortChange: (ordering) => setQueryParams({ ...queryParams, ordering }),
-              }}
-              loading={isLoading}
+              renderMobileCard={renderMobileCard}
+              getRowId={(task) => task.id}
+              getRowLabel={(task) => task.title}
+              onView={handleViewTask}
+              onEdit={handleEditTask}
+              onDelete={handleDeleteTask}
+              emptyTitle="No tasks found"
+              emptySubtitle="Get started by creating your first task"
             />
           )}
         </div>
+
+        {/* Pagination */}
+        {tasksData && tasksData.count > 0 && (
+          <div className="flex-shrink-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="container mx-auto px-4 sm:px-6 py-3">
+              <div className="flex justify-center gap-2 items-center">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!tasksData.previous}
+                  onClick={() =>
+                    setQueryParams((prev) => ({
+                      ...prev,
+                      page: (prev.page || 1) - 1,
+                    }))
+                  }
+                >
+                  <ChevronLeft className="h-4 w-4 mr-1" />
+                  Previous
+                </Button>
+                <span className="text-sm text-muted-foreground">
+                  Page {queryParams.page || 1} of{' '}
+                  {Math.ceil(tasksData.count / (queryParams.page_size || 20))}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={!tasksData.next}
+                  onClick={() =>
+                    setQueryParams((prev) => ({
+                      ...prev,
+                      page: (prev.page || 1) + 1,
+                    }))
+                  }
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Task Form Drawer */}
