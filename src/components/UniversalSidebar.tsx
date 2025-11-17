@@ -20,6 +20,7 @@ import {
   MessageCircle,
   FileText,
   Send,
+  CheckSquare,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -120,6 +121,12 @@ const menuItems: MenuItem[] = [
         label: "Pipeline",
         icon: Kanban,
         path: "/crm/pipeline",
+      },
+      {
+        id: "crm-tasks",
+        label: "Tasks",
+        icon: CheckSquare,
+        path: "/crm/tasks",
       },
     ],
   },
