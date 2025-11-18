@@ -141,6 +141,12 @@ const menuItems: MenuItem[] = [
         icon: UserCheck,
         path: "/doctor",
       },
+      {
+        id: "hms-patients",
+        label: "Patients",
+        icon: Users,
+        path: "/hms/patients",
+      },
     ],
   },
   {

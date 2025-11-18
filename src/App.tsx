@@ -23,6 +23,7 @@ import { CRMLeadStatuses } from "./pages/CRMLeadStatuses";
 import { CRMTasks } from "./pages/CRMTasks";
 import { Doctors } from "./pages/Doctors";
 import DoctorTest from "./pages/doctor";
+import PatientsListPage from "./pages/patients/PatientsListPage";
 import  Contacts from "./pages/Contacts";
 import Chats from "./pages/Chats";
 import Groups from "./pages/Groups";
@@ -77,6 +78,7 @@ const AppLayout = () => {
 
             {/* HMS Routes */}
             <Route path="/hms/doctors" element={<Doctors />} />
+            <Route path="/hms/patients" element={<PatientsListPage />} />
             <Route path="/doctor" element={<DoctorTest />} />
 
             {/* WhatsApp Routes */}
