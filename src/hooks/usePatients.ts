@@ -58,6 +58,7 @@ export const usePatients = (params?: PatientListParams) => {
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<PatientProfile>>(
     url,
+    () => getPatients(params), // Custom fetcher using hmsClient
     {
       revalidateOnFocus: false,
       keepPreviousData: true,
