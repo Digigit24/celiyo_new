@@ -25,6 +25,7 @@ import { Doctors } from "./pages/Doctors";
 import DoctorTest from "./pages/doctor";
 import SpecialtiesTest from "./pages/Specialties";
 import PatientsTest from "./pages/Patients";
+import AppointmentsTest from "./pages/Appointments";
 import  Contacts from "./pages/Contacts";
 import Chats from "./pages/Chats";
 import Groups from "./pages/Groups";
@@ -82,6 +83,7 @@ const AppLayout = () => {
             <Route path="/doctor" element={<DoctorTest />} />
             <Route path="/specialties" element={<SpecialtiesTest />} />
             <Route path="/patients" element={<PatientsTest />} />
+            <Route path="/appointments" element={<AppointmentsTest />} />
 
             {/* WhatsApp Routes */}
             <Route path="/whatsapp/contacts" element={<Contacts />} />

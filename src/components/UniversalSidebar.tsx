@@ -155,6 +155,12 @@ const menuItems: MenuItem[] = [
         icon: User,
         path: "/patients",
       },
+      {
+        id: "hms-appointments",
+        label: "Appointments",
+        icon: Calendar,
+        path: "/appointments",
+      },
     ],
   },
   {

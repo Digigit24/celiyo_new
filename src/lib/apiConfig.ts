@@ -56,6 +56,20 @@ export const API_CONFIG = {
       PROFILE_DELETE: '/patients/profiles/:id/',
       REGISTER: '/patients/profiles/register/',
       STATISTICS: '/patients/profiles/statistics/',
+    },
+    APPOINTMENTS: {
+      LIST: '/appointments/',
+      DETAIL: '/appointments/:id/',
+      CREATE: '/appointments/',
+      UPDATE: '/appointments/:id/',
+      DELETE: '/appointments/:id/',
+      STATISTICS: '/appointments/statistics/',
+      BY_DOCTOR: '/appointments/by-doctor/:doctor_id/',
+      BY_PATIENT: '/appointments/by-patient/:patient_id/',
+      UPCOMING: '/appointments/upcoming/',
+      CANCEL: '/appointments/:id/cancel/',
+      COMPLETE: '/appointments/:id/complete/',
+      RESCHEDULE: '/appointments/:id/reschedule/',
     }
   },
 
