@@ -47,33 +47,31 @@ export const API_CONFIG = {
       SPECIALTY_CREATE: '/doctors/specialties/',
       SPECIALTY_UPDATE: '/doctors/specialties/:id/',
       SPECIALTY_DELETE: '/doctors/specialties/:id/',
-    }
-  },
+    },
+    PATIENTS: {
+      LIST: '/patients/patients/',
+      DETAIL: '/patients/patients/:id/',
+      CREATE: '/patients/patients/',
+      UPDATE: '/patients/patients/:id/',
+      DELETE: '/patients/patients/:id/',
+      STATISTICS: '/patients/patients/statistics/',
 
-  // ==================== PATIENTS ====================
-  PATIENTS: {
-    LIST: '/patients/patients/',
-    DETAIL: '/patients/patients/:id/',
-    CREATE: '/patients/patients/',
-    UPDATE: '/patients/patients/:id/',
-    DELETE: '/patients/patients/:id/',
-    STATISTICS: '/patients/patients/statistics/',
+      // Vitals
+      VITALS_LIST: '/patients/patients/:id/vitals/',
+      RECORD_VITALS: '/patients/patients/:id/record_vitals/',
 
-    // Vitals
-    VITALS_LIST: '/patients/patients/:id/vitals/',
-    RECORD_VITALS: '/patients/patients/:id/record_vitals/',
+      // Allergies
+      ALLERGIES_LIST: '/patients/patients/:id/allergies/',
+      ADD_ALLERGY: '/patients/patients/:id/add_allergy/',
 
-    // Allergies
-    ALLERGIES_LIST: '/patients/patients/:id/allergies/',
-    ADD_ALLERGY: '/patients/patients/:id/add_allergy/',
+      // Medical History
+      MEDICAL_HISTORY_LIST: '/patients/patients/:id/medical_history/',
+      ADD_MEDICAL_HISTORY: '/patients/patients/:id/add_medical_history/',
 
-    // Medical History
-    MEDICAL_HISTORY_LIST: '/patients/patients/:id/medical_history/',
-    ADD_MEDICAL_HISTORY: '/patients/patients/:id/add_medical_history/',
-
-    // Medications
-    MEDICATIONS_LIST: '/patients/patients/:id/medications/',
-    ADD_MEDICATION: '/patients/patients/:id/add_medication/',
+      // Medications
+      MEDICATIONS_LIST: '/patients/patients/:id/medications/',
+      ADD_MEDICATION: '/patients/patients/:id/add_medication/',
+    },
   },
 
 
