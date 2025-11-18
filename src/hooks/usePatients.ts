@@ -53,11 +53,13 @@ import type {
  * });
  */
 export const usePatients = (params?: PatientListParams) => {
-  const queryString = buildQueryString(params);
-  const url = `${API_CONFIG.PATIENTS.LIST}${queryString}`;
+  // Create a stable key that includes params for proper cache invalidation
+  const cacheKey = params
+    ? [API_CONFIG.PATIENTS.LIST, JSON.stringify(params)]
+    : API_CONFIG.PATIENTS.LIST;
 
   const { data, error, isLoading, mutate } = useSWR<PaginatedResponse<PatientProfile>>(
-    url,
+    cacheKey,
     () => getPatients(params), // Custom fetcher using hmsClient
     {
       revalidateOnFocus: false,
