@@ -21,6 +21,8 @@ import {
   FileText,
   Send,
   CheckSquare,
+  Award,
+  User,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -140,6 +142,18 @@ const menuItems: MenuItem[] = [
         label: "Doctors",
         icon: UserCheck,
         path: "/doctor",
+      },
+      {
+        id: "hms-specialties",
+        label: "Specialties",
+        icon: Award,
+        path: "/specialties",
+      },
+      {
+        id: "hms-patients",
+        label: "Patients",
+        icon: User,
+        path: "/patients",
       },
     ],
   },

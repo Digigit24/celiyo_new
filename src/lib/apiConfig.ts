@@ -47,6 +47,15 @@ export const API_CONFIG = {
       SPECIALTY_CREATE: '/doctors/specialties/',
       SPECIALTY_UPDATE: '/doctors/specialties/:id/',
       SPECIALTY_DELETE: '/doctors/specialties/:id/',
+    },
+    PATIENTS: {
+      PROFILES_LIST: '/patients/profiles/',
+      PROFILE_DETAIL: '/patients/profiles/:id/',
+      PROFILE_CREATE: '/patients/profiles/',
+      PROFILE_UPDATE: '/patients/profiles/:id/',
+      PROFILE_DELETE: '/patients/profiles/:id/',
+      REGISTER: '/patients/profiles/register/',
+      STATISTICS: '/patients/profiles/statistics/',
     }
   },
 
