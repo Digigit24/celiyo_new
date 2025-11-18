@@ -7,10 +7,11 @@
 export const API_CONFIG = {
   // ==================== BASE URLS ====================
   // You can override these via Vite env vars in .env/.env.local
-  // VITE_AUTH_BASE_URL, VITE_CRM_BASE_URL, VITE_WHATSAPP_BASE_URL, VITE_WHATSAPP_WS_URL
+  // VITE_AUTH_BASE_URL, VITE_CRM_BASE_URL, VITE_HMS_BASE_URL, VITE_WHATSAPP_BASE_URL, VITE_WHATSAPP_WS_URL
   AUTH_BASE_URL: import.meta.env.VITE_AUTH_BASE_URL || 'https://admin.celiyo.com/api',
   CRM_BASE_URL: import.meta.env.VITE_CRM_BASE_URL || 'https://crm.celiyo.com/api',
-  HMS_BASE_URL: import.meta.env.VITE_HMS_BASE_URL || 'http://127.0.0.1:8000/api',
+  // HMS shares the same backend as Auth (both on port 8000), so it uses the same base URL
+  HMS_BASE_URL: import.meta.env.VITE_HMS_BASE_URL || 'https://admin.celiyo.com/api',
   WHATSAPP_BASE_URL: import.meta.env.VITE_WHATSAPP_BASE_URL || 'https://whatsapp.dglinkup.com/api',
   
   // ✅ WebSocket URL for real-time WhatsApp updates
@@ -18,6 +19,7 @@ export const API_CONFIG = {
   
   // For development, set in .env.local instead of editing code:
   // VITE_AUTH_BASE_URL=http://localhost:8000/api
+  // VITE_HMS_BASE_URL=http://localhost:8000/api  (same as auth - shared backend)
   // VITE_CRM_BASE_URL=http://localhost:8001/api
   // VITE_WHATSAPP_BASE_URL=http://localhost:8002/api
   // VITE_WHATSAPP_WS_URL=ws://localhost:8002
