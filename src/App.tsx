@@ -18,17 +18,26 @@ import Inbox from "./pages/Inbox";
 import OPD from "./pages/OPD";
 import NotFound from "./pages/NotFound";
 import { CRMLeads } from "./pages/CRMLeads";
-import { CRMActivities } from "./pages/CRMActivities"; // ⬅️ ADDED
+import { CRMActivities } from "./pages/CRMActivities";
 import { CRMLeadStatuses } from "./pages/CRMLeadStatuses";
 import { CRMTasks } from "./pages/CRMTasks";
 import { Doctors } from "./pages/Doctors";
 import DoctorTest from "./pages/doctor";
-import  Contacts from "./pages/Contacts";
+import Contacts from "./pages/Contacts";
 import Chats from "./pages/Chats";
 import Groups from "./pages/Groups";
 import Templates from "./pages/Templates";
 import Campaigns from "./pages/Campaigns";
 import { useWhatsappSocket } from "@/hooks/whatsapp/useWhatsappSocket";
+
+// OPD Pages
+import OpdVisitsListPage from "./pages/opd/OpdVisitsListPage";
+import OpdBillsListPage from "./pages/opd/OpdBillsListPage";
+import ClinicalNotesListPage from "./pages/opd/ClinicalNotesListPage";
+import VisitFindingsListPage from "./pages/opd/VisitFindingsListPage";
+import ProcedureMastersListPage from "./pages/opd/ProcedureMastersListPage";
+import ProcedurePackagesListPage from "./pages/opd/ProcedurePackagesListPage";
+import ProcedureBillsListPage from "./pages/opd/ProcedureBillsListPage";
 
 const queryClient = new QueryClient();
 
@@ -67,11 +76,20 @@ const AppLayout = () => {
             <Route path="/" element={<Dashboard />} />
             <Route path="/inbox" element={<Inbox />} />
             <Route path="/opd" element={<OPD />} />
-            
+
+            {/* OPD Sub-routes */}
+            <Route path="/opd/visits" element={<OpdVisitsListPage />} />
+            <Route path="/opd/bills" element={<OpdBillsListPage />} />
+            <Route path="/opd/clinical-notes" element={<ClinicalNotesListPage initialFilters={{}} onApply={() => {}} />} />
+            <Route path="/opd/findings" element={<VisitFindingsListPage />} />
+            <Route path="/opd/procedures" element={<ProcedureMastersListPage />} />
+            <Route path="/opd/packages" element={<ProcedurePackagesListPage />} />
+            <Route path="/opd/procedure-bills" element={<ProcedureBillsListPage />} />
+
             {/* CRM Routes */}
             <Route path="/crm" element={<CRMLeads />} />
             <Route path="/crm/leads" element={<CRMLeads />} />
-            <Route path="/crm/activities" element={<CRMActivities />} /> {/* ⬅️ ADDED */}
+            <Route path="/crm/activities" element={<CRMActivities />} />
             <Route path="/crm/statuses" element={<CRMLeadStatuses />} />
             <Route path="/crm/tasks" element={<CRMTasks />} />
 
@@ -85,7 +103,7 @@ const AppLayout = () => {
             <Route path="/whatsapp/groups" element={<Groups />} />
             <Route path="/whatsapp/templates" element={<Templates />} />
             <Route path="/whatsapp/campaigns" element={<Campaigns />} />
-            
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
