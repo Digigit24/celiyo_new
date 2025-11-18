@@ -131,6 +131,19 @@ const menuItems: MenuItem[] = [
     ],
   },
   {
+    id: "hms",
+    label: "HMS",
+    icon: Stethoscope,
+    children: [
+      {
+        id: "hms-doctors",
+        label: "Doctors",
+        icon: UserCheck,
+        path: "/doctor",
+      },
+    ],
+  },
+  {
     id: "opd",
     label: "OPD",
     icon: Stethoscope,
