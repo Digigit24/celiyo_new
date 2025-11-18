@@ -1,6 +1,6 @@
 // src/services/opd/visit.service.ts
 import { hmsClient } from '@/lib/client';
-import { API_CONFIG, buildUrl } from '@/lib/apiConfig';
+import { API_CONFIG } from '@/lib/apiConfig';
 import type {
   Visit,
   VisitCreateData,
@@ -10,6 +10,15 @@ import type {
   PaginatedResponse,
   ApiResponse,
 } from '@/types/opd';
+
+// Helper function to replace URL parameters
+const replaceUrlParams = (url: string, params: Record<string, string | number>): string => {
+  let result = url;
+  Object.entries(params).forEach(([key, value]) => {
+    result = result.replace(`:${key}`, String(value));
+  });
+  return result;
+};
 
 // ==================== VISITS ====================
 
@@ -21,7 +30,7 @@ export const getVisits = async (
 };
 
 export const getVisitById = async (id: number): Promise<Visit> => {
-  const url = buildUrl(API_CONFIG.HMS.OPD.VISIT_DETAIL, { id }, undefined, 'hms');
+  const url = replaceUrlParams(API_CONFIG.HMS.OPD.VISIT_DETAIL, { id });
   const response = await hmsClient.get<Visit>(url);
   // API returns visit directly, not wrapped
   return response.data;
@@ -39,13 +48,13 @@ export const updateVisit = async (
   id: number,
   data: VisitUpdateData
 ): Promise<Visit> => {
-  const url = buildUrl(API_CONFIG.HMS.OPD.VISIT_UPDATE, { id }, undefined, 'hms');
+  const url = replaceUrlParams(API_CONFIG.HMS.OPD.VISIT_UPDATE, { id });
   const response = await hmsClient.patch<ApiResponse<Visit>>(url, data);
   return response.data.data || response.data;
 };
 
 export const deleteVisit = async (id: number): Promise<void> => {
-  const url = buildUrl(API_CONFIG.HMS.OPD.VISIT_DELETE, { id }, undefined, 'hms');
+  const url = replaceUrlParams(API_CONFIG.HMS.OPD.VISIT_DELETE, { id });
   await hmsClient.delete(url);
 };
 
@@ -109,7 +118,7 @@ export const callNextPatient = async (): Promise<{
 export const completeVisit = async (
   id: number
 ): Promise<ApiResponse<Visit>> => {
-  const url = buildUrl(API_CONFIG.HMS.OPD.VISIT_COMPLETE, { id }, undefined, 'hms');
+  const url = replaceUrlParams(API_CONFIG.HMS.OPD.VISIT_COMPLETE, { id });
   const response = await hmsClient.post<ApiResponse<Visit>>(url);
   return response.data;
 };

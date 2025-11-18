@@ -2,7 +2,7 @@
 
 import useSWR from 'swr';
 import useSWRMutation from 'swr/mutation';
-import { API_CONFIG, buildUrl } from '@/lib/apiConfig';
+import { API_CONFIG } from '@/lib/apiConfig';
 import {
   getVisits,
   getVisitById,
@@ -29,6 +29,15 @@ import type {
   VisitStatistics,
   PaginatedResponse,
 } from '@/types/opd';
+
+// Helper function to replace URL parameters
+const replaceUrlParams = (url: string, params: Record<string, string | number>): string => {
+  let result = url;
+  Object.entries(params).forEach(([key, value]) => {
+    result = result.replace(`:${key}`, String(value));
+  });
+  return result;
+};
 
 // ==================== QUERY HOOKS ====================
 
@@ -60,7 +69,7 @@ export function useVisits(params?: VisitListParams) {
  * Hook to fetch a single visit by ID
  */
 export function useVisit(id: number | null) {
-  const url = id ? buildUrl(API_CONFIG.HMS.OPD.VISIT_DETAIL, { id }, undefined, 'hms') : null;
+  const url = id ? replaceUrlParams(API_CONFIG.HMS.OPD.VISIT_DETAIL, { id }) : null;
 
   const { data, error, isLoading, mutate } = useSWR<Visit>(
     url,
@@ -169,7 +178,7 @@ export function useCreateVisit() {
  * Hook to update a visit
  */
 export function useUpdateVisit(id: number) {
-  const url = buildUrl(API_CONFIG.HMS.OPD.VISIT_UPDATE, { id }, undefined, 'hms');
+  const url = replaceUrlParams(API_CONFIG.HMS.OPD.VISIT_UPDATE, { id });
 
   const { trigger, isMutating, error } = useSWRMutation(
     url,
@@ -223,7 +232,7 @@ export function useCallNextPatient() {
  * Hook to complete a visit
  */
 export function useCompleteVisit(id: number) {
-  const url = buildUrl(API_CONFIG.HMS.OPD.VISIT_COMPLETE, { id }, undefined, 'hms');
+  const url = replaceUrlParams(API_CONFIG.HMS.OPD.VISIT_COMPLETE, { id });
 
   const { trigger, isMutating, error } = useSWRMutation(
     url,
