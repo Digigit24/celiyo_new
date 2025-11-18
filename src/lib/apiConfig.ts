@@ -1,10 +1,10 @@
 // ==================== API CONFIGURATION ====================
 // Celiyo Multi-Tenant API Configuration
 // Production URLs:
-// - Auth API: https://admin.celiyo.com/api
-// - HMS API: https://hms.celiyo.com/api
-// - CRM API: https://crm.celiyo.com/api
-// - WhatsApp API: https://whatsapp.dglinkup.com/api
+// - Auth API: https://admin.celiyo.com/api (port 8000)
+// - HMS API: https://admin.celiyo.com/api (port 8000 - same backend as Auth)
+// - CRM API: https://crm.celiyo.com/api (port 8001)
+// - WhatsApp API: https://whatsapp.dglinkup.com/api (port 8002)
 
 export const API_CONFIG = {
   // ==================== BASE URLS ====================
@@ -12,7 +12,9 @@ export const API_CONFIG = {
   // VITE_AUTH_BASE_URL, VITE_CRM_BASE_URL, VITE_HMS_BASE_URL, VITE_WHATSAPP_BASE_URL, VITE_WHATSAPP_WS_URL
   AUTH_BASE_URL: import.meta.env.VITE_AUTH_BASE_URL || 'https://admin.celiyo.com/api',
   CRM_BASE_URL: import.meta.env.VITE_CRM_BASE_URL || 'https://crm.celiyo.com/api',
-  HMS_BASE_URL: import.meta.env.VITE_HMS_BASE_URL || 'https://hms.celiyo.com/api',
+  // HMS shares the same backend as Auth (both port 8000), so uses admin.celiyo.com
+  // If your HMS backend is on hms.celiyo.com, set VITE_HMS_BASE_URL=https://hms.celiyo.com/api in .env.local
+  HMS_BASE_URL: import.meta.env.VITE_HMS_BASE_URL || 'https://admin.celiyo.com/api',
   WHATSAPP_BASE_URL: import.meta.env.VITE_WHATSAPP_BASE_URL || 'https://whatsapp.dglinkup.com/api',
   
   // ✅ WebSocket URL for real-time WhatsApp updates
