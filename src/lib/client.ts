@@ -72,9 +72,18 @@ const crmClient: AxiosInstance = axios.create({
   },
 });
 
-// Create HMS client for HMS API (port 8000)
+// Create HMS client for HMS API (port 8000 - doctors, patients, appointments)
 const hmsClient: AxiosInstance = axios.create({
   baseURL: API_CONFIG.HMS_BASE_URL,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Create OPD client for OPD module (hms.celiyo.com - visits, bills, procedures)
+const opdClient: AxiosInstance = axios.create({
+  baseURL: API_CONFIG.OPD_BASE_URL,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -404,8 +413,142 @@ hmsClient.interceptors.response.use(
   }
 );
 
+// Request interceptor for OPD client - attach token and tenant headers
+opdClient.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const token = tokenManager.getAccessToken();
+
+    console.log('📤 OPD API Request:', {
+      url: config.url,
+      method: config.method?.toUpperCase(),
+      hasToken: !!token
+    });
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+      console.log('🔑 Added Bearer token to OPD request');
+    } else {
+      console.warn('⚠️ No access token found for OPD request!');
+    }
+
+    // Multi-tenant header propagation (read from stored user)
+    try {
+      const userJson = localStorage.getItem(USER_KEY);
+      if (userJson) {
+        const user = JSON.parse(userJson);
+        const tenant = user?.tenant;
+
+        if (tenant) {
+          // Get tenant ID (could be tenant.id or tenant.tenant_id)
+          const tenantId = tenant.id || tenant.tenant_id;
+
+          if (tenantId) {
+            config.headers['X-Tenant-Id'] = tenantId;
+            config.headers['tenanttoken'] = tenantId; // Your API uses 'tenanttoken' header
+
+            console.log('🏢 Added tenant headers to OPD:', {
+              'X-Tenant-Id': tenantId,
+              'tenanttoken': tenantId
+            });
+          }
+
+          if (tenant.slug) {
+            config.headers['X-Tenant-Slug'] = tenant.slug;
+          }
+        } else {
+          console.warn('⚠️ No tenant found in user object for OPD');
+        }
+      } else {
+        console.warn('⚠️ No user found in localStorage for OPD');
+      }
+    } catch (error) {
+      console.error('❌ Failed to parse user or attach tenant headers for OPD:', error);
+    }
+
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for OPD client
+opdClient.interceptors.response.use(
+  (response) => {
+    console.log('✅ OPD API response:', {
+      status: response.status,
+      url: response.config.url
+    });
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    console.error('❌ OPD API error:', {
+      status: error.response?.status,
+      url: error.config?.url,
+      data: error.response?.data
+    });
+
+    // Handle 401 Unauthorized - try to refresh token
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      console.log('🔄 Attempting to refresh token for OPD...');
+
+      try {
+        const refreshToken = tokenManager.getRefreshToken();
+        if (refreshToken) {
+          // Try to refresh the token using auth client
+          const response = await authClient.post(API_CONFIG.AUTH.REFRESH, {
+            refresh: refreshToken
+          });
+
+          const { access, refresh } = response.data;
+          tokenManager.setAccessToken(access);
+
+          // Update refresh token if provided
+          if (refresh) {
+            tokenManager.setRefreshToken(refresh);
+          }
+
+          console.log('✅ Token refreshed for OPD, retrying original request');
+
+          // Retry the original request with new token
+          originalRequest.headers.Authorization = `Bearer ${access}`;
+          return opdClient(originalRequest);
+        }
+      } catch (refreshError) {
+        console.error('❌ Token refresh failed for OPD:', refreshError);
+
+        // Refresh failed, clear tokens and redirect to login
+        tokenManager.removeTokens();
+        localStorage.removeItem(USER_KEY);
+
+        if (!window.location.pathname.includes('/login')) {
+          console.log('↪️ Redirecting to login...');
+          window.location.href = '/login';
+        }
+        return Promise.reject(refreshError);
+      }
+    }
+
+    // Handle 403 Forbidden - OPD module not enabled
+    if (error.response?.status === 403) {
+      console.error('🚫 OPD access forbidden:', error.response.data);
+    }
+
+    // Handle network errors
+    if (!error.response) {
+      console.error('🌐 Network error:', error.message);
+    }
+
+    return Promise.reject(error);
+  }
+);
+
 // Export all clients
-export { authClient, crmClient, hmsClient };
+export { authClient, crmClient, hmsClient, opdClient };
 
 // Export auth client as default for backward compatibility
 export default authClient;
