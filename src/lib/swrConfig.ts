@@ -1,18 +1,18 @@
 // src/lib/swrConfig.ts
 import { SWRConfiguration } from 'swr';
-import client from './client';
+import { hmsClient } from './client';
 import { AxiosError } from 'axios';
 
-// Generic fetcher for SWR using our authenticated axios client
+// Generic fetcher for SWR using HMS client
 export const fetcher = async <T = any>(url: string): Promise<T> => {
   try {
-    const response = await client.get<T>(url);
-    
+    const response = await hmsClient.get<T>(url);
+
     // Handle Django-style responses with nested data
     if (response.data && typeof response.data === 'object' && 'data' in response.data) {
       return (response.data as any).data;
     }
-    
+
     return response.data;
   } catch (error) {
     const axiosError = error as AxiosError;
@@ -22,45 +22,45 @@ export const fetcher = async <T = any>(url: string): Promise<T> => {
 
 // POST fetcher for mutations
 export const postFetcher = async <T = any>(url: string, { arg }: { arg: any }): Promise<T> => {
-  const response = await client.post<T>(url, arg);
-  
+  const response = await hmsClient.post<T>(url, arg);
+
   if (response.data && typeof response.data === 'object' && 'data' in response.data) {
     return (response.data as any).data;
   }
-  
+
   return response.data;
 };
 
 // PUT fetcher for mutations
 export const putFetcher = async <T = any>(url: string, { arg }: { arg: any }): Promise<T> => {
-  const response = await client.put<T>(url, arg);
-  
+  const response = await hmsClient.put<T>(url, arg);
+
   if (response.data && typeof response.data === 'object' && 'data' in response.data) {
     return (response.data as any).data;
   }
-  
+
   return response.data;
 };
 
 // PATCH fetcher for mutations
 export const patchFetcher = async <T = any>(url: string, { arg }: { arg: any }): Promise<T> => {
-  const response = await client.patch<T>(url, arg);
-  
+  const response = await hmsClient.patch<T>(url, arg);
+
   if (response.data && typeof response.data === 'object' && 'data' in response.data) {
     return (response.data as any).data;
   }
-  
+
   return response.data;
 };
 
 // DELETE fetcher for mutations
 export const deleteFetcher = async <T = any>(url: string): Promise<T> => {
-  const response = await client.delete<T>(url);
-  
+  const response = await hmsClient.delete<T>(url);
+
   if (response.data && typeof response.data === 'object' && 'data' in response.data) {
     return (response.data as any).data;
   }
-  
+
   return response.data;
 };
 
