@@ -100,6 +100,13 @@ export const API_CONFIG = {
         CREATE: '/opd/clinical-notes/',
         UPDATE: '/opd/clinical-notes/:id/',
         DELETE: '/opd/clinical-notes/:id/',
+      },
+      VISIT_FINDINGS: {
+        LIST: '/opd/visit-findings/',
+        DETAIL: '/opd/visit-findings/:id/',
+        CREATE: '/opd/visit-findings/',
+        UPDATE: '/opd/visit-findings/:id/',
+        DELETE: '/opd/visit-findings/:id/',
       }
     }
   },
