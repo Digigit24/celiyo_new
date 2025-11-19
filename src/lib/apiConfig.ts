@@ -93,6 +93,13 @@ export const API_CONFIG = {
         RECORD_PAYMENT: '/opd/bills/:id/record-payment/',
         PRINT: '/opd/bills/:id/print/',
         STATISTICS: '/opd/bills/statistics/',
+      },
+      CLINICAL_NOTES: {
+        LIST: '/opd/clinical-notes/',
+        DETAIL: '/opd/clinical-notes/:id/',
+        CREATE: '/opd/clinical-notes/',
+        UPDATE: '/opd/clinical-notes/:id/',
+        DELETE: '/opd/clinical-notes/:id/',
       }
     }
   },
