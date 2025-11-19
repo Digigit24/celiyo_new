@@ -42,12 +42,12 @@ const createPatientSchema = z.object({
   pincode: z.string().min(4, 'Pincode must be at least 4 digits'),
 
   // Medical Info (OPTIONAL)
-  blood_group: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional().or(z.literal('')),
+  blood_group: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional(),
   height: z.coerce.number().min(0).optional().or(z.literal('')),
   weight: z.coerce.number().min(0).optional().or(z.literal('')),
 
   // Social Info (OPTIONAL)
-  marital_status: z.enum(['single', 'married', 'divorced', 'widowed']).optional().or(z.literal('')),
+  marital_status: z.enum(['single', 'married', 'divorced', 'widowed']).optional(),
   occupation: z.string().optional(),
 
   // Emergency Contact (REQUIRED)
@@ -83,12 +83,12 @@ const updatePatientSchema = z.object({
   pincode: z.string().optional(),
 
   // Medical Info
-  blood_group: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional().or(z.literal('')),
+  blood_group: z.enum(['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']).optional(),
   height: z.coerce.number().min(0).optional().or(z.literal('')),
   weight: z.coerce.number().min(0).optional().or(z.literal('')),
 
   // Social Info
-  marital_status: z.enum(['single', 'married', 'divorced', 'widowed']).optional().or(z.literal('')),
+  marital_status: z.enum(['single', 'married', 'divorced', 'widowed']).optional(),
   occupation: z.string().optional(),
 
   // Emergency Contact
@@ -140,10 +140,10 @@ const PatientBasicInfo = forwardRef<PatientBasicInfoHandle, PatientBasicInfoProp
           state: '',
           country: 'India',
           pincode: '',
-          blood_group: '' as any,
+          blood_group: undefined,
           height: '' as any,
           weight: '' as any,
-          marital_status: '' as any,
+          marital_status: undefined,
           occupation: '',
           emergency_contact_name: '',
           emergency_contact_phone: '',
@@ -167,10 +167,10 @@ const PatientBasicInfo = forwardRef<PatientBasicInfoHandle, PatientBasicInfoProp
           state: patient?.state || '',
           country: patient?.country || 'India',
           pincode: patient?.pincode || '',
-          blood_group: patient?.blood_group || '' as any,
+          blood_group: patient?.blood_group || undefined,
           height: patient?.height || '' as any,
           weight: patient?.weight || '' as any,
-          marital_status: patient?.marital_status || '' as any,
+          marital_status: patient?.marital_status || undefined,
           occupation: patient?.occupation || '',
           emergency_contact_name: patient?.emergency_contact_name || '',
           emergency_contact_phone: patient?.emergency_contact_phone || '',
@@ -537,15 +537,14 @@ const PatientBasicInfo = forwardRef<PatientBasicInfoHandle, PatientBasicInfoProp
               <div className="space-y-2">
                 <Label htmlFor="blood_group">Blood Group</Label>
                 <Select
-                  value={watchedBloodGroup}
+                  value={watchedBloodGroup || undefined}
                   onValueChange={(value) => setValue('blood_group', value)}
                   disabled={isReadOnly}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select blood group" />
+                    <SelectValue placeholder="Select blood group (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
                     <SelectItem value="A+">A+</SelectItem>
                     <SelectItem value="A-">A-</SelectItem>
                     <SelectItem value="B+">B+</SelectItem>
@@ -610,15 +609,14 @@ const PatientBasicInfo = forwardRef<PatientBasicInfoHandle, PatientBasicInfoProp
               <div className="space-y-2">
                 <Label htmlFor="marital_status">Marital Status</Label>
                 <Select
-                  value={watchedMaritalStatus}
+                  value={watchedMaritalStatus || undefined}
                   onValueChange={(value) => setValue('marital_status', value)}
                   disabled={isReadOnly}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select marital status" />
+                    <SelectValue placeholder="Select marital status (optional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">None</SelectItem>
                     <SelectItem value="single">Single</SelectItem>
                     <SelectItem value="married">Married</SelectItem>
                     <SelectItem value="divorced">Divorced</SelectItem>
