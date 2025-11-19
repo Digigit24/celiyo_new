@@ -23,7 +23,7 @@ import { CRMLeadStatuses } from "./pages/CRMLeadStatuses";
 import { CRMTasks } from "./pages/CRMTasks";
 import { Doctors } from "./pages/Doctors";
 import DoctorTest from "./pages/doctor";
-import SpecialtiesTest from "./pages/Specialties";
+import { Specialties } from "./pages/Specialties";
 import PatientsTest from "./pages/Patients";
 import AppointmentsTest from "./pages/Appointments";
 import  Contacts from "./pages/Contacts";
@@ -87,8 +87,9 @@ const AppLayout = () => {
 
             {/* HMS Routes */}
             <Route path="/hms/doctors" element={<Doctors />} />
+            <Route path="/hms/specialties" element={<Specialties />} />
             <Route path="/doctor" element={<DoctorTest />} />
-            <Route path="/specialties" element={<SpecialtiesTest />} />
+            <Route path="/specialties" element={<Specialties />} />
             <Route path="/patients" element={<PatientsTest />} />
             <Route path="/appointments" element={<AppointmentsTest />} />
 

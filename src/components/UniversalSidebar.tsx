@@ -145,13 +145,13 @@ const menuItems: MenuItem[] = [
         id: "hms-doctors",
         label: "Doctors",
         icon: UserCheck,
-        path: "/doctor",
+        path: "/hms/doctors",
       },
       {
         id: "hms-specialties",
         label: "Specialties",
         icon: Award,
-        path: "/specialties",
+        path: "/hms/specialties",
       },
       {
         id: "hms-patients",
