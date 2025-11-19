@@ -83,6 +83,16 @@ export const API_CONFIG = {
         QUEUE: '/opd/visits/queue/',
         CALL_NEXT: '/opd/visits/call-next/',
         COMPLETE: '/opd/visits/:id/complete/',
+      },
+      BILLS: {
+        LIST: '/opd/bills/',
+        DETAIL: '/opd/bills/:id/',
+        CREATE: '/opd/bills/',
+        UPDATE: '/opd/bills/:id/',
+        DELETE: '/opd/bills/:id/',
+        RECORD_PAYMENT: '/opd/bills/:id/record-payment/',
+        PRINT: '/opd/bills/:id/print/',
+        STATISTICS: '/opd/bills/statistics/',
       }
     }
   },
