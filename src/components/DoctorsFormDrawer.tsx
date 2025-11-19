@@ -93,7 +93,7 @@ export default function DoctorsFormDrawer({
 
     if (
       window.confirm(
-        `Are you sure you want to delete Dr. ${doctor?.full_name}? This action cannot be undone.`
+        `Are you sure you want to delete this doctor (License: ${doctor?.data?.medical_license_number})? This action cannot be undone.`
       )
     ) {
       try {

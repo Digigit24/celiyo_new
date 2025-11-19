@@ -118,8 +118,10 @@ export const Doctors: React.FC = () => {
       key: 'name',
       cell: (doctor) => (
         <div className="flex flex-col">
-          <span className="font-medium">{doctor.full_name}</span>
-          <span className="text-sm text-muted-foreground">{doctor.user.email}</span>
+          <span className="font-medium">{doctor.medical_license_number}</span>
+          <span className="text-sm text-muted-foreground">
+            {doctor.qualifications || 'No qualifications listed'}
+          </span>
         </div>
       ),
     },
@@ -197,8 +199,12 @@ export const Doctors: React.FC = () => {
         {/* Header Row */}
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-base truncate">{doctor.full_name}</h3>
-            <p className="text-sm text-muted-foreground truncate">{doctor.user.email}</p>
+            <h3 className="font-semibold text-base truncate">
+              License: {doctor.medical_license_number}
+            </h3>
+            <p className="text-sm text-muted-foreground truncate">
+              {doctor.qualifications || 'No qualifications listed'}
+            </p>
           </div>
           <Badge
             variant="default"
@@ -435,7 +441,7 @@ export const Doctors: React.FC = () => {
                 columns={columns}
                 renderMobileCard={renderMobileCard}
                 getRowId={(doctor) => doctor.id}
-                getRowLabel={(doctor) => doctor.full_name}
+                getRowLabel={(doctor) => `License ${doctor.medical_license_number}`}
                 onView={handleView}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
