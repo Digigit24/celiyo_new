@@ -32,6 +32,13 @@ import Groups from "./pages/Groups";
 import Templates from "./pages/Templates";
 import Campaigns from "./pages/Campaigns";
 import { useWhatsappSocket } from "@/hooks/whatsapp/useWhatsappSocket";
+import OPDVisits from "./pages/opd/Visits";
+import OPDBills from "./pages/opd/Bills";
+import ClinicalNotes from "./pages/opd/ClinicalNotes";
+import VisitFindings from "./pages/opd/Findings";
+import ProcedureMasters from "./pages/opd/Procedures";
+import ProcedurePackages from "./pages/opd/Packages";
+import ProcedureBills from "./pages/opd/ProcedureBills";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +91,15 @@ const AppLayout = () => {
             <Route path="/specialties" element={<SpecialtiesTest />} />
             <Route path="/patients" element={<PatientsTest />} />
             <Route path="/appointments" element={<AppointmentsTest />} />
+
+            {/* OPD Routes */}
+            <Route path="/opd/visits" element={<OPDVisits />} />
+            <Route path="/opd/bills" element={<OPDBills />} />
+            <Route path="/opd/clinical-notes" element={<ClinicalNotes />} />
+            <Route path="/opd/findings" element={<VisitFindings />} />
+            <Route path="/opd/procedures" element={<ProcedureMasters />} />
+            <Route path="/opd/packages" element={<ProcedurePackages />} />
+            <Route path="/opd/procedure-bills" element={<ProcedureBills />} />
 
             {/* WhatsApp Routes */}
             <Route path="/whatsapp/contacts" element={<Contacts />} />
