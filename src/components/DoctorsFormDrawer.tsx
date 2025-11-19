@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Pencil, Trash2, Phone, Mail, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 
-import type { Doctor, DoctorCreateData, DoctorUpdateData } from '@/types/doctor.types';
+import type { Doctor, DoctorCreateWithUserData, DoctorUpdateData } from '@/types/doctor.types';
 import { useDoctor } from '@/hooks/useDoctor';
 
 import DoctorBasicInfo from './doctor-drawer/DoctorBasicInfo';
@@ -12,7 +12,7 @@ import { SideDrawer, type DrawerActionButton, type DrawerHeaderAction } from '@/
 
 // Form handle interface for collecting form values
 export interface DoctorBasicInfoHandle {
-  getFormValues: () => Promise<DoctorCreateData | DoctorUpdateData | null>;
+  getFormValues: () => Promise<DoctorCreateWithUserData | DoctorUpdateData | null>;
 }
 
 interface DoctorsFormDrawerProps {
@@ -42,8 +42,9 @@ export default function DoctorsFormDrawer({
   const {
     useDoctor: useDoctorById,
     useSpecialties,
-    createDoctor,
+    createDoctorWithUser,
     updateDoctor,
+    patchDoctor,
     deleteDoctor,
   } = useDoctor();
 
@@ -110,7 +111,7 @@ export default function DoctorsFormDrawer({
     setIsSaving(true);
     try {
       if (currentMode === 'create') {
-        // CREATE FLOW
+        // CREATE FLOW - Use createDoctorWithUser
         const values = await formRef.current?.getFormValues();
 
         if (!values) {
@@ -120,13 +121,19 @@ export default function DoctorsFormDrawer({
 
         console.log('Creating doctor with values:', values);
 
-        await createDoctor(values as DoctorCreateData);
+        // Call createDoctorWithUser endpoint
+        const response = await createDoctorWithUser(values as DoctorCreateWithUserData);
 
-        toast.success('Doctor created successfully');
-        handleSuccess();
-        handleClose();
+        // Check if response is successful
+        if (response.success) {
+          toast.success(response.message || 'Doctor created successfully');
+          handleSuccess();
+          handleClose();
+        } else {
+          toast.error(response.error || 'Failed to create doctor');
+        }
       } else if (currentMode === 'edit') {
-        // EDIT FLOW
+        // EDIT FLOW - Use patchDoctor for partial updates
         const values = await formRef.current?.getFormValues();
 
         if (!values || !doctorId) {
@@ -136,11 +143,17 @@ export default function DoctorsFormDrawer({
 
         console.log('Updating doctor with values:', values);
 
-        await updateDoctor(doctorId, values as DoctorUpdateData);
+        // Call patchDoctor endpoint
+        const response = await patchDoctor(doctorId, values as DoctorUpdateData);
 
-        toast.success('Doctor updated successfully');
-        handleSuccess();
-        handleSwitchToView();
+        // Check if response is successful
+        if (response.success) {
+          toast.success(response.message || 'Doctor updated successfully');
+          handleSuccess();
+          handleSwitchToView();
+        } else {
+          toast.error(response.error || 'Failed to update doctor');
+        }
       }
     } catch (error: any) {
       console.error('Save error:', error);
@@ -152,24 +165,24 @@ export default function DoctorsFormDrawer({
     } finally {
       setIsSaving(false);
     }
-  }, [currentMode, doctorId, createDoctor, updateDoctor, handleSuccess, handleClose, handleSwitchToView]);
+  }, [currentMode, doctorId, createDoctorWithUser, patchDoctor, handleSuccess, handleClose, handleSwitchToView]);
 
   const drawerTitle =
     currentMode === 'create'
       ? 'Create New Doctor'
-      : doctor
-      ? `Dr. ${doctor.full_name}`
+      : doctor?.data
+      ? `Doctor Profile`
       : 'Doctor Details';
 
   const drawerDescription =
     currentMode === 'create'
       ? undefined
-      : doctor
-      ? `${doctor.specialties.map(s => s.name).join(', ')} • ${doctor.years_of_experience} years exp`
+      : doctor?.data
+      ? `${doctor.data.specialties.map((s: any) => s.name).join(', ')} • ${doctor.data.years_of_experience} years exp`
       : undefined;
 
   const headerActions: DrawerHeaderAction[] =
-    currentMode === 'view' && doctor
+    currentMode === 'view' && doctor?.data
       ? [
           {
             icon: Phone,
@@ -182,7 +195,10 @@ export default function DoctorsFormDrawer({
           },
           {
             icon: Mail,
-            onClick: () => window.open(`mailto:${doctor.user.email}`, '_self'),
+            onClick: () => {
+              console.log('Email doctor');
+              toast.info('Email feature coming soon');
+            },
             label: 'Email doctor',
             variant: 'ghost',
           },
@@ -262,7 +278,7 @@ export default function DoctorsFormDrawer({
         <TabsContent value="basic" className="mt-6 space-y-6">
           <DoctorBasicInfo
             ref={formRef}
-            doctor={doctor}
+            doctor={doctor?.data}
             specialties={specialties}
             mode={currentMode}
             onSuccess={handleSuccess}
