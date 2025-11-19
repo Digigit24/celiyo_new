@@ -114,6 +114,13 @@ export const API_CONFIG = {
         CREATE: '/opd/procedure-masters/',
         UPDATE: '/opd/procedure-masters/:id/',
         DELETE: '/opd/procedure-masters/:id/',
+      },
+      PROCEDURE_PACKAGES: {
+        LIST: '/opd/procedure-packages/',
+        DETAIL: '/opd/procedure-packages/:id/',
+        CREATE: '/opd/procedure-packages/',
+        UPDATE: '/opd/procedure-packages/:id/',
+        DELETE: '/opd/procedure-packages/:id/',
       }
     }
   },
