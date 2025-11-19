@@ -4,296 +4,473 @@ import { useDoctor } from '@/hooks/useDoctor';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, RefreshCw } from 'lucide-react';
-import { DoctorListParams } from '@/types/doctor.types';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { DataTable, DataTableColumn } from '@/components/DataTable';
+import DoctorsFormDrawer from '@/components/DoctorsFormDrawer';
+import {
+  Loader2,
+  Plus,
+  Search,
+  UserPlus,
+  Stethoscope,
+  Calendar,
+  DollarSign,
+  Star
+} from 'lucide-react';
+import { DoctorListParams, Doctor } from '@/types/doctor.types';
 
 export const Doctors: React.FC = () => {
   const { user, hasModuleAccess } = useAuth();
-  const { hasHMSAccess, useDoctors, useSpecialties, useDoctorStatistics } = useDoctor();
-  
-  // Query parameters state
-  const [queryParams, setQueryParams] = useState<DoctorListParams>({
-    page: 1,
-    search: ''
-  });
+  const {
+    hasHMSAccess,
+    useDoctors,
+    deleteDoctor,
+  } = useDoctor();
 
-  // Fetch doctors, specialties, and statistics
-  const { data: doctorsData, error: doctorsError, isLoading: doctorsLoading, mutate: mutateDoctors } = useDoctors(queryParams);
-  const { data: specialtiesData, error: specialtiesError, isLoading: specialtiesLoading, mutate: mutateSpecialties } = useSpecialties({
-    is_active: true
-  });
-  const { data: statisticsData, error: statisticsError, isLoading: statisticsLoading, mutate: mutateStatistics } = useDoctorStatistics();
+  // State for search and filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'active' | 'on_leave' | 'inactive' | ''>('');
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Drawer state
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
+  const [drawerMode, setDrawerMode] = useState<'view' | 'edit' | 'create'>('view');
+
+  // Build query params
+  const queryParams: DoctorListParams = {
+    page: currentPage,
+    search: searchTerm || undefined,
+    status: statusFilter || undefined,
+  };
+
+  // Fetch doctors
+  const {
+    data: doctorsData,
+    error: doctorsError,
+    isLoading: doctorsLoading,
+    mutate: mutateDoctors
+  } = useDoctors(queryParams);
+
+  const doctors = doctorsData?.results || [];
+  const totalCount = doctorsData?.count || 0;
+  const hasNext = !!doctorsData?.next;
+  const hasPrevious = !!doctorsData?.previous;
+
+  // Handlers
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1); // Reset to first page
+  };
+
+  const handleStatusFilter = (status: 'active' | 'on_leave' | 'inactive' | '') => {
+    setStatusFilter(status);
+    setCurrentPage(1);
+  };
+
+  const handleView = (doctor: Doctor) => {
+    setSelectedDoctorId(doctor.id);
+    setDrawerMode('view');
+    setDrawerOpen(true);
+  };
+
+  const handleEdit = (doctor: Doctor) => {
+    setSelectedDoctorId(doctor.id);
+    setDrawerMode('edit');
+    setDrawerOpen(true);
+  };
+
+  const handleCreate = () => {
+    setSelectedDoctorId(null);
+    setDrawerMode('create');
+    setDrawerOpen(true);
+  };
+
+  const handleDelete = async (doctor: Doctor) => {
+    try {
+      await deleteDoctor(doctor.id);
+      mutateDoctors();
+    } catch (error: any) {
+      console.error('Delete failed:', error);
+    }
+  };
+
+  const handleDrawerSuccess = () => {
+    mutateDoctors();
+  };
+
+  const handleDrawerDelete = () => {
+    mutateDoctors();
+  };
+
+  // DataTable columns configuration
+  const columns: DataTableColumn<Doctor>[] = [
+    {
+      header: 'Doctor',
+      key: 'name',
+      cell: (doctor) => (
+        <div className="flex flex-col">
+          <span className="font-medium">{doctor.full_name}</span>
+          <span className="text-sm text-muted-foreground">{doctor.user.email}</span>
+        </div>
+      ),
+    },
+    {
+      header: 'Specialties',
+      key: 'specialties',
+      cell: (doctor) => (
+        <div className="flex flex-wrap gap-1">
+          {doctor.specialties.slice(0, 2).map((specialty) => (
+            <Badge key={specialty.id} variant="secondary" className="text-xs">
+              {specialty.name}
+            </Badge>
+          ))}
+          {doctor.specialties.length > 2 && (
+            <Badge variant="outline" className="text-xs">
+              +{doctor.specialties.length - 2}
+            </Badge>
+          )}
+        </div>
+      ),
+    },
+    {
+      header: 'Experience',
+      key: 'experience',
+      cell: (doctor) => (
+        <span className="text-sm">{doctor.years_of_experience} years</span>
+      ),
+    },
+    {
+      header: 'Consultation Fee',
+      key: 'fee',
+      cell: (doctor) => (
+        <div className="flex flex-col text-sm">
+          <span className="font-medium">${doctor.consultation_fee}</span>
+          <span className="text-xs text-muted-foreground">
+            Follow-up: ${doctor.follow_up_fee}
+          </span>
+        </div>
+      ),
+    },
+    {
+      header: 'Rating',
+      key: 'rating',
+      cell: (doctor) => (
+        <div className="flex items-center gap-1 text-sm">
+          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+          <span className="font-medium">{doctor.average_rating}</span>
+          <span className="text-muted-foreground">({doctor.total_reviews})</span>
+        </div>
+      ),
+    },
+    {
+      header: 'Status',
+      key: 'status',
+      cell: (doctor) => {
+        const statusConfig = {
+          active: { label: 'Active', className: 'bg-green-600' },
+          on_leave: { label: 'On Leave', className: 'bg-orange-600' },
+          inactive: { label: 'Inactive', className: 'bg-gray-600' },
+        };
+        const config = statusConfig[doctor.status];
+        return (
+          <Badge variant="default" className={config.className}>
+            {config.label}
+          </Badge>
+        );
+      },
+    },
+  ];
+
+  // Mobile card renderer
+  const renderMobileCard = (doctor: Doctor, actions: any) => {
+    return (
+      <>
+        {/* Header Row */}
+        <div className="flex items-start justify-between">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-base truncate">{doctor.full_name}</h3>
+            <p className="text-sm text-muted-foreground truncate">{doctor.user.email}</p>
+          </div>
+          <Badge
+            variant="default"
+            className={
+              doctor.status === 'active'
+                ? 'bg-green-600'
+                : doctor.status === 'on_leave'
+                ? 'bg-orange-600'
+                : 'bg-gray-600'
+            }
+          >
+            {doctor.status === 'active' && 'Active'}
+            {doctor.status === 'on_leave' && 'On Leave'}
+            {doctor.status === 'inactive' && 'Inactive'}
+          </Badge>
+        </div>
+
+        {/* Specialties */}
+        <div className="flex flex-wrap gap-1">
+          {doctor.specialties.map((specialty) => (
+            <Badge key={specialty.id} variant="secondary" className="text-xs">
+              {specialty.name}
+            </Badge>
+          ))}
+        </div>
+
+        {/* Stats Row */}
+        <div className="grid grid-cols-3 gap-2 text-sm">
+          <div>
+            <p className="text-muted-foreground text-xs">Experience</p>
+            <p className="font-medium">{doctor.years_of_experience} years</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground text-xs">Consultation</p>
+            <p className="font-medium">${doctor.consultation_fee}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground text-xs">Rating</p>
+            <p className="font-medium flex items-center gap-1">
+              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+              {doctor.average_rating}
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex gap-2 pt-2">
+          {actions.view && (
+            <Button size="sm" variant="outline" onClick={actions.view} className="flex-1">
+              View
+            </Button>
+          )}
+          {actions.edit && (
+            <Button size="sm" variant="outline" onClick={actions.edit} className="flex-1">
+              Edit
+            </Button>
+          )}
+          {actions.askDelete && (
+            <Button size="sm" variant="destructive" onClick={actions.askDelete}>
+              Delete
+            </Button>
+          )}
+        </div>
+      </>
+    );
+  };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-4 sm:p-6 space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold">HMS Doctors API Test</h1>
-          <p className="text-gray-600">
-            Tenant: {user?.tenant.name || 'N/A'} | User: {user?.email}
-          </p>
-          <p className="text-sm text-gray-500">
-            Tenant ID: {user?.tenant.id}
+          <h1 className="text-2xl sm:text-3xl font-bold">Doctors</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            Manage your medical staff
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={() => mutateStatistics()} variant="outline" size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh Stats
-          </Button>
-          <Button onClick={() => mutateSpecialties()} variant="outline" size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh Specialties
-          </Button>
-          <Button onClick={() => mutateDoctors()} variant="outline" size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh Doctors
-          </Button>
-        </div>
+        <Button onClick={handleCreate} size="default" className="w-full sm:w-auto">
+          <Plus className="h-4 w-4 mr-2" />
+          Add Doctor
+        </Button>
       </div>
 
-      {/* Doctor Statistics API Response */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Doctor Statistics API Response</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {statisticsLoading && (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="w-8 h-8 animate-spin mr-2" />
-              <span>Loading statistics...</span>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <UserPlus className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm text-muted-foreground">Total Doctors</p>
+                <p className="text-xl sm:text-2xl font-bold">{totalCount}</p>
+              </div>
             </div>
-          )}
-          
-          {statisticsError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <h3 className="text-red-800 font-semibold mb-2">Error:</h3>
-              <p className="text-red-600">{statisticsError.message}</p>
-            </div>
-          )}
-          
-          {statisticsData && (
-            <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="text-green-800 font-semibold mb-2">✅ Success!</h3>
-                <p className="text-green-600">
-                  Retrieved doctor statistics
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Stethoscope className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-xs sm:text-sm text-muted-foreground">Active</p>
+                <p className="text-xl sm:text-2xl font-bold">
+                  {doctors.filter((d) => d.status === 'active').length}
                 </p>
               </div>
-              
-              <div>
-                <h3 className="font-semibold mb-2">API Endpoint:</h3>
-                <code className="bg-gray-100 px-3 py-1 rounded text-sm">
-                  GET /api/doctors/profiles/statistics/
-                </code>
-              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-              <div>
-                <h3 className="font-semibold mb-2">Raw Response:</h3>
-                <pre className="bg-gray-100 p-4 rounded-lg overflow-auto text-xs max-h-96 border border-gray-200">
-                  {JSON.stringify(statisticsData, null, 2)}
-                </pre>
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Calendar className="h-5 w-5 text-orange-600" />
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Specialties API Response */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Specialties API Response</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {specialtiesLoading && (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="w-8 h-8 animate-spin mr-2" />
-              <span>Loading specialties...</span>
-            </div>
-          )}
-          
-          {specialtiesError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <h3 className="text-red-800 font-semibold mb-2">Error:</h3>
-              <p className="text-red-600">{specialtiesError.message}</p>
-            </div>
-          )}
-          
-          {specialtiesData && (
-            <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="text-green-800 font-semibold mb-2">✅ Success!</h3>
-                <p className="text-green-600">
-                  Retrieved {specialtiesData.count} specialt{specialtiesData.count === 1 ? 'y' : 'ies'}
+              <div>
+                <p className="text-xs sm:text-sm text-muted-foreground">On Leave</p>
+                <p className="text-xl sm:text-2xl font-bold">
+                  {doctors.filter((d) => d.status === 'on_leave').length}
                 </p>
               </div>
-              
-              <div>
-                <h3 className="font-semibold mb-2">API Endpoint:</h3>
-                <code className="bg-gray-100 px-3 py-1 rounded text-sm">
-                  GET /api/doctors/specialties/?is_active=true
-                </code>
-              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-              <div>
-                <h3 className="font-semibold mb-2">Raw Response:</h3>
-                <pre className="bg-gray-100 p-4 rounded-lg overflow-auto text-xs max-h-96 border border-gray-200">
-                  {JSON.stringify(specialtiesData, null, 2)}
-                </pre>
+        <Card>
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <DollarSign className="h-5 w-5 text-purple-600" />
               </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Doctors API Response */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Doctors API Response</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {doctorsLoading && (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="w-8 h-8 animate-spin mr-2" />
-              <span>Loading doctors...</span>
-            </div>
-          )}
-          
-          {doctorsError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <h3 className="text-red-800 font-semibold mb-2">Error:</h3>
-              <p className="text-red-600">{doctorsError.message}</p>
-            </div>
-          )}
-          
-          {doctorsData && (
-            <div className="space-y-4">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <h3 className="text-green-800 font-semibold mb-2">✅ Success!</h3>
-                <p className="text-green-600">
-                  Retrieved {doctorsData.results.length} doctor(s) out of {doctorsData.count} total
+              <div>
+                <p className="text-xs sm:text-sm text-muted-foreground">Avg Fee</p>
+                <p className="text-xl sm:text-2xl font-bold">
+                  $
+                  {doctors.length > 0
+                    ? Math.round(
+                        doctors.reduce(
+                          (sum, d) => sum + parseFloat(d.consultation_fee),
+                          0
+                        ) / doctors.length
+                      )
+                    : 0}
                 </p>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-                  <div className="text-3xl font-bold text-blue-600">{doctorsData.count}</div>
-                  <div className="text-sm text-blue-800">Total Doctors</div>
-                </div>
-                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                  <div className="text-3xl font-bold text-green-600">{doctorsData.results.length}</div>
-                  <div className="text-sm text-green-800">Current Page</div>
-                </div>
-                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
-                  <div className="text-3xl font-bold text-purple-600">
-                    {doctorsData.results.filter(d => d.status === 'active').length}
-                  </div>
-                  <div className="text-sm text-purple-800">Active Doctors</div>
-                </div>
-                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                  <div className="text-3xl font-bold text-orange-600">
-                    {doctorsData.results.filter(d => d.is_available_online).length}
-                  </div>
-                  <div className="text-sm text-orange-800">Online Available</div>
-                </div>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold mb-2">API Endpoint:</h3>
-                <code className="bg-gray-100 px-3 py-1 rounded text-sm">
-                  GET /api/doctors/profiles/?page={queryParams.page}&search={queryParams.search}
-                </code>
-              </div>
-
-              {/* Pagination Controls */}
-              {doctorsData.count > 0 && (
-                <div className="flex justify-center gap-2 items-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!doctorsData.previous}
-                    onClick={() => setQueryParams(prev => ({ ...prev, page: (prev.page || 1) - 1 }))}
-                  >
-                    Previous
-                  </Button>
-                  <span className="px-4 py-2 text-sm">
-                    Page {queryParams.page || 1}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={!doctorsData.next}
-                    onClick={() => setQueryParams(prev => ({ ...prev, page: (prev.page || 1) + 1 }))}
-                  >
-                    Next
-                  </Button>
-                </div>
-              )}
-
-              <div>
-                <h3 className="font-semibold mb-2">Raw Response:</h3>
-                <pre className="bg-gray-100 p-4 rounded-lg overflow-auto text-xs max-h-96 border border-gray-200">
-                  {JSON.stringify(doctorsData, null, 2)}
-                </pre>
-              </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
-      {/* Current Query Parameters */}
+      {/* Filters & Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Current Query Parameters</CardTitle>
+          <CardTitle className="text-lg">Filters</CardTitle>
         </CardHeader>
         <CardContent>
-          <pre className="bg-gray-100 p-4 rounded-lg overflow-auto text-sm border border-gray-200">
-            {JSON.stringify(queryParams, null, 2)}
-          </pre>
-        </CardContent>
-      </Card>
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Search */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search doctors by name, email..."
+                value={searchTerm}
+                onChange={handleSearch}
+                className="pl-10"
+              />
+            </div>
 
-      {/* Authentication Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Authentication Info</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 text-sm">
-            <div className="grid grid-cols-2 gap-2">
-              <span className="font-semibold">User ID:</span>
-              <span className="font-mono text-xs">{user?.id}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <span className="font-semibold">Email:</span>
-              <span>{user?.email}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <span className="font-semibold">Tenant ID:</span>
-              <span className="font-mono text-xs">{user?.tenant.id}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <span className="font-semibold">Tenant Name:</span>
-              <span>{user?.tenant.name}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <span className="font-semibold">Tenant Slug:</span>
-              <span>{user?.tenant.slug}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <span className="font-semibold">Enabled Modules:</span>
-              <span>{user?.tenant.enabled_modules.join(', ')}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <span className="font-semibold">HMS Access:</span>
-              <span className={hasHMSAccess ? 'text-green-600 font-semibold' : 'text-red-600'}>
-                {hasHMSAccess ? '✅ Granted' : '❌ Denied'}
-              </span>
+            {/* Status Filter */}
+            <div className="flex gap-2 flex-wrap">
+              <Button
+                variant={statusFilter === '' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleStatusFilter('')}
+              >
+                All
+              </Button>
+              <Button
+                variant={statusFilter === 'active' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleStatusFilter('active')}
+              >
+                Active
+              </Button>
+              <Button
+                variant={statusFilter === 'on_leave' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleStatusFilter('on_leave')}
+              >
+                On Leave
+              </Button>
+              <Button
+                variant={statusFilter === 'inactive' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleStatusFilter('inactive')}
+              >
+                Inactive
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Doctors Table */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">Doctors List</CardTitle>
+            {doctorsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {doctorsError ? (
+            <div className="p-8 text-center">
+              <p className="text-destructive">{doctorsError.message}</p>
+            </div>
+          ) : (
+            <>
+              <DataTable
+                rows={doctors}
+                isLoading={doctorsLoading}
+                columns={columns}
+                renderMobileCard={renderMobileCard}
+                getRowId={(doctor) => doctor.id}
+                getRowLabel={(doctor) => doctor.full_name}
+                onView={handleView}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                emptyTitle="No doctors found"
+                emptySubtitle="Try adjusting your search or filters, or add a new doctor"
+              />
+
+              {/* Pagination */}
+              {!doctorsLoading && doctors.length > 0 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t">
+                  <p className="text-sm text-muted-foreground">
+                    Showing {doctors.length} of {totalCount} doctor(s)
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!hasPrevious}
+                      onClick={() => setCurrentPage((p) => p - 1)}
+                    >
+                      Previous
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={!hasNext}
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Drawer */}
+      <DoctorsFormDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        doctorId={selectedDoctorId}
+        mode={drawerMode}
+        onSuccess={handleDrawerSuccess}
+        onDelete={handleDrawerDelete}
+        onModeChange={(newMode) => setDrawerMode(newMode)}
+      />
     </div>
   );
 };
