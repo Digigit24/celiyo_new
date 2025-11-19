@@ -151,7 +151,7 @@ const menuItems: MenuItem[] = [
         id: "hms-specialties",
         label: "Specialties",
         icon: Award,
-        path: "/specialties",
+        path: "/hms/specialties",
       },
       {
         id: "hms-patients",
