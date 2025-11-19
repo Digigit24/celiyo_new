@@ -33,6 +33,10 @@ export const Doctors: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'active' | 'on_leave' | 'inactive' | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
 
+  // Debug logging
+  console.log('Doctors component rendering...');
+  console.log('HMS Access:', hasHMSAccess);
+
   // Drawer state
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedDoctorId, setSelectedDoctorId] = useState<number | null>(null);
@@ -57,6 +61,9 @@ export const Doctors: React.FC = () => {
   const totalCount = doctorsData?.count || 0;
   const hasNext = !!doctorsData?.next;
   const hasPrevious = !!doctorsData?.previous;
+
+  // Debug logging
+  console.log('Doctors data:', { doctors, totalCount, isLoading: doctorsLoading, error: doctorsError });
 
   // Handlers
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -261,6 +268,12 @@ export const Doctors: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
+      {/* DEBUG: Confirm render */}
+      <div style={{ padding: '10px', background: '#f0f0f0', border: '2px solid #ff0000' }}>
+        <p style={{ margin: 0 }}>🚨 DEBUG: Doctors component is rendering!</p>
+        <p style={{ margin: 0, fontSize: '12px' }}>Loading: {String(doctorsLoading)} | Doctors count: {doctors.length} | Total: {totalCount}</p>
+      </div>
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
