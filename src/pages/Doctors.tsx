@@ -119,7 +119,7 @@ export const Doctors: React.FC = () => {
       cell: (doctor) => (
         <div className="flex flex-col">
           <span className="font-medium">{doctor.full_name}</span>
-          <span className="text-sm text-muted-foreground">{doctor.user.email}</span>
+          <span className="text-sm text-muted-foreground">{doctor.user?.email || 'N/A'}</span>
         </div>
       ),
     },
@@ -128,14 +128,14 @@ export const Doctors: React.FC = () => {
       key: 'specialties',
       cell: (doctor) => (
         <div className="flex flex-wrap gap-1">
-          {doctor.specialties.slice(0, 2).map((specialty) => (
+          {(doctor.specialties || []).slice(0, 2).map((specialty) => (
             <Badge key={specialty.id} variant="secondary" className="text-xs">
               {specialty.name}
             </Badge>
           ))}
-          {doctor.specialties.length > 2 && (
+          {(doctor.specialties || []).length > 2 && (
             <Badge variant="outline" className="text-xs">
-              +{doctor.specialties.length - 2}
+              +{(doctor.specialties || []).length - 2}
             </Badge>
           )}
         </div>
@@ -145,7 +145,7 @@ export const Doctors: React.FC = () => {
       header: 'Experience',
       key: 'experience',
       cell: (doctor) => (
-        <span className="text-sm">{doctor.years_of_experience} years</span>
+        <span className="text-sm">{doctor.years_of_experience || 0} years</span>
       ),
     },
     {
@@ -153,9 +153,9 @@ export const Doctors: React.FC = () => {
       key: 'fee',
       cell: (doctor) => (
         <div className="flex flex-col text-sm">
-          <span className="font-medium">${doctor.consultation_fee}</span>
+          <span className="font-medium">${doctor.consultation_fee || 0}</span>
           <span className="text-xs text-muted-foreground">
-            Follow-up: ${doctor.follow_up_fee}
+            Follow-up: ${doctor.follow_up_fee || 0}
           </span>
         </div>
       ),
@@ -166,8 +166,8 @@ export const Doctors: React.FC = () => {
       cell: (doctor) => (
         <div className="flex items-center gap-1 text-sm">
           <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-          <span className="font-medium">{doctor.average_rating}</span>
-          <span className="text-muted-foreground">({doctor.total_reviews})</span>
+          <span className="font-medium">{doctor.average_rating || 0}</span>
+          <span className="text-muted-foreground">({doctor.total_reviews || 0})</span>
         </div>
       ),
     },
@@ -198,7 +198,7 @@ export const Doctors: React.FC = () => {
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-base truncate">{doctor.full_name}</h3>
-            <p className="text-sm text-muted-foreground truncate">{doctor.user.email}</p>
+            <p className="text-sm text-muted-foreground truncate">{doctor.user?.email || 'N/A'}</p>
           </div>
           <Badge
             variant="default"
@@ -218,7 +218,7 @@ export const Doctors: React.FC = () => {
 
         {/* Specialties */}
         <div className="flex flex-wrap gap-1">
-          {doctor.specialties.map((specialty) => (
+          {(doctor.specialties || []).map((specialty) => (
             <Badge key={specialty.id} variant="secondary" className="text-xs">
               {specialty.name}
             </Badge>
@@ -229,17 +229,17 @@ export const Doctors: React.FC = () => {
         <div className="grid grid-cols-3 gap-2 text-sm">
           <div>
             <p className="text-muted-foreground text-xs">Experience</p>
-            <p className="font-medium">{doctor.years_of_experience} years</p>
+            <p className="font-medium">{doctor.years_of_experience || 0} years</p>
           </div>
           <div>
             <p className="text-muted-foreground text-xs">Consultation</p>
-            <p className="font-medium">${doctor.consultation_fee}</p>
+            <p className="font-medium">${doctor.consultation_fee || 0}</p>
           </div>
           <div>
             <p className="text-muted-foreground text-xs">Rating</p>
             <p className="font-medium flex items-center gap-1">
               <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-              {doctor.average_rating}
+              {doctor.average_rating || 0}
             </p>
           </div>
         </div>

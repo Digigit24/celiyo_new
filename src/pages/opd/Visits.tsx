@@ -21,7 +21,7 @@ export const OPDVisits: React.FC = () => {
         <h2>VISIT STATISTICS API</h2>
         <p>Endpoint: GET /opd/visits/statistics/</p>
         {statisticsLoading && <p>Loading statistics...</p>}
-        {statisticsError && (
+        {statisticsError && !statistics && (
           <div>
             <p style={{ color: 'red' }}>Error: {statisticsError.message || 'Failed to fetch statistics'}</p>
             <pre style={{ background: '#ffe6e6', padding: '10px', overflow: 'auto', color: 'red' }}>
@@ -46,7 +46,7 @@ export const OPDVisits: React.FC = () => {
         <h2>QUEUE STATUS API</h2>
         <p>Endpoint: GET /opd/visits/queue/</p>
         {queueLoading && <p>Loading queue...</p>}
-        {queueError && (
+        {queueError && !queue && (
           <div>
             <p style={{ color: 'red' }}>Error: {queueError.message || 'Failed to fetch queue'}</p>
             <pre style={{ background: '#ffe6e6', padding: '10px', overflow: 'auto', color: 'red' }}>
@@ -73,7 +73,7 @@ export const OPDVisits: React.FC = () => {
         <h2>TODAY'S VISITS API</h2>
         <p>Endpoint: GET /opd/visits/today/</p>
         {todayLoading && <p>Loading today's visits...</p>}
-        {todayError && (
+        {todayError && !todayVisits && (
           <div>
             <p style={{ color: 'red' }}>Error: {todayError.message || "Failed to fetch today's visits"}</p>
             <pre style={{ background: '#ffe6e6', padding: '10px', overflow: 'auto', color: 'red' }}>
@@ -100,7 +100,7 @@ export const OPDVisits: React.FC = () => {
         <h2>ALL VISITS API</h2>
         <p>Endpoint: GET /opd/visits/</p>
         {visitsLoading && <p>Loading visits...</p>}
-        {visitsError && (
+        {visitsError && !visits && (
           <div>
             <p style={{ color: 'red' }}>Error: {visitsError.message || 'Failed to fetch visits'}</p>
             <pre style={{ background: '#ffe6e6', padding: '10px', overflow: 'auto', color: 'red' }}>
