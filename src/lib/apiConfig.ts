@@ -70,6 +70,20 @@ export const API_CONFIG = {
       CANCEL: '/appointments/:id/cancel/',
       COMPLETE: '/appointments/:id/complete/',
       RESCHEDULE: '/appointments/:id/reschedule/',
+    },
+    OPD: {
+      VISITS: {
+        LIST: '/opd/visits/',
+        DETAIL: '/opd/visits/:id/',
+        CREATE: '/opd/visits/',
+        UPDATE: '/opd/visits/:id/',
+        DELETE: '/opd/visits/:id/',
+        STATISTICS: '/opd/visits/statistics/',
+        TODAY: '/opd/visits/today/',
+        QUEUE: '/opd/visits/queue/',
+        CALL_NEXT: '/opd/visits/call-next/',
+        COMPLETE: '/opd/visits/:id/complete/',
+      }
     }
   },
 
