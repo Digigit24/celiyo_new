@@ -121,6 +121,17 @@ export const API_CONFIG = {
         CREATE: '/opd/procedure-packages/',
         UPDATE: '/opd/procedure-packages/:id/',
         DELETE: '/opd/procedure-packages/:id/',
+      },
+      PROCEDURE_BILLS: {
+        LIST: '/opd/procedure-bills/',
+        DETAIL: '/opd/procedure-bills/:id/',
+        CREATE: '/opd/procedure-bills/',
+        UPDATE: '/opd/procedure-bills/:id/',
+        DELETE: '/opd/procedure-bills/:id/',
+        RECORD_PAYMENT: '/opd/procedure-bills/:id/record-payment/',
+        PRINT: '/opd/procedure-bills/:id/print/',
+        ITEMS_LIST: '/opd/procedure-bill-items/',
+        ITEM_DETAIL: '/opd/procedure-bill-items/:id/',
       }
     }
   },
