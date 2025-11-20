@@ -9,6 +9,7 @@ import { DataTable, DataTableColumn } from '@/components/DataTable';
 import { Loader2, Plus, Search, Briefcase, CheckCircle, XCircle } from 'lucide-react';
 import { ProcedureMaster, ProcedureMasterListParams, ProcedureCategory } from '@/types/procedureMaster.types';
 import { toast } from 'sonner';
+import { ProcedureMasterFormDrawer } from '@/components/ProcedureMasterFormDrawer';
 
 export const ProcedureMasters: React.FC = () => {
   const { useProcedureMasters, deleteProcedure } = useProcedureMaster();
@@ -17,6 +18,9 @@ export const ProcedureMasters: React.FC = () => {
   const [categoryFilter, setCategoryFilter] = useState<ProcedureCategory | ''>('');
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedProcedureId, setSelectedProcedureId] = useState<number | null>(null);
 
   const queryParams: ProcedureMasterListParams = {
     page: currentPage,
@@ -121,7 +125,7 @@ export const ProcedureMasters: React.FC = () => {
             Manage procedure catalog and pricing
           </p>
         </div>
-        <Button onClick={() => toast.info('Create procedure feature coming soon')} size="default" className="w-full sm:w-auto">
+        <Button onClick={() => { setDrawerMode('create'); setSelectedProcedureId(null); setDrawerOpen(true); }} size="default" className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           New Procedure
         </Button>
@@ -254,8 +258,8 @@ export const ProcedureMasters: React.FC = () => {
                 columns={columns}
                 getRowId={(procedure) => procedure.id}
                 getRowLabel={(procedure) => procedure.name}
-                onView={(procedure) => toast.info('View procedure details coming soon')}
-                onEdit={(procedure) => toast.info('Edit feature coming soon')}
+                onView={(procedure) => { setDrawerMode('view'); setSelectedProcedureId(procedure.id); setDrawerOpen(true); }}
+                onEdit={(procedure) => { setDrawerMode('edit'); setSelectedProcedureId(procedure.id); setDrawerOpen(true); }}
                 onDelete={handleDelete}
                 emptyTitle="No procedures found"
                 emptySubtitle="Try adjusting your filters"
@@ -280,6 +284,13 @@ export const ProcedureMasters: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      <ProcedureMasterFormDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        mode={drawerMode}
+        procedureId={selectedProcedureId}
+        onSuccess={mutate}
+      />
     </div>
   );
 };

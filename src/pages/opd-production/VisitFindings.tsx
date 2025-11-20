@@ -10,6 +10,7 @@ import { Loader2, Plus, Search, Activity, Heart, Thermometer } from 'lucide-reac
 import { VisitFinding, VisitFindingListParams, FindingType } from '@/types/visitFinding.types';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { VisitFindingFormDrawer } from '@/components/VisitFindingFormDrawer';
 
 export const VisitFindings: React.FC = () => {
   const { useVisitFindings, deleteFinding } = useVisitFinding();
@@ -17,6 +18,9 @@ export const VisitFindings: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [findingTypeFilter, setFindingTypeFilter] = useState<FindingType | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedFindingId, setSelectedFindingId] = useState<number | null>(null);
 
   const queryParams: VisitFindingListParams = {
     page: currentPage,
@@ -126,7 +130,7 @@ export const VisitFindings: React.FC = () => {
             Manage patient vitals and examination findings
           </p>
         </div>
-        <Button onClick={() => toast.info('Create finding feature coming soon')} size="default" className="w-full sm:w-auto">
+        <Button onClick={() => { setDrawerMode('create'); setSelectedFindingId(null); setDrawerOpen(true); }} size="default" className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           New Finding
         </Button>
@@ -245,8 +249,8 @@ export const VisitFindings: React.FC = () => {
                 columns={columns}
                 getRowId={(finding) => finding.id}
                 getRowLabel={(finding) => finding.visit_number || `Visit #${finding.visit}`}
-                onView={(finding) => toast.info('View finding details coming soon')}
-                onEdit={(finding) => toast.info('Edit feature coming soon')}
+                onView={(finding) => { setDrawerMode('view'); setSelectedFindingId(finding.id); setDrawerOpen(true); }}
+                onEdit={(finding) => { setDrawerMode('edit'); setSelectedFindingId(finding.id); setDrawerOpen(true); }}
                 onDelete={handleDelete}
                 emptyTitle="No visit findings found"
                 emptySubtitle="Try adjusting your filters"
@@ -271,6 +275,13 @@ export const VisitFindings: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      <VisitFindingFormDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        mode={drawerMode}
+        findingId={selectedFindingId}
+        onSuccess={mutate}
+      />
     </div>
   );
 };

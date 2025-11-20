@@ -9,6 +9,7 @@ import { DataTable, DataTableColumn } from '@/components/DataTable';
 import { Loader2, Plus, Search, Package, TrendingDown, CheckCircle } from 'lucide-react';
 import { ProcedurePackage, ProcedurePackageListParams } from '@/types/procedurePackage.types';
 import { toast } from 'sonner';
+import { ProcedurePackageFormDrawer } from '@/components/ProcedurePackageFormDrawer';
 
 export const ProcedurePackages: React.FC = () => {
   const { useProcedurePackages, deletePackage } = useProcedurePackage();
@@ -16,6 +17,9 @@ export const ProcedurePackages: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState<boolean | undefined>(undefined);
   const [currentPage, setCurrentPage] = useState(1);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedPackageId, setSelectedPackageId] = useState<number | null>(null);
 
   const queryParams: ProcedurePackageListParams = {
     page: currentPage,
@@ -119,7 +123,7 @@ export const ProcedurePackages: React.FC = () => {
             Manage procedure bundles and discounts
           </p>
         </div>
-        <Button onClick={() => toast.info('Create package feature coming soon')} size="default" className="w-full sm:w-auto">
+        <Button onClick={() => { setDrawerMode('create'); setSelectedPackageId(null); setDrawerOpen(true); }} size="default" className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           New Package
         </Button>
@@ -254,8 +258,8 @@ export const ProcedurePackages: React.FC = () => {
                 columns={columns}
                 getRowId={(pkg) => pkg.id}
                 getRowLabel={(pkg) => pkg.name}
-                onView={(pkg) => toast.info('View package details coming soon')}
-                onEdit={(pkg) => toast.info('Edit feature coming soon')}
+                onView={(pkg) => { setDrawerMode('view'); setSelectedPackageId(pkg.id); setDrawerOpen(true); }}
+                onEdit={(pkg) => { setDrawerMode('edit'); setSelectedPackageId(pkg.id); setDrawerOpen(true); }}
                 onDelete={handleDelete}
                 emptyTitle="No packages found"
                 emptySubtitle="Try adjusting your filters"
@@ -280,6 +284,13 @@ export const ProcedurePackages: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      <ProcedurePackageFormDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        mode={drawerMode}
+        packageId={selectedPackageId}
+        onSuccess={mutate}
+      />
     </div>
   );
 };

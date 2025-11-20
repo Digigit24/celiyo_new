@@ -10,6 +10,7 @@ import { Loader2, Plus, Search, DollarSign, FileText, CreditCard, AlertCircle } 
 import { OPDBill, OPDBillListParams } from '@/types/opdBill.types';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { OPDBillFormDrawer } from '@/components/OPDBillFormDrawer';
 
 export const OPDBills: React.FC = () => {
   const { useOPDBills, deleteBill, useOPDBillStatistics, printBill, recordBillPayment } = useOPDBill();
@@ -17,6 +18,9 @@ export const OPDBills: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<'paid' | 'unpaid' | 'partial' | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedBillId, setSelectedBillId] = useState<number | null>(null);
 
   const queryParams: OPDBillListParams = {
     page: currentPage,
@@ -131,7 +135,7 @@ export const OPDBills: React.FC = () => {
             Manage billing and payments
           </p>
         </div>
-        <Button onClick={() => toast.info('Create bill feature coming soon')} size="default" className="w-full sm:w-auto">
+        <Button onClick={() => { setDrawerMode('create'); setSelectedBillId(null); setDrawerOpen(true); }} size="default" className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           New Bill
         </Button>
@@ -250,7 +254,7 @@ export const OPDBills: React.FC = () => {
                 getRowId={(bill) => bill.id}
                 getRowLabel={(bill) => bill.bill_number}
                 onView={(bill) => handlePrint(bill)}
-                onEdit={(bill) => toast.info('Edit feature coming soon')}
+                onEdit={(bill) => { setDrawerMode('edit'); setSelectedBillId(bill.id); setDrawerOpen(true); }}
                 onDelete={handleDelete}
                 emptyTitle="No bills found"
                 emptySubtitle="Try adjusting your filters"
@@ -275,6 +279,13 @@ export const OPDBills: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      <OPDBillFormDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        mode={drawerMode}
+        billId={selectedBillId}
+        onSuccess={mutate}
+      />
     </div>
   );
 };

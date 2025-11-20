@@ -9,12 +9,16 @@ import { Loader2, Plus, Search, FileText, ClipboardList } from 'lucide-react';
 import { ClinicalNote, ClinicalNoteListParams } from '@/types/clinicalNote.types';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { ClinicalNoteFormDrawer } from '@/components/ClinicalNoteFormDrawer';
 
 export const ClinicalNotes: React.FC = () => {
   const { useClinicalNotes, deleteNote } = useClinicalNote();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
 
   const queryParams: ClinicalNoteListParams = {
     page: currentPage,
@@ -113,7 +117,7 @@ export const ClinicalNotes: React.FC = () => {
             Manage clinical documentation
           </p>
         </div>
-        <Button onClick={() => toast.info('Create note feature coming soon')} size="default" className="w-full sm:w-auto">
+        <Button onClick={() => { setDrawerMode('create'); setSelectedNoteId(null); setDrawerOpen(true); }} size="default" className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           New Note
         </Button>
@@ -202,8 +206,8 @@ export const ClinicalNotes: React.FC = () => {
                 columns={columns}
                 getRowId={(note) => note.id}
                 getRowLabel={(note) => note.visit_number || `Visit #${note.visit}`}
-                onView={(note) => toast.info('View note details coming soon')}
-                onEdit={(note) => toast.info('Edit feature coming soon')}
+                onView={(note) => { setDrawerMode('view'); setSelectedNoteId(note.id); setDrawerOpen(true); }}
+                onEdit={(note) => { setDrawerMode('edit'); setSelectedNoteId(note.id); setDrawerOpen(true); }}
                 onDelete={handleDelete}
                 emptyTitle="No clinical notes found"
                 emptySubtitle="Try adjusting your filters"
@@ -228,6 +232,14 @@ export const ClinicalNotes: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      <ClinicalNoteFormDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        mode={drawerMode}
+        noteId={selectedNoteId}
+        onSuccess={mutate}
+      />
     </div>
   );
 };

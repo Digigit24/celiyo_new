@@ -10,6 +10,7 @@ import { Loader2, Plus, Search, DollarSign, FileText, CreditCard, AlertCircle } 
 import { ProcedureBill, ProcedureBillListParams } from '@/types/procedureBill.types';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { ProcedureBillFormDrawer } from '@/components/ProcedureBillFormDrawer';
 
 export const ProcedureBills: React.FC = () => {
   const { useProcedureBills, deleteBill, printBill } = useProcedureBill();
@@ -17,6 +18,9 @@ export const ProcedureBills: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [paymentStatusFilter, setPaymentStatusFilter] = useState<'paid' | 'unpaid' | 'partial' | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<'create' | 'edit' | 'view'>('create');
+  const [selectedBillId, setSelectedBillId] = useState<number | null>(null);
 
   const queryParams: ProcedureBillListParams = {
     page: currentPage,
@@ -145,7 +149,7 @@ export const ProcedureBills: React.FC = () => {
             Manage procedure billing and payments
           </p>
         </div>
-        <Button onClick={() => toast.info('Create bill feature coming soon')} size="default" className="w-full sm:w-auto">
+        <Button onClick={() => { setDrawerMode('create'); setSelectedBillId(null); setDrawerOpen(true); }} size="default" className="w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           New Bill
         </Button>
@@ -270,7 +274,7 @@ export const ProcedureBills: React.FC = () => {
                 getRowId={(bill) => bill.id}
                 getRowLabel={(bill) => bill.bill_number}
                 onView={(bill) => handlePrint(bill)}
-                onEdit={(bill) => toast.info('Edit feature coming soon')}
+                onEdit={(bill) => { setDrawerMode('edit'); setSelectedBillId(bill.id); setDrawerOpen(true); }}
                 onDelete={handleDelete}
                 emptyTitle="No bills found"
                 emptySubtitle="Try adjusting your filters"
@@ -295,6 +299,13 @@ export const ProcedureBills: React.FC = () => {
           )}
         </CardContent>
       </Card>
+      <ProcedureBillFormDrawer
+        isOpen={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        mode={drawerMode}
+        billId={selectedBillId}
+        onSuccess={mutate}
+      />
     </div>
   );
 };
