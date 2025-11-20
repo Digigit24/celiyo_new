@@ -15,7 +15,6 @@ import { authService } from "@/services/authService";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Inbox from "./pages/Inbox";
-import OPD from "./pages/OPD";
 import NotFound from "./pages/NotFound";
 import { CRMLeads } from "./pages/CRMLeads";
 import { CRMActivities } from "./pages/CRMActivities"; // ⬅️ ADDED
@@ -32,7 +31,7 @@ import Groups from "./pages/Groups";
 import Templates from "./pages/Templates";
 import Campaigns from "./pages/Campaigns";
 import { useWhatsappSocket } from "@/hooks/whatsapp/useWhatsappSocket";
-import OPDVisits from "./pages/opd/Visits";
+import OPDVisits from "./pages/OPDVisits";  // ✅ Updated to new production page
 import OPDBills from "./pages/opd/Bills";
 import ClinicalNotes from "./pages/opd/ClinicalNotes";
 import VisitFindings from "./pages/opd/Findings";
@@ -76,7 +75,7 @@ const AppLayout = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/inbox" element={<Inbox />} />
-            <Route path="/opd" element={<OPD />} />
+            <Route path="/opd" element={<OPDVisits />} />  {/* ✅ Updated to show new OPD Visits page */}
             
             {/* CRM Routes */}
             <Route path="/crm" element={<CRMLeads />} />
