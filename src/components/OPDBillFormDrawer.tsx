@@ -1,7 +1,7 @@
 // src/components/OPDBillFormDrawer.tsx
 import React from 'react';
 import { SideDrawer } from '@/components/SideDrawer';
-import { } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface OPDBillFormDrawerProps {
