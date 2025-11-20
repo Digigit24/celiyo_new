@@ -54,7 +54,7 @@ export const AppointmentsTest: React.FC = () => {
         {upcoming && (
           <div>
             <p style={{ color: 'green' }}>
-              Success! Found {upcoming.count} upcoming appointment(s), showing {upcoming.results.length} on this page
+              Success! Found {upcoming.count || 0} upcoming appointment(s), showing {upcoming.results?.length || 0} on this page
             </p>
             <pre style={{ background: '#f5f5f5', padding: '10px', overflow: 'auto' }}>
               {JSON.stringify(upcoming, null, 2)}
@@ -81,7 +81,7 @@ export const AppointmentsTest: React.FC = () => {
         {appointments && (
           <div>
             <p style={{ color: 'green' }}>
-              Success! Found {appointments.count} appointment(s), showing {appointments.results.length} on this page
+              Success! Found {appointments.count || 0} appointment(s), showing {appointments.results?.length || 0} on this page
             </p>
             <pre style={{ background: '#f5f5f5', padding: '10px', overflow: 'auto' }}>
               {JSON.stringify(appointments, null, 2)}
