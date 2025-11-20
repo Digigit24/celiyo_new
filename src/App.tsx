@@ -32,12 +32,12 @@ import Templates from "./pages/Templates";
 import Campaigns from "./pages/Campaigns";
 import { useWhatsappSocket } from "@/hooks/whatsapp/useWhatsappSocket";
 import OPDVisits from "./pages/OPDVisits";  // ✅ Updated to new production page
-import OPDBills from "./pages/opd/Bills";
-import ClinicalNotes from "./pages/opd/ClinicalNotes";
-import VisitFindings from "./pages/opd/Findings";
-import ProcedureMasters from "./pages/opd/Procedures";
-import ProcedurePackages from "./pages/opd/Packages";
-import ProcedureBills from "./pages/opd/ProcedureBills";
+import OPDBills from "./pages/opd-production/OPDBills";
+import ClinicalNotes from "./pages/opd-production/ClinicalNotes";
+import VisitFindings from "./pages/opd-production/VisitFindings";
+import ProcedureMasters from "./pages/opd-production/ProcedureMasters";
+import ProcedurePackages from "./pages/opd-production/ProcedurePackages";
+import ProcedureBills from "./pages/opd-production/ProcedureBills";
 
 const queryClient = new QueryClient();
 
