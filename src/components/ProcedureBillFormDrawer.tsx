@@ -27,11 +27,10 @@ export const ProcedureBillFormDrawer: React.FC<ProcedureBillFormDrawerProps> = (
 
   return (
     <SideDrawer
-      isOpen={isOpen}
-      onClose={onClose}
+      open={isOpen}
+      onOpenChange={(open) => { if (!open) onClose(); }}
       title={getTitle()}
-      subtitle="Multi-item procedure billing"
-      icon={FileText}
+      description="Multi-item procedure billing"
     >
       <div className="space-y-4">
         <div className="bg-muted p-6 rounded-lg text-center">

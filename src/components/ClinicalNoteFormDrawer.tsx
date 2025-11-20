@@ -4,7 +4,7 @@ import { SideDrawer, DrawerHeaderAction } from '@/components/SideDrawer';
 import { ClinicalNoteBasicInfo } from '@/components/clinical-note-drawer/ClinicalNoteBasicInfo';
 import { useClinicalNote } from '@/hooks/useClinicalNote';
 import { ClinicalNote, ClinicalNoteCreateData, ClinicalNoteUpdateData } from '@/types/clinicalNote.types';
-import { FileText, Pencil, Trash2, Printer } from 'lucide-react';
+import { Pencil, Trash2, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ClinicalNoteFormDrawerProps {
@@ -116,11 +116,10 @@ export const ClinicalNoteFormDrawer: React.FC<ClinicalNoteFormDrawerProps> = ({
 
   return (
     <SideDrawer
-      isOpen={isOpen}
-      onClose={onClose}
+      open={isOpen}
+      onOpenChange={(open) => { if (!open) onClose(); }}
       title={getTitle()}
-      subtitle={note ? `Visit: ${note.visit_number || `#${note.visit}`}` : undefined}
-      icon={FileText}
+      description={note ? `Visit: ${note.visit_number || `#${note.visit}`}` : undefined}
       headerActions={headerActions}
     >
       <ClinicalNoteBasicInfo

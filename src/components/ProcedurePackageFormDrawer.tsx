@@ -4,7 +4,7 @@ import { SideDrawer, DrawerHeaderAction } from '@/components/SideDrawer';
 import { ProcedurePackageBasicInfo } from '@/components/procedure-package-drawer/ProcedurePackageBasicInfo';
 import { useProcedurePackage } from '@/hooks/useProcedurePackage';
 import { ProcedurePackage, ProcedurePackageCreateData, ProcedurePackageUpdateData } from '@/types/procedurePackage.types';
-import { Package, Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ProcedurePackageFormDrawerProps {
@@ -111,11 +111,10 @@ export const ProcedurePackageFormDrawer: React.FC<ProcedurePackageFormDrawerProp
 
   return (
     <SideDrawer
-      isOpen={isOpen}
-      onClose={onClose}
+      open={isOpen}
+      onOpenChange={(open) => { if (!open) onClose(); }}
       title={getTitle()}
-      subtitle={pkg ? `${pkg.code} - ${pkg.procedures.length} procedures` : undefined}
-      icon={Package}
+      description={pkg ? `${pkg.code} - ${pkg.procedures.length} procedures` : undefined}
       headerActions={headerActions}
     >
       <ProcedurePackageBasicInfo

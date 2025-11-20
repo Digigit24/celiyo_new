@@ -4,7 +4,7 @@ import { SideDrawer, DrawerHeaderAction } from '@/components/SideDrawer';
 import { VisitFindingBasicInfo } from '@/components/visit-finding-drawer/VisitFindingBasicInfo';
 import { useVisitFinding } from '@/hooks/useVisitFinding';
 import { VisitFinding, VisitFindingCreateData, VisitFindingUpdateData } from '@/types/visitFinding.types';
-import { Activity, Pencil, Trash2, Printer } from 'lucide-react';
+import { Pencil, Trash2, Printer } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface VisitFindingFormDrawerProps {
@@ -116,11 +116,10 @@ export const VisitFindingFormDrawer: React.FC<VisitFindingFormDrawerProps> = ({
 
   return (
     <SideDrawer
-      isOpen={isOpen}
-      onClose={onClose}
+      open={isOpen}
+      onOpenChange={(open) => { if (!open) onClose(); }}
       title={getTitle()}
-      subtitle={finding ? `Visit: ${finding.visit_number || `#${finding.visit}`} - ${finding.finding_type.toUpperCase()}` : undefined}
-      icon={Activity}
+      description={finding ? `Visit: ${finding.visit_number || `#${finding.visit}`} - ${finding.finding_type.toUpperCase()}` : undefined}
       headerActions={headerActions}
     >
       <VisitFindingBasicInfo

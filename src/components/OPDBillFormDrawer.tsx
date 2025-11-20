@@ -1,7 +1,7 @@
 // src/components/OPDBillFormDrawer.tsx
 import React from 'react';
 import { SideDrawer } from '@/components/SideDrawer';
-import { DollarSign } from 'lucide-react';
+import { } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface OPDBillFormDrawerProps {
@@ -27,11 +27,10 @@ export const OPDBillFormDrawer: React.FC<OPDBillFormDrawerProps> = ({
 
   return (
     <SideDrawer
-      isOpen={isOpen}
-      onClose={onClose}
+      open={isOpen}
+      onOpenChange={(open) => { if (!open) onClose(); }}
       title={getTitle()}
-      subtitle="OPD billing and payment tracking"
-      icon={DollarSign}
+      description="OPD billing and payment tracking"
     >
       <div className="space-y-4">
         <div className="bg-muted p-6 rounded-lg text-center">

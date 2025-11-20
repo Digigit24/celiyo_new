@@ -4,7 +4,7 @@ import { SideDrawer, DrawerHeaderAction } from '@/components/SideDrawer';
 import { ProcedureMasterBasicInfo } from '@/components/procedure-master-drawer/ProcedureMasterBasicInfo';
 import { useProcedureMaster } from '@/hooks/useProcedureMaster';
 import { ProcedureMaster, ProcedureMasterCreateData, ProcedureMasterUpdateData } from '@/types/procedureMaster.types';
-import { Briefcase, Pencil, Trash2 } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ProcedureMasterFormDrawerProps {
@@ -111,11 +111,10 @@ export const ProcedureMasterFormDrawer: React.FC<ProcedureMasterFormDrawerProps>
 
   return (
     <SideDrawer
-      isOpen={isOpen}
-      onClose={onClose}
+      open={isOpen}
+      onOpenChange={(open) => { if (!open) onClose(); }}
       title={getTitle()}
-      subtitle={procedure ? `${procedure.code} - ${procedure.category.replace('_', ' ').toUpperCase()}` : undefined}
-      icon={Briefcase}
+      description={procedure ? `${procedure.code} - ${procedure.category.replace('_', ' ').toUpperCase()}` : undefined}
       headerActions={headerActions}
     >
       <ProcedureMasterBasicInfo
