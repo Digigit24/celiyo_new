@@ -1,5 +1,5 @@
 // src/components/specialty-drawer/SpecialtyBasicInfo.tsx
-import { forwardRef, useImperativeHandle } from 'react';
+import { forwardRef, useImperativeHandle, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -69,12 +69,27 @@ const SpecialtyBasicInfo = forwardRef<SpecialtyBasicInfoHandle, SpecialtyBasicIn
       formState: { errors },
       watch,
       setValue,
+      reset,
     } = useForm<any>({
       resolver: zodResolver(schema),
       defaultValues,
     });
 
     const watchedIsActive = watch('is_active');
+
+    // Reset form when specialty data changes (for edit/view modes)
+    useEffect(() => {
+      if (!isCreateMode && specialty) {
+        const formValues = {
+          name: specialty.name || '',
+          code: specialty.code || '',
+          description: specialty.description || '',
+          department: specialty.department || '',
+          is_active: specialty.is_active ?? true,
+        };
+        reset(formValues);
+      }
+    }, [specialty, isCreateMode, reset]);
 
     // Expose form validation and data collection to parent
     useImperativeHandle(ref, () => ({

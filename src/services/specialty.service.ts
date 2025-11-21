@@ -32,10 +32,11 @@ class SpecialtyService {
   // Get single specialty by ID
   async getSpecialty(id: number): Promise<Specialty> {
     try {
-      const response = await hmsClient.get<Specialty>(
+      const response = await hmsClient.get<any>(
         API_CONFIG.HMS.DOCTORS.SPECIALTY_DETAIL.replace(':id', id.toString())
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
@@ -47,11 +48,12 @@ class SpecialtyService {
   // Create new specialty
   async createSpecialty(specialtyData: SpecialtyCreateData): Promise<Specialty> {
     try {
-      const response = await hmsClient.post<Specialty>(
+      const response = await hmsClient.post<any>(
         API_CONFIG.HMS.DOCTORS.SPECIALTY_CREATE,
         specialtyData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
@@ -63,11 +65,12 @@ class SpecialtyService {
   // Update specialty (full update)
   async updateSpecialty(id: number, specialtyData: SpecialtyUpdateData): Promise<Specialty> {
     try {
-      const response = await hmsClient.put<Specialty>(
+      const response = await hmsClient.put<any>(
         API_CONFIG.HMS.DOCTORS.SPECIALTY_UPDATE.replace(':id', id.toString()),
         specialtyData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
@@ -79,11 +82,12 @@ class SpecialtyService {
   // Partially update specialty (patch)
   async patchSpecialty(id: number, specialtyData: Partial<SpecialtyUpdateData>): Promise<Specialty> {
     try {
-      const response = await hmsClient.patch<Specialty>(
+      const response = await hmsClient.patch<any>(
         API_CONFIG.HMS.DOCTORS.SPECIALTY_UPDATE.replace(':id', id.toString()),
         specialtyData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
