@@ -165,13 +165,13 @@ export const OPDVisits: React.FC = () => {
       cell: (visit) => (
         <div className="flex flex-col gap-1">
           <Badge variant="secondary" className="text-xs w-fit">
-            {visit.visit_type.replace('_', ' ').toUpperCase()}
+            {visit.visit_type ? visit.visit_type.replace('_', ' ').toUpperCase() : 'N/A'}
           </Badge>
           <Badge
             variant={visit.priority === 'urgent' || visit.priority === 'high' ? 'destructive' : 'outline'}
             className={`text-xs w-fit ${visit.priority === 'high' ? 'bg-orange-600 text-white' : ''}`}
           >
-            {visit.priority.toUpperCase()}
+            {visit.priority ? visit.priority.toUpperCase() : 'NORMAL'}
           </Badge>
         </div>
       ),
@@ -187,7 +187,7 @@ export const OPDVisits: React.FC = () => {
           cancelled: { label: 'Cancelled', className: 'bg-red-600' },
           no_show: { label: 'No Show', className: 'bg-gray-600' },
         };
-        const config = statusConfig[visit.status];
+        const config = visit.status ? statusConfig[visit.status] : { label: 'Unknown', className: 'bg-gray-600' };
         return (
           <Badge variant="default" className={config.className}>
             {config.label}
@@ -200,12 +200,12 @@ export const OPDVisits: React.FC = () => {
       key: 'payment',
       cell: (visit) => (
         <div className="flex flex-col text-sm">
-          <span className="font-medium">₹{visit.total_amount}</span>
+          <span className="font-medium">₹{visit.total_amount || '0'}</span>
           <Badge
             variant={visit.payment_status === 'paid' ? 'default' : 'secondary'}
             className={`text-xs ${visit.payment_status === 'paid' ? 'bg-green-600' : ''}`}
           >
-            {visit.payment_status.replace('_', ' ').toUpperCase()}
+            {visit.payment_status ? visit.payment_status.replace('_', ' ').toUpperCase() : 'PENDING'}
           </Badge>
         </div>
       ),
@@ -241,7 +241,7 @@ export const OPDVisits: React.FC = () => {
                 : 'bg-gray-600'
             }
           >
-            {visit.status.replace('_', ' ').toUpperCase()}
+            {visit.status ? visit.status.replace('_', ' ').toUpperCase() : 'UNKNOWN'}
           </Badge>
         </div>
 
@@ -249,30 +249,30 @@ export const OPDVisits: React.FC = () => {
         <div className="space-y-1">
           <div className="text-sm">
             <span className="text-muted-foreground">Patient: </span>
-            <span className="font-medium">{visit.patient?.full_name}</span>
+            <span className="font-medium">{visit.patient?.full_name || 'N/A'}</span>
           </div>
           <div className="text-sm">
             <span className="text-muted-foreground">Doctor: </span>
-            <span className="font-medium">{visit.doctor?.full_name}</span>
+            <span className="font-medium">{visit.doctor?.full_name || 'N/A'}</span>
           </div>
         </div>
 
         {/* Details Row */}
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary" className="text-xs">
-            {visit.visit_type.replace('_', ' ').toUpperCase()}
+            {visit.visit_type ? visit.visit_type.replace('_', ' ').toUpperCase() : 'N/A'}
           </Badge>
           <Badge
             variant={visit.priority === 'urgent' || visit.priority === 'high' ? 'destructive' : 'outline'}
             className={`text-xs ${visit.priority === 'high' ? 'bg-orange-600 text-white' : ''}`}
           >
-            {visit.priority.toUpperCase()}
+            {visit.priority ? visit.priority.toUpperCase() : 'NORMAL'}
           </Badge>
           <Badge
             variant={visit.payment_status === 'paid' ? 'default' : 'secondary'}
             className={`text-xs ${visit.payment_status === 'paid' ? 'bg-green-600' : ''}`}
           >
-            ₹{visit.total_amount} • {visit.payment_status.replace('_', ' ').toUpperCase()}
+            ₹{visit.total_amount || '0'} • {visit.payment_status ? visit.payment_status.replace('_', ' ').toUpperCase() : 'PENDING'}
           </Badge>
         </div>
 
