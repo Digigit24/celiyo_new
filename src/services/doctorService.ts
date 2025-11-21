@@ -50,13 +50,13 @@ class DoctorService {
   async createDoctor(doctorData: DoctorCreateData): Promise<Doctor> {
     try {
       const response = await hmsClient.post<Doctor>(
-        API_CONFIG.HMS.DOCTORS.PROFILE_CREATE,
+        API_CONFIG.HMS.DOCTORS.PROFILE_CREATE_WITH_USER,
         doctorData
       );
       return response.data;
     } catch (error: any) {
-      const message = error.response?.data?.error || 
-                     error.response?.data?.message || 
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
                      'Failed to create doctor';
       throw new Error(message);
     }

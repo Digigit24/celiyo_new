@@ -65,8 +65,8 @@ export interface DoctorListParams {
 }
 
 export interface DoctorCreateData {
+  create_user: boolean;
   email: string;
-  username: string;
   password: string;
   password_confirm: string;
   first_name: string;

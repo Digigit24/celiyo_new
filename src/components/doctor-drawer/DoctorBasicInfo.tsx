@@ -26,7 +26,6 @@ import type { Doctor, DoctorCreateData, DoctorUpdateData, Specialty } from '@/ty
 const createDoctorSchema = z.object({
   // User fields
   email: z.string().email('Invalid email address'),
-  username: z.string().min(3, 'Username must be at least 3 characters'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   password_confirm: z.string().min(8, 'Password confirmation required'),
   first_name: z.string().min(1, 'First name is required'),
@@ -82,7 +81,6 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
     const defaultValues = isCreateMode
       ? {
           email: '',
-          username: '',
           password: '',
           password_confirm: '',
           first_name: '',
@@ -131,8 +129,8 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
             (data) => {
               if (isCreateMode) {
                 const payload: DoctorCreateData = {
+                  create_user: true,
                   email: data.email,
-                  username: data.username,
                   password: data.password,
                   password_confirm: data.password_confirm,
                   first_name: data.first_name,
@@ -201,20 +199,6 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
                 />
                 {errors.email && (
                   <p className="text-sm text-destructive">{errors.email.message as string}</p>
-                )}
-              </div>
-
-              {/* Username */}
-              <div className="space-y-2">
-                <Label htmlFor="username">Username *</Label>
-                <Input
-                  id="username"
-                  {...register('username')}
-                  placeholder="doctor.smith"
-                  className={errors.username ? 'border-destructive' : ''}
-                />
-                {errors.username && (
-                  <p className="text-sm text-destructive">{errors.username.message as string}</p>
                 )}
               </div>
 

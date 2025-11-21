@@ -36,6 +36,7 @@ export const API_CONFIG = {
       PROFILES_LIST: '/doctors/profiles/',
       PROFILE_DETAIL: '/doctors/profiles/:id/',
       PROFILE_CREATE: '/doctors/profiles/',
+      PROFILE_CREATE_WITH_USER: '/doctors/profiles/create_with_user/',
       PROFILE_UPDATE: '/doctors/profiles/:id/',
       PROFILE_DELETE: '/doctors/profiles/:id/',
       REGISTER: '/doctors/profiles/register/',
