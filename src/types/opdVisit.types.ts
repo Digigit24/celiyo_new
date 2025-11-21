@@ -94,9 +94,9 @@ export interface OpdVisitListParams {
 
 // ==================== CREATE DATA ====================
 export interface OpdVisitCreateData {
-  // Required
-  patient_id: number;
-  doctor_id: number;
+  // Required - backend expects 'patient' and 'doctor' not 'patient_id' and 'doctor_id'
+  patient: number;
+  doctor: number;
   visit_date: string;
   visit_time: string;
   visit_type: VisitType;

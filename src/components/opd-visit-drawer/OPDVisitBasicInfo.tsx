@@ -167,6 +167,7 @@ const OPDVisitBasicInfo = forwardRef<OPDVisitBasicInfoHandle, OPDVisitBasicInfoP
       formState: { errors },
       watch,
       setValue,
+      reset,
     } = useForm<any>({
       resolver: zodResolver(schema),
       defaultValues,
@@ -178,6 +179,43 @@ const OPDVisitBasicInfo = forwardRef<OPDVisitBasicInfoHandle, OPDVisitBasicInfoP
     const watchedStatus = watch('status');
     const watchedPaymentStatus = watch('payment_status');
     const watchedFollowUpRequired = watch('follow_up_required');
+
+    // Reset form when visit data changes (for edit/view modes)
+    useEffect(() => {
+      if (!isCreateMode && visit) {
+        const formValues = {
+          visit_date: visit.visit_date || '',
+          visit_time: visit.visit_time || '',
+          visit_type: visit.visit_type || 'new',
+          status: visit.status || 'waiting',
+          priority: visit.priority || 'normal',
+          chief_complaint: visit.chief_complaint || '',
+          symptoms: visit.symptoms || '',
+          diagnosis: visit.diagnosis || '',
+          treatment_plan: visit.treatment_plan || '',
+          prescription: visit.prescription || '',
+          notes: visit.notes || '',
+          temperature: visit.temperature || '',
+          blood_pressure_systolic: visit.blood_pressure_systolic || undefined,
+          blood_pressure_diastolic: visit.blood_pressure_diastolic || undefined,
+          heart_rate: visit.heart_rate || undefined,
+          respiratory_rate: visit.respiratory_rate || undefined,
+          oxygen_saturation: visit.oxygen_saturation || '',
+          weight: visit.weight || '',
+          height: visit.height || '',
+          consultation_fee: visit.consultation_fee ? parseFloat(visit.consultation_fee) : 0,
+          additional_charges: visit.additional_charges ? parseFloat(visit.additional_charges) : 0,
+          payment_status: visit.payment_status || 'pending',
+          payment_method: visit.payment_method || '',
+          follow_up_required: visit.follow_up_required || false,
+          follow_up_date: visit.follow_up_date || '',
+          follow_up_notes: visit.follow_up_notes || '',
+          referred_to: visit.referred_to || '',
+          referral_reason: visit.referral_reason || '',
+        };
+        reset(formValues);
+      }
+    }, [visit, isCreateMode, reset]);
 
     // Auto-set consultation fee based on selected doctor
     useEffect(() => {
@@ -200,8 +238,9 @@ const OPDVisitBasicInfo = forwardRef<OPDVisitBasicInfoHandle, OPDVisitBasicInfoP
             (data) => {
               if (isCreateMode) {
                 const payload: OpdVisitCreateData = {
-                  patient_id: Number(data.patient_id),
-                  doctor_id: Number(data.doctor_id),
+                  // Backend expects 'patient' and 'doctor', not 'patient_id' and 'doctor_id'
+                  patient: Number(data.patient_id),
+                  doctor: Number(data.doctor_id),
                   visit_date: data.visit_date,
                   visit_time: data.visit_time,
                   visit_type: data.visit_type,

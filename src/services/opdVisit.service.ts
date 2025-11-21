@@ -35,10 +35,11 @@ class OpdVisitService {
   // Get single OPD visit by ID
   async getOpdVisit(id: number): Promise<OpdVisit> {
     try {
-      const response = await hmsClient.get<OpdVisit>(
+      const response = await hmsClient.get<any>(
         API_CONFIG.HMS.OPD.VISITS.DETAIL.replace(':id', id.toString())
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
@@ -81,11 +82,12 @@ class OpdVisitService {
   // Create new OPD visit
   async createOpdVisit(visitData: OpdVisitCreateData): Promise<OpdVisit> {
     try {
-      const response = await hmsClient.post<OpdVisit>(
+      const response = await hmsClient.post<any>(
         API_CONFIG.HMS.OPD.VISITS.CREATE,
         visitData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
@@ -97,11 +99,12 @@ class OpdVisitService {
   // Update OPD visit (full update)
   async updateOpdVisit(id: number, visitData: OpdVisitUpdateData): Promise<OpdVisit> {
     try {
-      const response = await hmsClient.put<OpdVisit>(
+      const response = await hmsClient.put<any>(
         API_CONFIG.HMS.OPD.VISITS.UPDATE.replace(':id', id.toString()),
         visitData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
@@ -113,11 +116,12 @@ class OpdVisitService {
   // Partially update OPD visit (patch)
   async patchOpdVisit(id: number, visitData: Partial<OpdVisitUpdateData>): Promise<OpdVisit> {
     try {
-      const response = await hmsClient.patch<OpdVisit>(
+      const response = await hmsClient.patch<any>(
         API_CONFIG.HMS.OPD.VISITS.UPDATE.replace(':id', id.toString()),
         visitData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
@@ -129,11 +133,12 @@ class OpdVisitService {
   // Complete OPD visit
   async completeOpdVisit(id: number, data: CompleteVisitData): Promise<OpdVisit> {
     try {
-      const response = await hmsClient.post<OpdVisit>(
+      const response = await hmsClient.post<any>(
         API_CONFIG.HMS.OPD.VISITS.COMPLETE.replace(':id', id.toString()),
         data
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
@@ -145,10 +150,11 @@ class OpdVisitService {
   // Call next patient
   async callNextPatient(): Promise<OpdVisit> {
     try {
-      const response = await hmsClient.post<OpdVisit>(
+      const response = await hmsClient.post<any>(
         API_CONFIG.HMS.OPD.VISITS.CALL_NEXT
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
