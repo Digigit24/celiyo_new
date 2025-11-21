@@ -310,7 +310,7 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Email</Label>
-                  <p>{doctor?.user.email}</p>
+                  <p>{doctor?.user?.email || 'N/A'}</p>
                 </div>
               </div>
             )}
