@@ -32,10 +32,11 @@ class PatientService {
   // Get single patient by ID
   async getPatient(id: number): Promise<Patient> {
     try {
-      const response = await hmsClient.get<Patient>(
+      const response = await hmsClient.get<any>(
         API_CONFIG.HMS.PATIENTS.PROFILE_DETAIL.replace(':id', id.toString())
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
@@ -47,11 +48,12 @@ class PatientService {
   // Create new patient
   async createPatient(patientData: PatientCreateData): Promise<Patient> {
     try {
-      const response = await hmsClient.post<Patient>(
+      const response = await hmsClient.post<any>(
         API_CONFIG.HMS.PATIENTS.PROFILE_CREATE,
         patientData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
@@ -63,11 +65,12 @@ class PatientService {
   // Register new patient (alternative endpoint)
   async registerPatient(patientData: PatientCreateData): Promise<Patient> {
     try {
-      const response = await hmsClient.post<Patient>(
+      const response = await hmsClient.post<any>(
         API_CONFIG.HMS.PATIENTS.REGISTER,
         patientData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
@@ -79,11 +82,12 @@ class PatientService {
   // Update patient (full update)
   async updatePatient(id: number, patientData: PatientUpdateData): Promise<Patient> {
     try {
-      const response = await hmsClient.put<Patient>(
+      const response = await hmsClient.put<any>(
         API_CONFIG.HMS.PATIENTS.PROFILE_UPDATE.replace(':id', id.toString()),
         patientData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
@@ -95,11 +99,12 @@ class PatientService {
   // Partially update patient (patch)
   async patchPatient(id: number, patientData: Partial<PatientUpdateData>): Promise<Patient> {
     try {
-      const response = await hmsClient.patch<Patient>(
+      const response = await hmsClient.patch<any>(
         API_CONFIG.HMS.PATIENTS.PROFILE_UPDATE.replace(':id', id.toString()),
         patientData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||

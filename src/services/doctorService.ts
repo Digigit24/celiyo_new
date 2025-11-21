@@ -34,13 +34,14 @@ class DoctorService {
   // Get single doctor by ID
   async getDoctor(id: number): Promise<Doctor> {
     try {
-      const response = await hmsClient.get<Doctor>(
+      const response = await hmsClient.get<any>(
         API_CONFIG.HMS.DOCTORS.PROFILE_DETAIL.replace(':id', id.toString())
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
-      const message = error.response?.data?.error || 
-                     error.response?.data?.message || 
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
                      'Failed to fetch doctor';
       throw new Error(message);
     }
@@ -49,11 +50,12 @@ class DoctorService {
   // Create new doctor
   async createDoctor(doctorData: DoctorCreateData): Promise<Doctor> {
     try {
-      const response = await hmsClient.post<Doctor>(
+      const response = await hmsClient.post<any>(
         API_CONFIG.HMS.DOCTORS.PROFILE_CREATE_WITH_USER,
         doctorData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
@@ -65,14 +67,15 @@ class DoctorService {
   // Register new doctor (alternative endpoint)
   async registerDoctor(doctorData: DoctorCreateData): Promise<Doctor> {
     try {
-      const response = await hmsClient.post<Doctor>(
+      const response = await hmsClient.post<any>(
         API_CONFIG.HMS.DOCTORS.REGISTER,
         doctorData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
-      const message = error.response?.data?.error || 
-                     error.response?.data?.message || 
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
                      'Failed to register doctor';
       throw new Error(message);
     }
@@ -81,14 +84,15 @@ class DoctorService {
   // Update doctor (full update)
   async updateDoctor(id: number, doctorData: DoctorUpdateData): Promise<Doctor> {
     try {
-      const response = await hmsClient.put<Doctor>(
+      const response = await hmsClient.put<any>(
         API_CONFIG.HMS.DOCTORS.PROFILE_UPDATE.replace(':id', id.toString()),
         doctorData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
-      const message = error.response?.data?.error || 
-                     error.response?.data?.message || 
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
                      'Failed to update doctor';
       throw new Error(message);
     }
@@ -97,14 +101,15 @@ class DoctorService {
   // Partially update doctor
   async patchDoctor(id: number, doctorData: Partial<DoctorUpdateData>): Promise<Doctor> {
     try {
-      const response = await hmsClient.patch<Doctor>(
+      const response = await hmsClient.patch<any>(
         API_CONFIG.HMS.DOCTORS.PROFILE_UPDATE.replace(':id', id.toString()),
         doctorData
       );
-      return response.data;
+      // API returns {success: true, data: {...}}, so we need to unwrap it
+      return response.data?.data || response.data;
     } catch (error: any) {
-      const message = error.response?.data?.error || 
-                     error.response?.data?.message || 
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
                      'Failed to update doctor';
       throw new Error(message);
     }
