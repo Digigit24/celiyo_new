@@ -1,5 +1,5 @@
 // src/components/doctor-drawer/DoctorBasicInfo.tsx
-import { forwardRef, useImperativeHandle } from 'react';
+import { forwardRef, useImperativeHandle, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -113,6 +113,7 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
       formState: { errors },
       watch,
       setValue,
+      reset,
     } = useForm<any>({
       resolver: zodResolver(schema),
       defaultValues,
@@ -120,6 +121,22 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
 
     const watchedSpecialtyIds = watch('specialty_ids') || [];
     const watchedStatus = watch('status');
+
+    // Reset form when doctor data changes (for edit/view modes)
+    useEffect(() => {
+      if (!isCreateMode && doctor) {
+        const formValues = {
+          qualifications: doctor.qualifications || '',
+          specialty_ids: doctor.specialties?.map((s) => s.id) || [],
+          years_of_experience: doctor.years_of_experience || 0,
+          consultation_fee: parseFloat(doctor.consultation_fee || '0'),
+          follow_up_fee: parseFloat(doctor.follow_up_fee || '0'),
+          consultation_duration: doctor.consultation_duration || 30,
+          status: doctor.status || 'active',
+        };
+        reset(formValues);
+      }
+    }, [doctor, isCreateMode, reset]);
 
     // Expose form validation and data collection to parent
     useImperativeHandle(ref, () => ({

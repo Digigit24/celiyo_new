@@ -1,5 +1,5 @@
 // src/components/patient-drawer/PatientBasicInfo.tsx
-import { forwardRef, useImperativeHandle } from 'react';
+import { forwardRef, useImperativeHandle, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -187,6 +187,7 @@ const PatientBasicInfo = forwardRef<PatientBasicInfoHandle, PatientBasicInfoProp
       formState: { errors },
       watch,
       setValue,
+      reset,
     } = useForm<any>({
       resolver: zodResolver(schema),
       defaultValues,
@@ -196,6 +197,41 @@ const PatientBasicInfo = forwardRef<PatientBasicInfoHandle, PatientBasicInfoProp
     const watchedStatus = watch('status');
     const watchedBloodGroup = watch('blood_group');
     const watchedMaritalStatus = watch('marital_status');
+
+    // Reset form when patient data changes (for edit/view modes)
+    useEffect(() => {
+      if (!isCreateMode && patient) {
+        const formValues = {
+          first_name: patient.first_name || '',
+          last_name: patient.last_name || '',
+          middle_name: patient.middle_name || '',
+          date_of_birth: patient.date_of_birth || '',
+          gender: patient.gender || 'male',
+          mobile_primary: patient.mobile_primary || '',
+          mobile_secondary: patient.mobile_secondary || '',
+          email: patient.email || '',
+          address_line1: patient.address_line1 || '',
+          address_line2: patient.address_line2 || '',
+          city: patient.city || '',
+          state: patient.state || '',
+          country: patient.country || 'India',
+          pincode: patient.pincode || '',
+          blood_group: patient.blood_group || undefined,
+          height: patient.height || '',
+          weight: patient.weight || '',
+          marital_status: patient.marital_status || undefined,
+          occupation: patient.occupation || '',
+          emergency_contact_name: patient.emergency_contact_name || '',
+          emergency_contact_phone: patient.emergency_contact_phone || '',
+          emergency_contact_relation: patient.emergency_contact_relation || '',
+          insurance_provider: patient.insurance_provider || '',
+          insurance_policy_number: patient.insurance_policy_number || '',
+          insurance_expiry_date: patient.insurance_expiry_date || '',
+          status: patient.status || 'active',
+        };
+        reset(formValues);
+      }
+    }, [patient, isCreateMode, reset]);
 
     // Expose form validation and data collection to parent
     useImperativeHandle(ref, () => ({
