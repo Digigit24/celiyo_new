@@ -18,7 +18,7 @@ export enum ActivityTypeEnum {
 export enum TaskStatusEnum {
   TODO = 'TODO',
   IN_PROGRESS = 'IN_PROGRESS',
-  COMPLETED = 'COMPLETED',
+  DONE = 'DONE',
   CANCELLED = 'CANCELLED'
 }
 
@@ -61,16 +61,21 @@ export interface LeadOrder {
 export interface Task {
   id: number;
   tenant_id: string;
+  lead: number;
+  lead_name?: string; // From serializer
   title: string;
   description?: string;
   status: TaskStatusEnum;
   priority: PriorityEnum;
   due_date?: string;
-  assigned_to_user_id?: string;
-  lead?: number;
-  completed_at?: string;
+  assignee_user_id?: string;
+  reporter_user_id?: string;
+  owner_user_id?: string;
+  checklist?: any; // JSONField
+  attachments_count: number;
   created_at: string;
   updated_at: string;
+  completed_at?: string;
 }
 
 export interface Lead {
@@ -203,13 +208,18 @@ export interface TasksQueryParams {
   page?: number;
   page_size?: number;
   search?: string;
+  lead?: number;
   status?: TaskStatusEnum;
   priority?: PriorityEnum;
-  assigned_to_user_id?: string;
-  lead?: number;
+  assignee_user_id?: string;
+  reporter_user_id?: string;
   due_date?: string;
   due_date__gte?: string;
   due_date__lte?: string;
+  due_date__isnull?: boolean;
+  completed_at__gte?: string;
+  completed_at__lte?: string;
+  completed_at__isnull?: boolean;
   created_at__gte?: string;
   created_at__lte?: string;
   ordering?: string;
@@ -275,13 +285,15 @@ export interface CreateLeadOrderPayload {
 export interface UpdateLeadOrderPayload extends Partial<CreateLeadOrderPayload> {}
 
 export interface CreateTaskPayload {
+  lead: number;
   title: string;
   description?: string;
   status?: TaskStatusEnum;
   priority?: PriorityEnum;
   due_date?: string;
-  assigned_to_user_id?: string;
-  lead?: number;
+  assignee_user_id?: string;
+  reporter_user_id?: string;
+  checklist?: any;
 }
 
 export interface UpdateTaskPayload extends Partial<CreateTaskPayload> {}
@@ -342,7 +354,7 @@ export const LEAD_ACTIVITY_ORDERING_OPTIONS = [
 export const TASK_STATUS_OPTIONS = [
   { value: TaskStatusEnum.TODO, label: 'To Do' },
   { value: TaskStatusEnum.IN_PROGRESS, label: 'In Progress' },
-  { value: TaskStatusEnum.COMPLETED, label: 'Completed' },
+  { value: TaskStatusEnum.DONE, label: 'Done' },
   { value: TaskStatusEnum.CANCELLED, label: 'Cancelled' }
 ];
 
