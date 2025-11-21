@@ -51,7 +51,7 @@ class DoctorService {
   async createDoctor(doctorData: DoctorCreateData): Promise<Doctor> {
     try {
       const response = await hmsClient.post<any>(
-        API_CONFIG.HMS.DOCTORS.PROFILE_CREATE_WITH_USER,
+        API_CONFIG.HMS.DOCTORS.PROFILE_CREATE,
         doctorData
       );
       // API returns {success: true, data: {...}}, so we need to unwrap it

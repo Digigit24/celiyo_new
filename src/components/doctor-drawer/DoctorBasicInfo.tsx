@@ -24,7 +24,7 @@ import type { Doctor, DoctorCreateData, DoctorUpdateData, Specialty } from '@/ty
 
 // Validation schemas
 const createDoctorSchema = z.object({
-  // User fields
+  // User fields (required for account creation)
   email: z.string().email('Invalid email address'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   password_confirm: z.string().min(8, 'Password confirmation required'),
@@ -32,23 +32,26 @@ const createDoctorSchema = z.object({
   last_name: z.string().min(1, 'Last name is required'),
   phone: z.string().min(10, 'Phone number must be at least 10 digits'),
 
-  // Doctor profile fields
-  medical_license_number: z.string().min(1, 'Medical license number is required'),
-  license_issuing_authority: z.string().min(1, 'License issuing authority is required'),
-  license_issue_date: z.string().min(1, 'License issue date is required'),
-  license_expiry_date: z.string().min(1, 'License expiry date is required'),
-  qualifications: z.string().min(1, 'Qualifications are required'),
-  specialty_ids: z.array(z.number()).min(1, 'At least one specialty is required'),
-  years_of_experience: z.coerce.number().min(0, 'Experience cannot be negative'),
-  consultation_fee: z.coerce.number().min(0, 'Consultation fee cannot be negative'),
-  follow_up_fee: z.coerce.number().min(0, 'Follow-up fee cannot be negative'),
+  // Doctor profile required field (per Django model - no blank=True)
   consultation_duration: z.coerce.number().min(5, 'Consultation duration must be at least 5 minutes'),
+
+  // Optional doctor profile fields (all have blank=True and/or null=True in Django model)
+  medical_license_number: z.string().optional(),
+  license_issuing_authority: z.string().optional(),
+  license_issue_date: z.string().optional(),
+  license_expiry_date: z.string().optional(),
+  qualifications: z.string().optional(),
+  specialty_ids: z.array(z.number()).optional(),
+  years_of_experience: z.coerce.number().min(0).optional(),
+  consultation_fee: z.coerce.number().min(0).optional(),
+  follow_up_fee: z.coerce.number().min(0).optional(),
 }).refine((data) => data.password === data.password_confirm, {
   message: "Passwords don't match",
   path: ["password_confirm"],
 });
 
 const updateDoctorSchema = z.object({
+  // All fields optional for update
   qualifications: z.string().optional(),
   specialty_ids: z.array(z.number()).optional(),
   years_of_experience: z.coerce.number().min(0).optional(),
@@ -80,12 +83,16 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
 
     const defaultValues = isCreateMode
       ? {
+          // Required user fields
           email: '',
           password: '',
           password_confirm: '',
           first_name: '',
           last_name: '',
           phone: '',
+          // Required doctor field
+          consultation_duration: 15,
+          // Optional doctor fields
           medical_license_number: '',
           license_issuing_authority: '',
           license_issue_date: '',
@@ -95,15 +102,15 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
           years_of_experience: 0,
           consultation_fee: 0,
           follow_up_fee: 0,
-          consultation_duration: 30,
         }
       : {
+          // All fields optional for update
           qualifications: doctor?.qualifications || '',
           specialty_ids: doctor?.specialties?.map((s) => s.id) || [],
           years_of_experience: doctor?.years_of_experience || 0,
           consultation_fee: parseFloat(doctor?.consultation_fee || '0'),
           follow_up_fee: parseFloat(doctor?.follow_up_fee || '0'),
-          consultation_duration: doctor?.consultation_duration || 30,
+          consultation_duration: doctor?.consultation_duration || 15,
           status: doctor?.status || 'active',
         };
 
@@ -131,7 +138,7 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
           years_of_experience: doctor.years_of_experience || 0,
           consultation_fee: parseFloat(doctor.consultation_fee || '0'),
           follow_up_fee: parseFloat(doctor.follow_up_fee || '0'),
-          consultation_duration: doctor.consultation_duration || 30,
+          consultation_duration: doctor.consultation_duration || 15,
           status: doctor.status || 'active',
         };
         reset(formValues);
@@ -145,36 +152,48 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
           handleSubmit(
             (data) => {
               if (isCreateMode) {
-                const payload: DoctorCreateData = {
+                // Create doctor with user account (per Django model)
+                const payload: any = {
+                  // User creation flag (required)
                   create_user: true,
+
+                  // User account fields (required when create_user = true)
                   email: data.email,
                   password: data.password,
                   password_confirm: data.password_confirm,
                   first_name: data.first_name,
                   last_name: data.last_name,
                   phone: data.phone,
-                  medical_license_number: data.medical_license_number,
-                  license_issuing_authority: data.license_issuing_authority,
-                  license_issue_date: data.license_issue_date,
-                  license_expiry_date: data.license_expiry_date,
-                  qualifications: data.qualifications,
-                  specialty_ids: data.specialty_ids,
-                  years_of_experience: Number(data.years_of_experience),
-                  consultation_fee: Number(data.consultation_fee),
-                  follow_up_fee: Number(data.follow_up_fee),
+
+                  // Doctor profile required field (consultation_duration has no blank=True)
                   consultation_duration: Number(data.consultation_duration),
                 };
+
+                // Add optional doctor profile fields only if they have values
+                if (data.medical_license_number) payload.medical_license_number = data.medical_license_number;
+                if (data.license_issuing_authority) payload.license_issuing_authority = data.license_issuing_authority;
+                if (data.license_issue_date) payload.license_issue_date = data.license_issue_date;
+                if (data.license_expiry_date) payload.license_expiry_date = data.license_expiry_date;
+                if (data.qualifications) payload.qualifications = data.qualifications;
+                if (data.specialty_ids && data.specialty_ids.length > 0) payload.specialty_ids = data.specialty_ids;
+                if (data.years_of_experience) payload.years_of_experience = Number(data.years_of_experience);
+                if (data.consultation_fee) payload.consultation_fee = Number(data.consultation_fee);
+                if (data.follow_up_fee) payload.follow_up_fee = Number(data.follow_up_fee);
+
                 resolve(payload);
               } else {
-                const payload: DoctorUpdateData = {
-                  qualifications: data.qualifications,
-                  specialty_ids: data.specialty_ids,
-                  years_of_experience: Number(data.years_of_experience),
-                  consultation_fee: Number(data.consultation_fee),
-                  follow_up_fee: Number(data.follow_up_fee),
-                  consultation_duration: Number(data.consultation_duration),
-                  status: data.status,
-                };
+                // Update doctor profile - all fields optional
+                const payload: any = {};
+
+                // Add only fields that have values
+                if (data.qualifications) payload.qualifications = data.qualifications;
+                if (data.specialty_ids) payload.specialty_ids = data.specialty_ids;
+                if (data.years_of_experience !== undefined) payload.years_of_experience = Number(data.years_of_experience);
+                if (data.consultation_fee !== undefined) payload.consultation_fee = Number(data.consultation_fee);
+                if (data.follow_up_fee !== undefined) payload.follow_up_fee = Number(data.follow_up_fee);
+                if (data.consultation_duration) payload.consultation_duration = Number(data.consultation_duration);
+                if (data.status) payload.status = data.status;
+
                 resolve(payload);
               }
             },
@@ -310,7 +329,7 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Email</Label>
-                  <p>{doctor?.user.email}</p>
+                  <p>{doctor?.user?.email || 'N/A'}</p>
                 </div>
               </div>
             )}
@@ -326,7 +345,7 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
             {isCreateMode ? (
               <>
                 <div className="space-y-2">
-                  <Label htmlFor="medical_license_number">License Number *</Label>
+                  <Label htmlFor="medical_license_number">License Number</Label>
                   <Input
                     id="medical_license_number"
                     {...register('medical_license_number')}
@@ -341,7 +360,7 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="license_issuing_authority">Issuing Authority *</Label>
+                  <Label htmlFor="license_issuing_authority">Issuing Authority</Label>
                   <Input
                     id="license_issuing_authority"
                     {...register('license_issuing_authority')}
@@ -357,7 +376,7 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="license_issue_date">Issue Date *</Label>
+                    <Label htmlFor="license_issue_date">Issue Date</Label>
                     <Input
                       id="license_issue_date"
                       type="date"
@@ -372,7 +391,7 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="license_expiry_date">Expiry Date *</Label>
+                    <Label htmlFor="license_expiry_date">Expiry Date</Label>
                     <Input
                       id="license_expiry_date"
                       type="date"
@@ -428,7 +447,7 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
           <CardContent className="space-y-4">
             {/* Qualifications */}
             <div className="space-y-2">
-              <Label htmlFor="qualifications">Qualifications *</Label>
+              <Label htmlFor="qualifications">Qualifications</Label>
               <Textarea
                 id="qualifications"
                 {...register('qualifications')}
@@ -444,7 +463,7 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
 
             {/* Specialties */}
             <div className="space-y-2">
-              <Label>Specialties *</Label>
+              <Label>Specialties</Label>
               <div className="flex flex-wrap gap-2 p-3 border rounded-md min-h-[60px]">
                 {specialties.map((specialty) => (
                   <Badge
@@ -467,7 +486,7 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
 
             {/* Years of Experience */}
             <div className="space-y-2">
-              <Label htmlFor="years_of_experience">Years of Experience *</Label>
+              <Label htmlFor="years_of_experience">Years of Experience</Label>
               <Input
                 id="years_of_experience"
                 type="number"
@@ -491,9 +510,27 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
             <CardTitle className="text-lg">Consultation & Fees</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="consultation_duration">Consultation Duration (minutes) {isCreateMode && '*'}</Label>
+              <Input
+                id="consultation_duration"
+                type="number"
+                min="5"
+                step="5"
+                {...register('consultation_duration')}
+                disabled={isReadOnly}
+                className={errors.consultation_duration ? 'border-destructive' : ''}
+              />
+              {errors.consultation_duration && (
+                <p className="text-sm text-destructive">
+                  {errors.consultation_duration.message as string}
+                </p>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="consultation_fee">Consultation Fee *</Label>
+                <Label htmlFor="consultation_fee">Consultation Fee</Label>
                 <Input
                   id="consultation_fee"
                   type="number"
@@ -511,7 +548,7 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="follow_up_fee">Follow-up Fee *</Label>
+                <Label htmlFor="follow_up_fee">Follow-up Fee</Label>
                 <Input
                   id="follow_up_fee"
                   type="number"
@@ -527,24 +564,6 @@ const DoctorBasicInfo = forwardRef<DoctorBasicInfoHandle, DoctorBasicInfoProps>(
                   </p>
                 )}
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="consultation_duration">Consultation Duration (minutes) *</Label>
-              <Input
-                id="consultation_duration"
-                type="number"
-                min="5"
-                step="5"
-                {...register('consultation_duration')}
-                disabled={isReadOnly}
-                className={errors.consultation_duration ? 'border-destructive' : ''}
-              />
-              {errors.consultation_duration && (
-                <p className="text-sm text-destructive">
-                  {errors.consultation_duration.message as string}
-                </p>
-              )}
             </div>
           </CardContent>
         </Card>
