@@ -93,6 +93,9 @@ export interface PatientListParams {
 }
 
 export interface PatientCreateData {
+  // Flag to skip user account creation
+  create_user: boolean;
+
   // Personal Info (REQUIRED)
   first_name: string;
   last_name: string;

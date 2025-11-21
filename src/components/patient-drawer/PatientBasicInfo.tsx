@@ -211,6 +211,7 @@ const PatientBasicInfo = forwardRef<PatientBasicInfoHandle, PatientBasicInfoProp
 
               if (isCreateMode) {
                 const payload: PatientCreateData = {
+                  create_user: false,
                   first_name: cleanData.first_name,
                   last_name: cleanData.last_name,
                   middle_name: cleanData.middle_name,
