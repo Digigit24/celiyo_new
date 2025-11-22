@@ -11,10 +11,10 @@ export const API_CONFIG = {
   AUTH_BASE_URL: import.meta.env.VITE_AUTH_BASE_URL || 'https://admin.celiyo.com/api',
   CRM_BASE_URL: import.meta.env.VITE_CRM_BASE_URL || 'https://crm.celiyo.com/api',
   HMS_BASE_URL: import.meta.env.VITE_HMS_BASE_URL || 'https://hms.celiyo.com/api',
-  WHATSAPP_BASE_URL: import.meta.env.VITE_WHATSAPP_BASE_URL || 'https://whatsapp.dglinkup.com/api',
-  
+  WHATSAPP_BASE_URL: import.meta.env.VITE_WHATSAPP_BASE_URL || 'https://whatsapp.celiyo.com/api',
+
   // ✅ WebSocket URL for real-time WhatsApp updates
-  WHATSAPP_WS_URL: import.meta.env.VITE_WHATSAPP_WS_URL || 'wss://whatsapp.dglinkup.com',
+  WHATSAPP_WS_URL: import.meta.env.VITE_WHATSAPP_WS_URL || 'wss://whatsapp.celiyo.com',
   
   // For development, set in .env.local instead of editing code:
   // VITE_AUTH_BASE_URL=http://localhost:8000/api
@@ -153,35 +153,49 @@ export const API_CONFIG = {
     LEAD_CREATE: '/crm/leads/',
     LEAD_UPDATE: '/crm/leads/:id/',
     LEAD_DELETE: '/crm/leads/:id/',
-
+    
     // Lead Status endpoints
     LEAD_STATUSES: '/crm/statuses/',
     LEAD_STATUS_DETAIL: '/crm/statuses/:id/',
     LEAD_STATUS_CREATE: '/crm/statuses/',
     LEAD_STATUS_UPDATE: '/crm/statuses/:id/',
     LEAD_STATUS_DELETE: '/crm/statuses/:id/',
-
+    
     // Lead Activity endpoints
     LEAD_ACTIVITIES: '/crm/activities/',
     LEAD_ACTIVITY_DETAIL: '/crm/activities/:id/',
     LEAD_ACTIVITY_CREATE: '/crm/activities/',
     LEAD_ACTIVITY_UPDATE: '/crm/activities/:id/',
     LEAD_ACTIVITY_DELETE: '/crm/activities/:id/',
-
+    
     // Lead Order endpoints (Kanban positioning)
     LEAD_ORDERS: '/crm/orders/',
     LEAD_ORDER_DETAIL: '/crm/orders/:id/',
     LEAD_ORDER_CREATE: '/crm/orders/',
     LEAD_ORDER_UPDATE: '/crm/orders/:id/',
     LEAD_ORDER_DELETE: '/crm/orders/:id/',
+     // Task endpoints
+    TASKS: '/tasks/',
+    TASK_DETAIL: '/tasks/:id/',
+    TASK_CREATE: '/tasks/',
+    TASK_UPDATE: '/tasks/:id/',
+    TASK_DELETE: '/tasks/:id/',
 
     // Meeting endpoints
-    MEETINGS: '/crm/meetings/',
-    MEETING_DETAIL: '/crm/meetings/:id/',
-    MEETING_CREATE: '/crm/meetings/',
-    MEETING_UPDATE: '/crm/meetings/:id/',
-    MEETING_DELETE: '/crm/meetings/:id/',
-    MEETING_CALENDAR: '/crm/meetings/calendar/',
+
+    MEETINGS: '/meetings/',
+
+    MEETING_DETAIL: '/meetings/:id/',
+
+    MEETING_CREATE: '/meetings/',
+
+    MEETING_UPDATE: '/meetings/:id/',
+
+    MEETING_DELETE: '/meetings/:id/',
+
+    MEETING_CALENDAR: '/meetings/calendar/',
+
+   
   },
 
   // ==================== WHATSAPP ====================
