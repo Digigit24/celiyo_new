@@ -13,9 +13,10 @@ export const API_CONFIG = {
   HMS_BASE_URL: import.meta.env.VITE_HMS_BASE_URL || 'https://hms.celiyo.com/api',
   WHATSAPP_BASE_URL: import.meta.env.VITE_WHATSAPP_BASE_URL || 'https://whatsapp.celiyo.com/api',
 
+  WHATSAPP_BASE_URL: import.meta.env.VITE_WHATSAPP_BASE_URL || 'https://whatsapp.celiyo.com/api',
+
   // ✅ WebSocket URL for real-time WhatsApp updates
-  WHATSAPP_WS_URL: import.meta.env.VITE_WHATSAPP_WS_URL || 'wss://whatsapp.celiyo.com',
-  
+ 
   // For development, set in .env.local instead of editing code:
   // VITE_AUTH_BASE_URL=http://localhost:8000/api
   // VITE_CRM_BASE_URL=http://localhost:8001/api

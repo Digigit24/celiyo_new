@@ -134,6 +134,12 @@ const menuItems: MenuItem[] = [
         icon: CheckSquare,
         path: "/crm/tasks",
       },
+      {
+        id: "crm-meetings",
+        label: "Meetings",
+        icon: Calendar,
+        path: "/crm/meetings",
+      },
     ],
   },
   {

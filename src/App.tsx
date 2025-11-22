@@ -20,6 +20,7 @@ import { CRMLeads } from "./pages/CRMLeads";
 import { CRMActivities } from "./pages/CRMActivities"; // ⬅️ ADDED
 import { CRMLeadStatuses } from "./pages/CRMLeadStatuses";
 import { CRMTasks } from "./pages/CRMTasks";
+import { Meetings } from "./pages/Meetings";
 import { Doctors } from "./pages/Doctors";
 import DoctorTest from "./pages/doctor";
 import { Specialties } from "./pages/Specialties";
@@ -83,6 +84,7 @@ const AppLayout = () => {
             <Route path="/crm/activities" element={<CRMActivities />} /> {/* ⬅️ ADDED */}
             <Route path="/crm/statuses" element={<CRMLeadStatuses />} />
             <Route path="/crm/tasks" element={<CRMTasks />} />
+            <Route path="/crm/meetings" element={<Meetings />} />
 
             {/* HMS Routes */}
             <Route path="/hms/doctors" element={<Doctors />} />
