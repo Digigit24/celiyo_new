@@ -176,11 +176,11 @@ export const API_CONFIG = {
     LEAD_ORDER_DELETE: '/crm/orders/:id/',
 
     // Task endpoints
-    TASKS: '/crm/tasks/',
-    TASK_DETAIL: '/crm/tasks/:id/',
-    TASK_CREATE: '/crm/tasks/',
-    TASK_UPDATE: '/crm/tasks/:id/',
-    TASK_DELETE: '/crm/tasks/:id/',
+    TASKS: '/tasks/',
+    TASK_DETAIL: '/tasks/:id/',
+    TASK_CREATE: '/tasks/',
+    TASK_UPDATE: '/tasks/:id/',
+    TASK_DELETE: '/tasks/:id/',
   },
 
   // ==================== WHATSAPP ====================
