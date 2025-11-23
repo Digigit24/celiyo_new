@@ -134,17 +134,16 @@ export const PermissionsEditor: React.FC<PermissionsEditorProps> = ({
           </Label>
           <div className="flex items-center gap-2">
             <Select
-              value={typeof currentValue === 'string' ? currentValue : ''}
+              value={typeof currentValue === 'string' && currentValue !== '' ? currentValue : undefined}
               onValueChange={(newValue) => {
                 updatePermission(moduleKey, resourceKey, actionKey, newValue);
               }}
               disabled={disabled}
             >
               <SelectTrigger className="w-32 h-8">
-                <SelectValue placeholder="None" />
+                <SelectValue placeholder="Select scope" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">None</SelectItem>
                 {actionConfig.options.map((option: string) => (
                   <SelectItem key={option} value={option}>
                     <span className="capitalize">{option}</span>
@@ -152,6 +151,26 @@ export const PermissionsEditor: React.FC<PermissionsEditorProps> = ({
                 ))}
               </SelectContent>
             </Select>
+            {/* Clear button */}
+            {currentValue && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => {
+                  // Remove the permission by deleting the key
+                  const newPermissions = { ...value };
+                  if (newPermissions[moduleKey]?.[resourceKey]) {
+                    delete newPermissions[moduleKey][resourceKey][actionKey];
+                    onChange(newPermissions);
+                  }
+                }}
+                disabled={disabled}
+              >
+                <span className="sr-only">Clear</span>
+                ×
+              </Button>
+            )}
           </div>
         </div>
       );
