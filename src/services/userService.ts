@@ -12,10 +12,23 @@ import {
   ApiResponse
 } from '@/types/user.types';
 
+/**
+ * User Service
+ *
+ * This service uses authClient which automatically includes tenant headers (x-tenant-id)
+ * in all requests. The backend will filter users based on these headers:
+ *
+ * - Regular users: Can only see users from their own tenant
+ * - Super admins: Can see all users across all tenants
+ *
+ * The tenant filtering is handled automatically by the backend based on the
+ * authenticated user's role and tenant association.
+ */
 class UserService {
   // ==================== USERS ====================
 
   // Get users with optional query parameters
+  // Note: Returns only current tenant's users for regular users
   async getUsers(params?: UserListParams): Promise<PaginatedResponse<User>> {
     try {
       const queryString = buildQueryString(params);
@@ -47,6 +60,8 @@ class UserService {
   }
 
   // Create new user
+  // Note: Tenant ID is automatically included in request headers
+  // Non-super-admin users can only create users in their own tenant
   async createUser(userData: UserCreateData): Promise<User> {
     try {
       const response = await authClient.post<User>(

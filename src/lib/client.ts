@@ -81,16 +81,60 @@ const hmsClient: AxiosInstance = axios.create({
   },
 });
 
-// Request interceptor for auth client - attach token to requests
+// Request interceptor for auth client - attach token and tenant headers
 authClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = tokenManager.getAccessToken();
-    
+
+    console.log('📤 Auth API Request:', {
+      url: config.url,
+      method: config.method?.toUpperCase(),
+      hasToken: !!token
+    });
+
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('🔑 Auth API request with token');
+      console.log('🔑 Added Bearer token to Auth request');
+    } else {
+      console.warn('⚠️ No access token found for Auth request!');
     }
-    
+
+    // Multi-tenant header propagation (read from stored user)
+    try {
+      const userJson = localStorage.getItem(USER_KEY);
+      if (userJson) {
+        const user = JSON.parse(userJson);
+        const tenant = user?.tenant;
+
+        if (tenant) {
+          // Get tenant ID (could be tenant.id or tenant.tenant_id)
+          const tenantId = tenant.id || tenant.tenant_id;
+
+          if (tenantId) {
+            config.headers['X-Tenant-Id'] = tenantId;
+            config.headers['x-tenant-id'] = tenantId; // Backend expects lowercase
+            config.headers['tenanttoken'] = tenantId; // Your API uses 'tenanttoken' header
+
+            console.log('🏢 Added tenant headers to Auth:', {
+              'X-Tenant-Id': tenantId,
+              'x-tenant-id': tenantId,
+              'tenanttoken': tenantId
+            });
+          }
+
+          if (tenant.slug) {
+            config.headers['X-Tenant-Slug'] = tenant.slug;
+          }
+        } else {
+          console.warn('⚠️ No tenant found in user object for Auth');
+        }
+      } else {
+        console.warn('⚠️ No user found in localStorage for Auth');
+      }
+    } catch (error) {
+      console.error('❌ Failed to parse user or attach tenant headers for Auth:', error);
+    }
+
     return config;
   },
   (error) => {
