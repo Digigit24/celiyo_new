@@ -90,6 +90,7 @@ export interface UserUpdateData {
   timezone?: string;
   is_active?: boolean;
   profile_picture?: string | null;
+  role_ids?: string[];
 }
 
 // Assign roles data

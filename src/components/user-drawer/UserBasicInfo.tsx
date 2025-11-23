@@ -1,5 +1,5 @@
 // src/components/user-drawer/UserBasicInfo.tsx
-import { forwardRef, useImperativeHandle, useEffect } from 'react';
+import { forwardRef, useImperativeHandle, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -17,8 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { X } from 'lucide-react';
 
 import type { User, UserCreateData, UserUpdateData } from '@/types/user.types';
+import { useRoles } from '@/hooks/useRoles';
 
 // Validation schemas
 const createUserSchema = z.object({
@@ -81,6 +85,16 @@ const UserBasicInfo = forwardRef<UserBasicInfoHandle, UserBasicInfoProps>(
 
     const schema = isCreateMode ? createUserSchema : updateUserSchema;
 
+    // Fetch roles for selection
+    const { useRolesList } = useRoles();
+    const { data: rolesData, isLoading: rolesLoading } = useRolesList({ is_active: true });
+    const availableRoles = rolesData?.results || [];
+
+    // Role selection state
+    const [selectedRoleIds, setSelectedRoleIds] = useState<string[]>(
+      user?.roles?.map((r) => r.id) || []
+    );
+
     const defaultValues = isCreateMode
       ? {
           email: '',
@@ -127,8 +141,20 @@ const UserBasicInfo = forwardRef<UserBasicInfoHandle, UserBasicInfoProps>(
           is_active: user.is_active ?? true,
         };
         reset(formValues);
+        setSelectedRoleIds(user.roles?.map((r) => r.id) || []);
       }
     }, [user, isCreateMode, reset]);
+
+    // Role selection handlers
+    const toggleRole = (roleId: string) => {
+      setSelectedRoleIds((prev) =>
+        prev.includes(roleId) ? prev.filter((id) => id !== roleId) : [...prev, roleId]
+      );
+    };
+
+    const removeRole = (roleId: string) => {
+      setSelectedRoleIds((prev) => prev.filter((id) => id !== roleId));
+    };
 
     // Expose form validation and data collection to parent
     useImperativeHandle(ref, () => ({
@@ -147,6 +173,7 @@ const UserBasicInfo = forwardRef<UserBasicInfoHandle, UserBasicInfoProps>(
                   last_name: data.last_name,
                   phone: data.phone || undefined,
                   timezone: data.timezone || 'Asia/Kolkata',
+                  role_ids: selectedRoleIds.length > 0 ? selectedRoleIds : undefined,
                 };
                 resolve(createData);
               } else {
@@ -157,6 +184,7 @@ const UserBasicInfo = forwardRef<UserBasicInfoHandle, UserBasicInfoProps>(
                   phone: data.phone || undefined,
                   timezone: data.timezone || 'Asia/Kolkata',
                   is_active: data.is_active,
+                  role_ids: selectedRoleIds.length > 0 ? selectedRoleIds : undefined,
                 };
                 resolve(updateData);
               }
@@ -416,6 +444,80 @@ const UserBasicInfo = forwardRef<UserBasicInfoHandle, UserBasicInfoProps>(
                 </CardContent>
               </Card>
             )}
+
+            {/* Roles Assignment */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Roles & Permissions</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Assign roles to control user access and permissions
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Selected Roles */}
+                {selectedRoleIds.length > 0 && (
+                  <div className="space-y-2">
+                    <Label>Assigned Roles</Label>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedRoleIds.map((roleId) => {
+                        const role = availableRoles.find((r) => r.id === roleId);
+                        if (!role) return null;
+                        return (
+                          <Badge key={roleId} variant="secondary" className="pr-1">
+                            {role.name}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-4 w-4 p-0 ml-2 hover:bg-transparent"
+                              onClick={() => removeRole(roleId)}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          </Badge>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Role Selection */}
+                <div className="space-y-2">
+                  <Label>Available Roles</Label>
+                  {rolesLoading ? (
+                    <p className="text-sm text-muted-foreground">Loading roles...</p>
+                  ) : availableRoles.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">No active roles available</p>
+                  ) : (
+                    <ScrollArea className="h-48 border rounded-md p-3">
+                      <div className="space-y-2">
+                        {availableRoles.map((role) => (
+                          <div key={role.id} className="flex items-start space-x-3 p-2 hover:bg-muted/50 rounded">
+                            <Checkbox
+                              id={`role-${role.id}`}
+                              checked={selectedRoleIds.includes(role.id)}
+                              onCheckedChange={() => toggleRole(role.id)}
+                            />
+                            <div className="flex-1 space-y-1">
+                              <Label
+                                htmlFor={`role-${role.id}`}
+                                className="text-sm font-medium cursor-pointer"
+                              >
+                                {role.name}
+                              </Label>
+                              {role.description && (
+                                <p className="text-xs text-muted-foreground">
+                                  {role.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </>
         )}
       </div>
