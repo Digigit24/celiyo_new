@@ -31,6 +31,18 @@ export const API_CONFIG = {
     REFRESH: '/auth/token/refresh/',
     VERIFY: '/auth/token/verify/',
     LOGOUT: '/auth/logout/',
+    // User Management endpoints
+    USERS: {
+      LIST: '/users/',
+      DETAIL: '/users/:id/',
+      CREATE: '/users/',
+      UPDATE: '/users/:id/',
+      DELETE: '/users/:id/',
+      ASSIGN_ROLES: '/users/:id/assign_roles/',
+      REMOVE_ROLE: '/users/:id/remove_role/',
+      ME: '/users/me/',
+      UPDATE_ME: '/users/update_me/',
+    },
   },
 
   // ==================== HMS ====================

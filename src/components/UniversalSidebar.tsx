@@ -27,6 +27,8 @@ import {
   Microscope,
   Package,
   Receipt,
+  Shield,
+  UserCog,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -219,6 +221,19 @@ const menuItems: MenuItem[] = [
         label: "Procedure Bills",
         icon: Receipt,
         path: "/opd/procedure-bills",
+      },
+    ],
+  },
+  {
+    id: "admin",
+    label: "Admin",
+    icon: Shield,
+    children: [
+      {
+        id: "admin-users",
+        label: "Users",
+        icon: UserCog,
+        path: "/admin/users",
       },
     ],
   },
