@@ -11,8 +11,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Shield, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 interface PermissionsEditorProps {
   schema: Record<string, any>;
@@ -98,6 +99,90 @@ export const PermissionsEditor: React.FC<PermissionsEditorProps> = ({
     actionKey: string
   ): boolean | string | undefined => {
     return value?.[moduleKey]?.[resourceKey]?.[actionKey];
+  };
+
+  // Bulk Actions
+  const grantAllPermissions = () => {
+    const newPermissions: Record<string, any> = {};
+
+    Object.entries(schema).forEach(([moduleKey, moduleConfig]: [string, any]) => {
+      newPermissions[moduleKey] = {};
+
+      Object.entries(moduleConfig.resources || {}).forEach(([resourceKey, resourceConfig]: [string, any]) => {
+        newPermissions[moduleKey][resourceKey] = {};
+
+        Object.entries(resourceConfig.actions || {}).forEach(([actionKey, actionConfig]: [string, any]) => {
+          if (actionConfig.type === 'boolean') {
+            newPermissions[moduleKey][resourceKey][actionKey] = true;
+          } else if (actionConfig.type === 'scope') {
+            newPermissions[moduleKey][resourceKey][actionKey] = 'all';
+          }
+        });
+      });
+    });
+
+    onChange(newPermissions);
+  };
+
+  const clearAllPermissions = () => {
+    onChange({});
+  };
+
+  const grantModulePermissions = (moduleKey: string) => {
+    const newPermissions = { ...value };
+    const moduleConfig = schema[moduleKey];
+
+    if (!newPermissions[moduleKey]) {
+      newPermissions[moduleKey] = {};
+    }
+
+    Object.entries(moduleConfig.resources || {}).forEach(([resourceKey, resourceConfig]: [string, any]) => {
+      newPermissions[moduleKey][resourceKey] = {};
+
+      Object.entries(resourceConfig.actions || {}).forEach(([actionKey, actionConfig]: [string, any]) => {
+        if (actionConfig.type === 'boolean') {
+          newPermissions[moduleKey][resourceKey][actionKey] = true;
+        } else if (actionConfig.type === 'scope') {
+          newPermissions[moduleKey][resourceKey][actionKey] = 'all';
+        }
+      });
+    });
+
+    onChange(newPermissions);
+  };
+
+  const clearModulePermissions = (moduleKey: string) => {
+    const newPermissions = { ...value };
+    delete newPermissions[moduleKey];
+    onChange(newPermissions);
+  };
+
+  const grantResourcePermissions = (moduleKey: string, resourceKey: string, scope: 'own' | 'team' | 'all' = 'all') => {
+    const newPermissions = { ...value };
+    const resourceConfig = schema[moduleKey]?.resources?.[resourceKey];
+
+    if (!newPermissions[moduleKey]) {
+      newPermissions[moduleKey] = {};
+    }
+    newPermissions[moduleKey][resourceKey] = {};
+
+    Object.entries(resourceConfig.actions || {}).forEach(([actionKey, actionConfig]: [string, any]) => {
+      if (actionConfig.type === 'boolean') {
+        newPermissions[moduleKey][resourceKey][actionKey] = true;
+      } else if (actionConfig.type === 'scope') {
+        newPermissions[moduleKey][resourceKey][actionKey] = scope;
+      }
+    });
+
+    onChange(newPermissions);
+  };
+
+  const clearResourcePermissions = (moduleKey: string, resourceKey: string) => {
+    const newPermissions = { ...value };
+    if (newPermissions[moduleKey]) {
+      delete newPermissions[moduleKey][resourceKey];
+    }
+    onChange(newPermissions);
   };
 
   const renderAction = (
@@ -189,24 +274,83 @@ export const PermissionsEditor: React.FC<PermissionsEditorProps> = ({
 
   return (
     <div className="space-y-4">
+      {/* Super Admin / Bulk Actions */}
+      <Card className="border-2 border-purple-200 bg-purple-50/50">
+        <CardHeader className="py-3 px-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-purple-600" />
+              <CardTitle className="text-base">Bulk Actions</CardTitle>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="px-4 pb-4">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={grantAllPermissions}
+              disabled={disabled}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Grant All (Super Admin)
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={clearAllPermissions}
+              disabled={disabled}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Clear All
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Grant all permissions across all modules or clear everything at once
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Modules */}
       {Object.entries(schema).map(([moduleKey, moduleConfig]: [string, any]) => {
         const isModuleExpanded = expandedModules.has(moduleKey);
 
         return (
           <Card key={moduleKey}>
-            <CardHeader className="py-3 px-4 cursor-pointer" onClick={() => toggleModule(moduleKey)}>
+            <CardHeader className="py-3 px-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => toggleModule(moduleKey)}>
                   {isModuleExpanded ? (
                     <ChevronDown className="h-4 w-4" />
                   ) : (
                     <ChevronRight className="h-4 w-4" />
                   )}
                   <CardTitle className="text-base">{moduleConfig.label || moduleKey}</CardTitle>
+                  <Badge variant="outline" className="text-xs">
+                    {Object.keys(moduleConfig.resources || {}).length} resources
+                  </Badge>
                 </div>
-                <Badge variant="outline" className="text-xs">
-                  {Object.keys(moduleConfig.resources || {}).length} resources
-                </Badge>
+
+                {/* Module Bulk Actions */}
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => grantModulePermissions(moduleKey)}
+                    disabled={disabled}
+                  >
+                    Grant All
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => clearModulePermissions(moduleKey)}
+                    disabled={disabled}
+                  >
+                    Clear
+                  </Button>
+                </div>
               </div>
             </CardHeader>
 
@@ -219,27 +363,71 @@ export const PermissionsEditor: React.FC<PermissionsEditorProps> = ({
 
                     return (
                       <div key={resourceKey} className="border rounded-lg">
-                        <div
-                          className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted/50"
-                          onClick={() => toggleResource(resourceFullKey)}
-                        >
-                          <div className="flex items-center gap-2">
-                            {isResourceExpanded ? (
-                              <ChevronDown className="h-3 w-3" />
-                            ) : (
-                              <ChevronRight className="h-3 w-3" />
-                            )}
-                            <span className="font-medium text-sm">
-                              {resourceConfig.label || resourceKey}
-                            </span>
+                        <div className="p-3 bg-muted/30">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 cursor-pointer flex-1" onClick={() => toggleResource(resourceFullKey)}>
+                              {isResourceExpanded ? (
+                                <ChevronDown className="h-3 w-3" />
+                              ) : (
+                                <ChevronRight className="h-3 w-3" />
+                              )}
+                              <span className="font-medium text-sm">
+                                {resourceConfig.label || resourceKey}
+                              </span>
+                              <Badge variant="secondary" className="text-xs">
+                                {Object.keys(resourceConfig.actions || {}).length} actions
+                              </Badge>
+                            </div>
+
+                            {/* Resource Bulk Actions */}
+                            <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => grantResourcePermissions(moduleKey, resourceKey, 'own')}
+                                disabled={disabled}
+                                title="Grant all with 'own' scope"
+                              >
+                                Own
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => grantResourcePermissions(moduleKey, resourceKey, 'team')}
+                                disabled={disabled}
+                                title="Grant all with 'team' scope"
+                              >
+                                Team
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => grantResourcePermissions(moduleKey, resourceKey, 'all')}
+                                disabled={disabled}
+                                title="Grant all with 'all' scope"
+                              >
+                                All
+                              </Button>
+                              <Separator orientation="vertical" className="h-4 mx-1" />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0"
+                                onClick={() => clearResourcePermissions(moduleKey, resourceKey)}
+                                disabled={disabled}
+                                title="Clear all permissions"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
                           </div>
-                          <Badge variant="secondary" className="text-xs">
-                            {Object.keys(resourceConfig.actions || {}).length} actions
-                          </Badge>
                         </div>
 
                         {isResourceExpanded && (
-                          <div className="border-t px-3 pb-2 space-y-1">
+                          <div className="px-3 pb-2 space-y-1">
                             {Object.entries(resourceConfig.actions || {}).map(
                               ([actionKey, actionConfig]: [string, any]) =>
                                 renderAction(moduleKey, resourceKey, actionKey, actionConfig)
