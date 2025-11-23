@@ -29,6 +29,7 @@ import {
   Receipt,
   Shield,
   UserCog,
+  ShieldCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -234,6 +235,12 @@ const menuItems: MenuItem[] = [
         label: "Users",
         icon: UserCog,
         path: "/admin/users",
+      },
+      {
+        id: "admin-roles",
+        label: "Roles",
+        icon: ShieldCheck,
+        path: "/admin/roles",
       },
     ],
   },

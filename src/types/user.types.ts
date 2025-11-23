@@ -3,10 +3,41 @@
 // Role interface
 export interface Role {
   id: string;
+  tenant: string;
+  name: string;
+  description: string;
+  permissions: Record<string, any>;
+  is_active: boolean;
+  created_by: string;
+  created_by_email?: string;
+  member_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Role create data
+export interface RoleCreateData {
   name: string;
   description?: string;
   permissions?: Record<string, any>;
-  is_active: boolean;
+  is_active?: boolean;
+}
+
+// Role update data
+export interface RoleUpdateData {
+  name?: string;
+  description?: string;
+  permissions?: Record<string, any>;
+  is_active?: boolean;
+}
+
+// Role list query parameters
+export interface RoleListParams {
+  search?: string;
+  is_active?: boolean;
+  page?: number;
+  page_size?: number;
+  [key: string]: string | number | boolean | undefined;
 }
 
 // User interface

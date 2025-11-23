@@ -43,6 +43,16 @@ export const API_CONFIG = {
       ME: '/users/me/',
       UPDATE_ME: '/users/update_me/',
     },
+    // Role Management endpoints
+    ROLES: {
+      LIST: '/roles/',
+      DETAIL: '/roles/:id/',
+      CREATE: '/roles/',
+      UPDATE: '/roles/:id/',
+      DELETE: '/roles/:id/',
+      MEMBERS: '/roles/:id/members/',
+      PERMISSIONS_SCHEMA: '/roles/permissions_schema/',
+    },
   },
 
   // ==================== HMS ====================
