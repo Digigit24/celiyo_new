@@ -39,6 +39,7 @@ import VisitFindings from "./pages/opd-production/VisitFindings";
 import ProcedureMasters from "./pages/opd-production/ProcedureMasters";
 import ProcedurePackages from "./pages/opd-production/ProcedurePackages";
 import ProcedureBills from "./pages/opd-production/ProcedureBills";
+import { Users } from "./pages/Users";
 
 const queryClient = new QueryClient();
 
@@ -109,7 +110,11 @@ const AppLayout = () => {
             <Route path="/whatsapp/groups" element={<Groups />} />
             <Route path="/whatsapp/templates" element={<Templates />} />
             <Route path="/whatsapp/campaigns" element={<Campaigns />} />
-            
+
+            {/* Admin/User Management Routes */}
+            <Route path="/admin/users" element={<Users />} />
+            <Route path="/users" element={<Users />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
