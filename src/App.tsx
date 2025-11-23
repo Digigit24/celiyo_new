@@ -41,6 +41,7 @@ import ProcedurePackages from "./pages/opd-production/ProcedurePackages";
 import ProcedureBills from "./pages/opd-production/ProcedureBills";
 import { Users } from "./pages/Users";
 import { Roles } from "./pages/Roles";
+import { Debug } from "./pages/Debug";
 
 const queryClient = new QueryClient();
 
@@ -117,6 +118,8 @@ const AppLayout = () => {
             <Route path="/users" element={<Users />} />
             <Route path="/admin/roles" element={<Roles />} />
             <Route path="/roles" element={<Roles />} />
+            <Route path="/admin/debug" element={<Debug />} />
+            <Route path="/debug" element={<Debug />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

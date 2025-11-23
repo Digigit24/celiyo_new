@@ -30,6 +30,7 @@ import {
   Shield,
   UserCog,
   ShieldCheck,
+  Bug,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -241,6 +242,12 @@ const menuItems: MenuItem[] = [
         label: "Roles",
         icon: ShieldCheck,
         path: "/admin/roles",
+      },
+      {
+        id: "admin-debug",
+        label: "Debug",
+        icon: Bug,
+        path: "/admin/debug",
       },
     ],
   },
