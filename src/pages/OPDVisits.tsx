@@ -20,6 +20,9 @@ import {
   AlertCircle,
   FileText,
   Stethoscope,
+  Eye,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import { OpdVisit, OpdVisitListParams } from '@/types/opdVisit.types';
 import { format } from 'date-fns';
@@ -221,6 +224,74 @@ export const OPDVisits: React.FC = () => {
           >
             {visit.payment_status ? visit.payment_status.replace('_', ' ').toUpperCase() : 'PENDING'}
           </Badge>
+        </div>
+      ),
+    },
+    {
+      header: 'Actions',
+      key: 'actions',
+      cell: (visit) => (
+        <div className="flex gap-1">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleView(visit);
+            }}
+            className="h-8 w-8 p-0"
+            title="View Details"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEdit(visit);
+            }}
+            className="h-8 w-8 p-0"
+            title="Edit Visit"
+          >
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleBilling(visit);
+            }}
+            className="h-8 w-8 p-0"
+            title="OPD Billing"
+          >
+            <DollarSign className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleConsultation(visit);
+            }}
+            className="h-8 w-8 p-0"
+            title="Consultation"
+          >
+            <Stethoscope className="h-4 w-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(visit);
+            }}
+            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+            title="Delete Visit"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       ),
     },
@@ -496,9 +567,6 @@ export const OPDVisits: React.FC = () => {
                 renderMobileCard={renderMobileCard}
                 getRowId={(visit) => visit.id}
                 getRowLabel={(visit) => visit.visit_number}
-                onView={handleView}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
                 emptyTitle="No visits found"
                 emptySubtitle="Try adjusting your search or filters, or create a new visit"
               />
