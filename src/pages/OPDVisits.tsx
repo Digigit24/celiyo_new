@@ -240,6 +240,81 @@ export const OPDVisits: React.FC = () => {
         </div>
       ),
     },
+    {
+      header: 'Actions',
+      key: 'actions',
+      className: 'w-[18%]',
+      cell: (visit) => (
+        <div className="flex items-center justify-end gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleBilling(visit);
+            }}
+            className="h-8"
+          >
+            <DollarSign className="h-3.5 w-3.5 mr-1.5" />
+            Billing
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleConsultation(visit);
+            }}
+            className="h-8"
+          >
+            <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
+            Consult
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleView(visit);
+                }}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit(visit);
+                }}
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit Visit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(visit);
+                }}
+                className="text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Visit
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      ),
+    },
   ];
 
   // Mobile card renderer
@@ -513,8 +588,6 @@ export const OPDVisits: React.FC = () => {
                 getRowId={(visit) => visit.id}
                 getRowLabel={(visit) => visit.visit_number}
                 onView={handleView}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
                 emptyTitle="No visits found"
                 emptySubtitle="Try adjusting your search or filters, or create a new visit"
               />
