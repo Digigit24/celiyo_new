@@ -1,5 +1,5 @@
 // src/pages/CRMLeads.tsx
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useCRM } from '@/hooks/useCRM';
 import { useAuth } from '@/hooks/useAuth';
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
@@ -21,7 +21,7 @@ type ViewMode = 'list' | 'kanban';
 
 export const CRMLeads: React.FC = () => {
   const { user, hasModuleAccess } = useAuth();
-  const { hasCRMAccess, useLeads, useLeadStatuses, deleteLead, patchLead, updateLeadStatus, deleteLeadStatus } = useCRM();
+  const { hasCRMAccess, useLeads, useLeadStatuses, useFieldConfigurations, deleteLead, patchLead, updateLeadStatus, deleteLeadStatus } = useCRM();
 
   // View mode state
   const [viewMode, setViewMode] = useState<ViewMode>('list');
@@ -49,6 +49,13 @@ export const CRMLeads: React.FC = () => {
     page_size: 100,
     ordering: 'order_index',
     is_active: true
+  });
+
+  // Fetch field configurations for dynamic columns
+  const { data: configurationsData } = useFieldConfigurations({
+    is_active: true,
+    ordering: 'display_order',
+    page_size: 200,
   });
 
   // Check access
@@ -297,8 +304,136 @@ export const CRMLeads: React.FC = () => {
     return `${currency || '$'}${formatted}`;
   };
 
-  // Desktop table columns
-  const columns: DataTableColumn<Lead>[] = [
+  // Create field visibility map
+  const fieldVisibilityMap = useMemo(() => {
+    const allFields = configurationsData?.results || [];
+    return new Map(
+      allFields
+        .filter((field) => field.is_standard)
+        .map((field) => [field.field_name, field.is_visible])
+    );
+  }, [configurationsData?.results]);
+
+  // Helper to check if a field is visible
+  const isFieldVisible = useCallback((fieldName: string): boolean => {
+    // Default to visible if no configuration exists
+    return fieldVisibilityMap.get(fieldName) ?? true;
+  }, [fieldVisibilityMap]);
+
+  // Build dynamic columns based on field configurations
+  const dynamicColumns = useMemo(() => {
+    const allFields = configurationsData?.results || [];
+    const standardFieldsMap = new Map(
+      allFields
+        .filter((field) => field.is_standard && field.is_visible)
+        .map((field) => [field.field_name, { order: field.display_order, config: field }])
+    );
+
+    // Column definitions for each standard field
+    const columnDefinitions: Record<string, DataTableColumn<Lead>> = {
+      name: {
+        header: 'Name',
+        key: 'name',
+        cell: (lead) => (
+          <div className="flex flex-col">
+            <span className="font-medium text-foreground">{lead.name}</span>
+            {lead.title && standardFieldsMap.has('title') && (
+              <span className="text-xs text-muted-foreground">{lead.title}</span>
+            )}
+          </div>
+        ),
+        className: 'w-[200px]',
+      },
+      company: {
+        header: 'Company',
+        key: 'company',
+        cell: (lead) => (
+          <div className="flex items-center gap-2">
+            {lead.company ? (
+              <>
+                <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-sm">{lead.company}</span>
+              </>
+            ) : (
+              <span className="text-sm text-muted-foreground">-</span>
+            )}
+          </div>
+        ),
+      },
+      phone: {
+        header: 'Contact',
+        key: 'contact',
+        cell: (lead) => (
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1.5 text-xs">
+              <Phone className="h-3 w-3 text-muted-foreground" />
+              <span>{lead.phone}</span>
+            </div>
+            {lead.email && standardFieldsMap.has('email') && (
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Mail className="h-3 w-3" />
+                <span>{lead.email}</span>
+              </div>
+            )}
+          </div>
+        ),
+      },
+      status: {
+        header: 'Status',
+        key: 'status',
+        cell: (lead) => getStatusBadge(lead.status),
+      },
+      priority: {
+        header: 'Priority',
+        key: 'priority',
+        cell: (lead) => getPriorityBadge(lead.priority),
+      },
+      value_amount: {
+        header: 'Value',
+        key: 'value',
+        cell: (lead) => (
+          <div className="flex items-center gap-1.5">
+            <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
+            <span className="font-medium">
+              {formatCurrency(lead.value_amount, lead.value_currency)}
+            </span>
+          </div>
+        ),
+        className: 'text-right',
+      },
+    };
+
+    // Build columns array from visible fields, sorted by display_order
+    const visibleColumns: Array<{ column: DataTableColumn<Lead>; order: number }> = [];
+
+    standardFieldsMap.forEach((value, fieldName) => {
+      const columnDef = columnDefinitions[fieldName];
+      if (columnDef) {
+        visibleColumns.push({ column: columnDef, order: value.order });
+      }
+    });
+
+    // Sort by display_order and extract just the column definitions
+    const sortedColumns = visibleColumns
+      .sort((a, b) => a.order - b.order)
+      .map((item) => item.column);
+
+    // Always add the "Last Updated" column at the end
+    sortedColumns.push({
+      header: 'Last Updated',
+      key: 'updated',
+      cell: (lead) => (
+        <span className="text-xs text-muted-foreground">
+          {formatDistanceToNow(new Date(lead.updated_at), { addSuffix: true })}
+        </span>
+      ),
+    });
+
+    return sortedColumns;
+  }, [configurationsData?.results, statusesData?.results]);
+
+  // Desktop table columns (fallback to static if no config data)
+  const columns: DataTableColumn<Lead>[] = dynamicColumns.length > 0 ? dynamicColumns : [
     {
       header: 'Name',
       key: 'name',
@@ -384,45 +519,53 @@ export const CRMLeads: React.FC = () => {
   const renderMobileCard = (lead: Lead, actions: RowActions<Lead>) => (
     <>
       {/* Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-base truncate">{lead.name}</h3>
-          {lead.title && (
-            <p className="text-xs text-muted-foreground mt-0.5">{lead.title}</p>
-          )}
+      {isFieldVisible('name') && (
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-base truncate">{lead.name}</h3>
+            {lead.title && isFieldVisible('title') && (
+              <p className="text-xs text-muted-foreground mt-0.5">{lead.title}</p>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            {isFieldVisible('priority') && getPriorityBadge(lead.priority)}
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          {getPriorityBadge(lead.priority)}
-        </div>
-      </div>
+      )}
 
       {/* Company & Status */}
-      <div className="flex flex-wrap items-center gap-2">
-        {lead.company && (
-          <div className="flex items-center gap-1.5 text-sm">
-            <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-            <span>{lead.company}</span>
-          </div>
-        )}
-        {getStatusBadge(lead.status)}
-      </div>
+      {(isFieldVisible('company') || isFieldVisible('status')) && (
+        <div className="flex flex-wrap items-center gap-2">
+          {lead.company && isFieldVisible('company') && (
+            <div className="flex items-center gap-1.5 text-sm">
+              <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>{lead.company}</span>
+            </div>
+          )}
+          {isFieldVisible('status') && getStatusBadge(lead.status)}
+        </div>
+      )}
 
       {/* Contact Info */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-1.5 text-sm">
-          <Phone className="h-3.5 w-3.5 text-muted-foreground" />
-          <span>{lead.phone}</span>
+      {(isFieldVisible('phone') || isFieldVisible('email')) && (
+        <div className="space-y-1">
+          {isFieldVisible('phone') && (
+            <div className="flex items-center gap-1.5 text-sm">
+              <Phone className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>{lead.phone}</span>
+            </div>
+          )}
+          {lead.email && isFieldVisible('email') && (
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Mail className="h-3.5 w-3.5" />
+              <span className="truncate">{lead.email}</span>
+            </div>
+          )}
         </div>
-        {lead.email && (
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <Mail className="h-3.5 w-3.5" />
-            <span className="truncate">{lead.email}</span>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Value */}
-      {lead.value_amount && (
+      {lead.value_amount && isFieldVisible('value_amount') && (
         <div className="flex items-center gap-1.5 text-sm font-medium">
           <DollarSign className="h-4 w-4 text-muted-foreground" />
           <span>{formatCurrency(lead.value_amount, lead.value_currency)}</span>
