@@ -1,16 +1,14 @@
 // src/components/LeadsFormDrawer.tsx
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Pencil, Trash2, Phone, Mail, Building2, DollarSign } from 'lucide-react';
+import { Pencil, Trash2, Phone, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { Lead, CreateLeadPayload, UpdateLeadPayload } from '@/types/crmTypes';
 import { useCRM } from '@/hooks/useCRM';
 
-import LeadBasicInfo from './lead-drawer/LeadBasicInfo';
-import LeadAddressInfo from './lead-drawer/LeadAddressInfo';
+import LeadDetailsForm from './lead-drawer/LeadDetailsForm';
 import LeadActivities from './lead-drawer/LeadActivities';
-import LeadCustomFields from './lead-drawer/LeadCustomFields';
 import { SideDrawer, type DrawerActionButton, type DrawerHeaderAction } from '@/components/SideDrawer';
 
 // Form handle interface for collecting form values
@@ -44,7 +42,7 @@ export function LeadsFormDrawer({
   onDelete,
   onModeChange,
 }: LeadsFormDrawerProps) {
-  const [activeTab, setActiveTab] = useState('basic');
+  const [activeTab, setActiveTab] = useState('details');
   const [currentMode, setCurrentMode] = useState(mode);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -52,10 +50,8 @@ export function LeadsFormDrawer({
   const { useLead, createLead, updateLead, deleteLead } = useCRM();
   const { data: lead, isLoading, error, mutate: revalidate } = useLead(leadId);
 
-  // Form refs to collect values
-  const basicInfoRef = useRef<LeadFormHandle | null>(null);
-  const addressInfoRef = useRef<PartialLeadFormHandle | null>(null);
-  const customFieldsRef = useRef<PartialLeadFormHandle | null>(null);
+  // Form ref - unified form for all lead data
+  const detailsFormRef = useRef<LeadFormHandle | null>(null);
 
   // Sync internal mode with prop
   useEffect(() => {
@@ -65,7 +61,7 @@ export function LeadsFormDrawer({
   // Reset tab when opening
   useEffect(() => {
     if (open) {
-      setActiveTab('basic');
+      setActiveTab('details');
     }
   }, [open]);
 
@@ -77,7 +73,7 @@ export function LeadsFormDrawer({
   }, [currentMode, onSuccess, revalidate]);
 
   const handleClose = useCallback(() => {
-    setActiveTab('basic');
+    setActiveTab('details');
     onOpenChange(false);
   }, [onOpenChange]);
 
@@ -113,38 +109,21 @@ export function LeadsFormDrawer({
   const handleSave = useCallback(async () => {
     setIsSaving(true);
     try {
-      // Collect values from all form tabs
-      const basicValues = await basicInfoRef.current?.getFormValues();
-      const addressValues = await addressInfoRef.current?.getFormValues();
-      const customFieldsValues = await customFieldsRef.current?.getFormValues();
+      // Collect all form values from unified form
+      const formValues = await detailsFormRef.current?.getFormValues();
 
-      // Validate each section separately
-      if (!basicValues) {
-        toast.error('Please fill in all required fields in Basic Info tab');
-        setActiveTab('basic');
+      if (!formValues) {
+        toast.error('Please fill in all required fields correctly');
+        setActiveTab('details');
         setIsSaving(false);
         return;
       }
 
-      if (customFieldsValues === null) {
-        toast.error('Please fill in all required custom fields');
-        setActiveTab('custom');
-        setIsSaving(false);
-        return;
-      }
-
-      // Merge all form values
-      const allValues: CreateLeadPayload = {
-        ...basicValues,
-        ...addressValues,
-        ...(customFieldsValues || {}),
-      };
-
-      console.log('Form values:', allValues);
+      console.log('Form values:', formValues);
 
       if (currentMode === 'create') {
         // CREATE FLOW
-        await createLead(allValues);
+        await createLead(formValues);
         toast.success('Lead created successfully');
         handleSuccess();
         handleClose();
@@ -152,10 +131,11 @@ export function LeadsFormDrawer({
         // EDIT FLOW
         if (!leadId) {
           toast.error('Lead ID is missing');
+          setIsSaving(false);
           return;
         }
 
-        await updateLead(leadId, allValues as UpdateLeadPayload);
+        await updateLead(leadId, formValues as UpdateLeadPayload);
         toast.success('Lead updated successfully');
         handleSuccess();
         handleSwitchToView();
@@ -260,38 +240,15 @@ export function LeadsFormDrawer({
   const drawerContent = (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="basic">Basic Info</TabsTrigger>
-          <TabsTrigger value="address">Address</TabsTrigger>
-          <TabsTrigger value="custom">Custom Fields</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="details">Lead Details</TabsTrigger>
           <TabsTrigger value="activities" disabled={currentMode === 'create'}>
             Activities
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="basic" className="mt-6 space-y-6">
-          <LeadBasicInfo
-            ref={basicInfoRef}
-            lead={lead}
-            mode={currentMode}
-            onSuccess={handleSuccess}
-          />
-        </TabsContent>
-
-        <TabsContent value="address" className="mt-6 space-y-6">
-          <LeadAddressInfo
-            ref={addressInfoRef}
-            lead={lead}
-            mode={currentMode}
-          />
-        </TabsContent>
-
-        <TabsContent value="custom" className="mt-6 space-y-6">
-          <LeadCustomFields
-            ref={customFieldsRef}
-            lead={lead}
-            mode={currentMode}
-          />
+        <TabsContent value="details" className="mt-6 space-y-6">
+          <LeadDetailsForm ref={detailsFormRef} lead={lead} mode={currentMode} />
         </TabsContent>
 
         <TabsContent value="activities" className="mt-6 space-y-6">
