@@ -19,6 +19,7 @@ import NotFound from "./pages/NotFound";
 import { CRMLeads } from "./pages/CRMLeads";
 import { CRMActivities } from "./pages/CRMActivities"; // ⬅️ ADDED
 import { CRMLeadStatuses } from "./pages/CRMLeadStatuses";
+import { CRMFieldConfigurations } from "./pages/CRMFieldConfigurations";
 import { CRMTasks } from "./pages/CRMTasks";
 import { Meetings } from "./pages/Meetings";
 import { Doctors } from "./pages/Doctors";
@@ -88,6 +89,7 @@ const AppLayout = () => {
             <Route path="/crm/leads" element={<CRMLeads />} />
             <Route path="/crm/activities" element={<CRMActivities />} /> {/* ⬅️ ADDED */}
             <Route path="/crm/statuses" element={<CRMLeadStatuses />} />
+            <Route path="/crm/settings" element={<CRMFieldConfigurations />} />
             <Route path="/crm/tasks" element={<CRMTasks />} />
             <Route path="/crm/meetings" element={<Meetings />} />
 

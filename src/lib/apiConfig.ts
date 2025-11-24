@@ -178,7 +178,8 @@ export const API_CONFIG = {
     LEAD_CREATE: '/crm/leads/',
     LEAD_UPDATE: '/crm/leads/:id/',
     LEAD_DELETE: '/crm/leads/:id/',
-    
+    LEAD_KANBAN: '/crm/leads/kanban/',
+
     // Lead Status endpoints
     LEAD_STATUSES: '/crm/statuses/',
     LEAD_STATUS_DETAIL: '/crm/statuses/:id/',
@@ -206,19 +207,22 @@ export const API_CONFIG = {
     TASK_CREATE: '/tasks/',
     TASK_UPDATE: '/tasks/:id/',
     TASK_DELETE: '/tasks/:id/',
+
     // Meeting endpoints
-
     MEETINGS: '/meetings/',
-
     MEETING_DETAIL: '/meetings/:id/',
-
     MEETING_CREATE: '/meetings/',
-
     MEETING_UPDATE: '/meetings/:id/',
-
     MEETING_DELETE: '/meetings/:id/',
-
     MEETING_CALENDAR: '/meetings/calendar/',
+
+    // Field Configuration endpoints
+    FIELD_CONFIGURATIONS: '/crm/field-configurations/',
+    FIELD_CONFIGURATION_DETAIL: '/crm/field-configurations/:id/',
+    FIELD_CONFIGURATION_CREATE: '/crm/field-configurations/',
+    FIELD_CONFIGURATION_UPDATE: '/crm/field-configurations/:id/',
+    FIELD_CONFIGURATION_DELETE: '/crm/field-configurations/:id/',
+    FIELD_SCHEMA: '/crm/field-configurations/field_schema/',
   },
 
   // ==================== WHATSAPP ====================
