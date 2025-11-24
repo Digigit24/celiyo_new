@@ -38,11 +38,11 @@ export const CRMFieldConfigurations: React.FC = () => {
   const { data: configurationsData, error, isLoading, mutate } = useFieldConfigurations(queryParams);
 
   // Filter configurations based on active tab
-  const filteredConfigurations = configurationsData?.results.filter((config) => {
+  const filteredConfigurations = configurationsData?.results?.filter((config) => {
     if (activeTab === 'standard') return config.is_standard;
     if (activeTab === 'custom') return !config.is_standard;
     return true;
-  });
+  }) || [];
 
   // Check access
   if (!hasCRMAccess) {
@@ -287,11 +287,11 @@ export const CRMFieldConfigurations: React.FC = () => {
 
   // Statistics
   const stats = {
-    total: configurationsData?.results.length || 0,
-    standard: configurationsData?.results.filter(c => c.is_standard).length || 0,
-    custom: configurationsData?.results.filter(c => !c.is_standard).length || 0,
-    visible: configurationsData?.results.filter(c => c.is_visible).length || 0,
-    required: configurationsData?.results.filter(c => c.is_required).length || 0,
+    total: configurationsData?.results?.length || 0,
+    standard: (configurationsData?.results || []).filter(c => c.is_standard).length,
+    custom: (configurationsData?.results || []).filter(c => !c.is_standard).length,
+    visible: (configurationsData?.results || []).filter(c => c.is_visible).length,
+    required: (configurationsData?.results || []).filter(c => c.is_required).length,
   };
 
   return (
