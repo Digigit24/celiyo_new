@@ -68,11 +68,23 @@ const LeadCustomFields = forwardRef<PartialLeadFormHandle, LeadCustomFieldsProps
           if (field.field_type === 'CHECKBOX') {
             fieldSchema = z.boolean({
               required_error: `${field.field_label} is required`,
+            }).refine((val) => val === true, {
+              message: `${field.field_label} must be checked`,
             });
           } else if (field.field_type === 'MULTISELECT') {
             fieldSchema = z
               .array(z.string())
-              .min(1, `${field.field_label} is required`);
+              .min(1, `${field.field_label} - at least one option is required`);
+          } else if (field.field_type === 'EMAIL') {
+            fieldSchema = z
+              .string()
+              .min(1, `${field.field_label} is required`)
+              .email('Invalid email address');
+          } else if (field.field_type === 'URL') {
+            fieldSchema = z
+              .string()
+              .min(1, `${field.field_label} is required`)
+              .url('Invalid URL');
           } else {
             fieldSchema = z
               .string()
@@ -100,20 +112,29 @@ const LeadCustomFields = forwardRef<PartialLeadFormHandle, LeadCustomFieldsProps
 
     // Initialize form with lead metadata
     useEffect(() => {
-      if (lead?.metadata && customFields.length > 0) {
-        const formValues: Record<string, any> = {};
-        customFields.forEach((field) => {
-          formValues[field.field_name] = lead.metadata?.[field.field_name] ?? '';
-        });
-        reset(formValues);
-      } else if (mode === 'create' && customFields.length > 0) {
-        const formValues: Record<string, any> = {};
-        customFields.forEach((field) => {
-          formValues[field.field_name] = field.default_value || '';
-        });
-        reset(formValues);
-      }
-    }, [lead, customFields, mode, reset]);
+      if (customFields.length === 0) return;
+
+      const formValues: Record<string, any> = {};
+      customFields.forEach((field) => {
+        // Get value from lead metadata or use default
+        let value = field.default_value || '';
+
+        if (lead?.metadata?.[field.field_name] !== undefined) {
+          value = lead.metadata[field.field_name];
+        }
+
+        // Handle different field types
+        if (field.field_type === 'CHECKBOX') {
+          formValues[field.field_name] = value === true || value === 'true';
+        } else if (field.field_type === 'MULTISELECT') {
+          formValues[field.field_name] = Array.isArray(value) ? value : [];
+        } else {
+          formValues[field.field_name] = value || '';
+        }
+      });
+
+      reset(formValues);
+    }, [lead?.metadata, customFields, mode, reset]);
 
     // Expose getFormValues to parent
     useImperativeHandle(ref, () => ({
@@ -121,10 +142,19 @@ const LeadCustomFields = forwardRef<PartialLeadFormHandle, LeadCustomFieldsProps
         return new Promise((resolve) => {
           handleSubmit(
             (data) => {
+              // Clean up empty values and format for backend
+              const cleanedData: Record<string, any> = {};
+              Object.entries(data).forEach(([key, value]) => {
+                if (value !== '' && value !== null && value !== undefined) {
+                  cleanedData[key] = value;
+                }
+              });
+
               // Return custom fields as metadata
-              resolve({ metadata: data as Record<string, any> });
+              resolve({ metadata: cleanedData });
             },
-            () => {
+            (errors) => {
+              console.error('Custom fields validation errors:', errors);
               resolve(null);
             }
           )();
