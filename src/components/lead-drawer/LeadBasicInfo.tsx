@@ -405,15 +405,15 @@ const LeadBasicInfo = forwardRef<LeadFormHandle, LeadBasicInfoProps>(
             control={control}
             render={({ field }) => (
               <Select
-                value={field.value || ''}
-                onValueChange={field.onChange}
+                value={field.value || 'unassigned'}
+                onValueChange={(value) => field.onChange(value === 'unassigned' ? '' : value)}
                 disabled={isReadOnly || usersLoading}
               >
                 <SelectTrigger id="assigned_to">
                   <SelectValue placeholder={usersLoading ? 'Loading users...' : 'Select user'} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No assignment</SelectItem>
+                  <SelectItem value="unassigned">No assignment</SelectItem>
                   {usersData?.results?.map((user) => (
                     <SelectItem key={user.id} value={user.id}>
                       <div className="flex items-center gap-2">
