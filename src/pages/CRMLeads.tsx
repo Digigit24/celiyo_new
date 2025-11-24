@@ -323,10 +323,11 @@ export const CRMLeads: React.FC = () => {
   // Build dynamic columns based on field configurations
   const dynamicColumns = useMemo(() => {
     const allFields = configurationsData?.results || [];
+    // Map ALL standard fields (don't filter by visibility yet)
     const standardFieldsMap = new Map(
       allFields
-        .filter((field) => field.is_standard && field.is_visible)
-        .map((field) => [field.field_name, { order: field.display_order, config: field }])
+        .filter((field) => field.is_standard)
+        .map((field) => [field.field_name, { order: field.display_order, visible: field.is_visible, config: field }])
     );
 
     // Column definitions for each standard field
@@ -403,13 +404,31 @@ export const CRMLeads: React.FC = () => {
       },
     };
 
-    // Build columns array from visible fields, sorted by display_order
+    // Build columns array - show all fields by default, hide only if explicitly set to invisible
     const visibleColumns: Array<{ column: DataTableColumn<Lead>; order: number }> = [];
 
-    standardFieldsMap.forEach((value, fieldName) => {
-      const columnDef = columnDefinitions[fieldName];
-      if (columnDef) {
-        visibleColumns.push({ column: columnDef, order: value.order });
+    // Define default order for fields (fallback if no config exists)
+    const defaultFieldOrder: Record<string, number> = {
+      name: 0,
+      phone: 1,
+      company: 2,
+      status: 3,
+      priority: 4,
+      value_amount: 5,
+    };
+
+    // Iterate through all column definitions
+    Object.entries(columnDefinitions).forEach(([fieldName, columnDef]) => {
+      const fieldConfig = standardFieldsMap.get(fieldName);
+
+      // Show field if:
+      // 1. No config exists (default to visible), OR
+      // 2. Config exists AND is_visible is true
+      const shouldShow = !fieldConfig || fieldConfig.visible;
+
+      if (shouldShow) {
+        const order = fieldConfig?.order ?? defaultFieldOrder[fieldName] ?? 999;
+        visibleColumns.push({ column: columnDef, order });
       }
     });
 
@@ -432,88 +451,8 @@ export const CRMLeads: React.FC = () => {
     return sortedColumns;
   }, [configurationsData?.results, statusesData?.results]);
 
-  // Desktop table columns (fallback to static if no config data)
-  const columns: DataTableColumn<Lead>[] = dynamicColumns.length > 0 ? dynamicColumns : [
-    {
-      header: 'Name',
-      key: 'name',
-      cell: (lead) => (
-        <div className="flex flex-col">
-          <span className="font-medium text-foreground">{lead.name}</span>
-          {lead.title && (
-            <span className="text-xs text-muted-foreground">{lead.title}</span>
-          )}
-        </div>
-      ),
-      className: 'w-[200px]',
-    },
-    {
-      header: 'Company',
-      key: 'company',
-      cell: (lead) => (
-        <div className="flex items-center gap-2">
-          {lead.company ? (
-            <>
-              <Building2 className="h-3.5 w-3.5 text-muted-foreground" />
-              <span className="text-sm">{lead.company}</span>
-            </>
-          ) : (
-            <span className="text-sm text-muted-foreground">-</span>
-          )}
-        </div>
-      ),
-    },
-    {
-      header: 'Contact',
-      key: 'contact',
-      cell: (lead) => (
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-1.5 text-xs">
-            <Phone className="h-3 w-3 text-muted-foreground" />
-            <span>{lead.phone}</span>
-          </div>
-          {lead.email && (
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Mail className="h-3 w-3" />
-              <span>{lead.email}</span>
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      header: 'Status',
-      key: 'status',
-      cell: (lead) => getStatusBadge(lead.status),
-    },
-    {
-      header: 'Priority',
-      key: 'priority',
-      cell: (lead) => getPriorityBadge(lead.priority),
-    },
-    {
-      header: 'Value',
-      key: 'value',
-      cell: (lead) => (
-        <div className="flex items-center gap-1.5">
-          <DollarSign className="h-3.5 w-3.5 text-muted-foreground" />
-          <span className="font-medium">
-            {formatCurrency(lead.value_amount, lead.value_currency)}
-          </span>
-        </div>
-      ),
-      className: 'text-right',
-    },
-    {
-      header: 'Last Updated',
-      key: 'updated',
-      cell: (lead) => (
-        <span className="text-xs text-muted-foreground">
-          {formatDistanceToNow(new Date(lead.updated_at), { addSuffix: true })}
-        </span>
-      ),
-    },
-  ];
+  // Desktop table columns
+  const columns: DataTableColumn<Lead>[] = dynamicColumns;
 
   // Mobile card renderer
   const renderMobileCard = (lead: Lead, actions: RowActions<Lead>) => (
