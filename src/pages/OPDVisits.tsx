@@ -587,6 +587,7 @@ export const OPDVisits: React.FC = () => {
                 renderMobileCard={renderMobileCard}
                 getRowId={(visit) => visit.id}
                 getRowLabel={(visit) => visit.visit_number}
+                onView={handleView}
                 emptyTitle="No visits found"
                 emptySubtitle="Try adjusting your search or filters, or create a new visit"
               />
