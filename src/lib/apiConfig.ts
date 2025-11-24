@@ -178,7 +178,8 @@ export const API_CONFIG = {
     LEAD_CREATE: '/crm/leads/',
     LEAD_UPDATE: '/crm/leads/:id/',
     LEAD_DELETE: '/crm/leads/:id/',
-    
+    LEAD_KANBAN: '/crm/leads/kanban/',
+
     // Lead Status endpoints
     LEAD_STATUSES: '/crm/statuses/',
     LEAD_STATUS_DETAIL: '/crm/statuses/:id/',
