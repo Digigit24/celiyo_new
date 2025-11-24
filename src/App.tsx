@@ -33,6 +33,8 @@ import Templates from "./pages/Templates";
 import Campaigns from "./pages/Campaigns";
 import { useWhatsappSocket } from "@/hooks/whatsapp/useWhatsappSocket";
 import OPDVisits from "./pages/OPDVisits";  // ✅ Updated to new production page
+import OPDBilling from "./pages/opd/Billing";
+import OPDConsultation from "./pages/opd/Consultation";
 import OPDBills from "./pages/opd-production/OPDBills";
 import ClinicalNotes from "./pages/opd-production/ClinicalNotes";
 import VisitFindings from "./pages/opd-production/VisitFindings";
@@ -99,6 +101,8 @@ const AppLayout = () => {
 
             {/* OPD Routes */}
             <Route path="/opd/visits" element={<OPDVisits />} />
+            <Route path="/opd/billing/:visitId" element={<OPDBilling />} />
+            <Route path="/opd/consultation/:visitId" element={<OPDConsultation />} />
             <Route path="/opd/bills" element={<OPDBills />} />
             <Route path="/opd/clinical-notes" element={<ClinicalNotes />} />
             <Route path="/opd/findings" element={<VisitFindings />} />

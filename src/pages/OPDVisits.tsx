@@ -1,5 +1,6 @@
 // src/pages/OPDVisits.tsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOpdVisit } from '@/hooks/useOpdVisit';
 import { useAuth } from '@/hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,6 +36,7 @@ import { OpdVisit, OpdVisitListParams } from '@/types/opdVisit.types';
 import { format } from 'date-fns';
 
 export const OPDVisits: React.FC = () => {
+  const navigate = useNavigate();
   const { user, hasModuleAccess } = useAuth();
   const {
     hasHMSAccess,
@@ -123,15 +125,11 @@ export const OPDVisits: React.FC = () => {
   };
 
   const handleBilling = (visit: OpdVisit) => {
-    // TODO: Implement billing functionality
-    console.log('Open billing for visit:', visit.id);
-    // You can navigate to billing page or open a billing drawer
+    navigate(`/opd/billing/${visit.id}`);
   };
 
   const handleConsultation = (visit: OpdVisit) => {
-    // TODO: Implement consultation functionality
-    console.log('Open consultation for visit:', visit.id);
-    // You can navigate to consultation page or open a consultation drawer
+    navigate(`/opd/consultation/${visit.id}`);
   };
 
   // Format date and time for display
