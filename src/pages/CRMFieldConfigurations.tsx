@@ -12,7 +12,6 @@ import { Plus, RefreshCw, Settings2, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import type { LeadFieldConfiguration, LeadFieldConfigurationsQueryParams } from '@/types/crmTypes';
-import type { RowActions } from '@/components/DataTable';
 
 type DrawerMode = 'view' | 'edit' | 'create';
 
@@ -86,6 +85,12 @@ export const CRMFieldConfigurations: React.FC = () => {
 
   const handleDeleteConfiguration = useCallback(
     async (config: LeadFieldConfiguration) => {
+      // Prevent deletion of standard fields
+      if (config.is_standard) {
+        toast.error('Standard fields cannot be deleted');
+        return;
+      }
+
       try {
         await deleteFieldConfiguration(config.id);
         toast.success(`Field configuration "${config.field_label}" deleted successfully`);
@@ -217,25 +222,6 @@ export const CRMFieldConfigurations: React.FC = () => {
         </span>
       ),
       sortable: true,
-    },
-  ];
-
-  // Row actions
-  const rowActions: RowActions<LeadFieldConfiguration> = [
-    {
-      label: 'View Details',
-      onClick: handleViewConfiguration,
-    },
-    {
-      label: 'Edit',
-      onClick: handleEditConfiguration,
-    },
-    {
-      label: 'Delete',
-      onClick: handleDeleteConfiguration,
-      variant: 'destructive',
-      // Only allow deletion of custom fields
-      condition: (config) => !config.is_standard,
     },
   ];
 
@@ -383,14 +369,17 @@ export const CRMFieldConfigurations: React.FC = () => {
             </CardHeader>
             <CardContent>
               <DataTable
-                columns={columns}
-                data={filteredConfigurations}
-                rowActions={rowActions}
-                onRowClick={handleViewConfiguration}
+                rows={filteredConfigurations}
                 isLoading={isLoading}
-                error={error?.message}
-                emptyMessage="No field configurations found"
-                renderMobileCard={renderMobileCard}
+                columns={columns}
+                renderMobileCard={(config, actions) => renderMobileCard(config)}
+                getRowId={(config) => config.id}
+                getRowLabel={(config) => config.field_label}
+                onView={handleViewConfiguration}
+                onEdit={handleEditConfiguration}
+                onDelete={handleDeleteConfiguration}
+                emptyTitle="No field configurations found"
+                emptySubtitle="Get started by creating your first field configuration"
               />
             </CardContent>
           </Card>
@@ -406,14 +395,17 @@ export const CRMFieldConfigurations: React.FC = () => {
             </CardHeader>
             <CardContent>
               <DataTable
-                columns={columns}
-                data={filteredConfigurations}
-                rowActions={rowActions}
-                onRowClick={handleViewConfiguration}
+                rows={filteredConfigurations}
                 isLoading={isLoading}
-                error={error?.message}
-                emptyMessage="No standard field configurations found"
-                renderMobileCard={renderMobileCard}
+                columns={columns}
+                renderMobileCard={(config, actions) => renderMobileCard(config)}
+                getRowId={(config) => config.id}
+                getRowLabel={(config) => config.field_label}
+                onView={handleViewConfiguration}
+                onEdit={handleEditConfiguration}
+                onDelete={handleDeleteConfiguration}
+                emptyTitle="No standard field configurations found"
+                emptySubtitle="Standard fields can be configured once created in the backend"
               />
             </CardContent>
           </Card>
@@ -429,24 +421,25 @@ export const CRMFieldConfigurations: React.FC = () => {
             </CardHeader>
             <CardContent>
               <DataTable
-                columns={columns}
-                data={filteredConfigurations}
-                rowActions={rowActions}
-                onRowClick={handleViewConfiguration}
+                rows={filteredConfigurations}
                 isLoading={isLoading}
-                error={error?.message}
-                emptyMessage={
-                  <div className="text-center py-12">
-                    <p className="text-muted-foreground mb-4">
-                      No custom fields configured yet
-                    </p>
+                columns={columns}
+                renderMobileCard={(config, actions) => renderMobileCard(config)}
+                getRowId={(config) => config.id}
+                getRowLabel={(config) => config.field_label}
+                onView={handleViewConfiguration}
+                onEdit={handleEditConfiguration}
+                onDelete={handleDeleteConfiguration}
+                emptyTitle="No custom fields configured yet"
+                emptySubtitle={
+                  <div className="text-center">
+                    <p className="mb-4">Get started by creating your first custom field</p>
                     <Button onClick={handleCreateConfiguration} variant="outline">
                       <Plus className="w-4 h-4 mr-2" />
-                      Create Your First Custom Field
+                      Create Custom Field
                     </Button>
                   </div>
                 }
-                renderMobileCard={renderMobileCard}
               />
             </CardContent>
           </Card>
