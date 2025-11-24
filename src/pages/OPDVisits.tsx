@@ -6,6 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { DataTable, DataTableColumn } from '@/components/DataTable';
 import OPDVisitFormDrawer from '@/components/OPDVisitFormDrawer';
 import {
@@ -23,6 +29,7 @@ import {
   Eye,
   Pencil,
   Trash2,
+  MoreVertical,
 } from 'lucide-react';
 import { OpdVisit, OpdVisitListParams } from '@/types/opdVisit.types';
 import { format } from 'date-fns';
@@ -231,67 +238,73 @@ export const OPDVisits: React.FC = () => {
       header: 'Actions',
       key: 'actions',
       cell: (visit) => (
-        <div className="flex gap-1">
+        <div className="flex items-center gap-2">
           <Button
             size="sm"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleView(visit);
-            }}
-            className="h-8 w-8 p-0"
-            title="View Details"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleEdit(visit);
-            }}
-            className="h-8 w-8 p-0"
-            title="Edit Visit"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
+            variant="outline"
             onClick={(e) => {
               e.stopPropagation();
               handleBilling(visit);
             }}
-            className="h-8 w-8 p-0"
-            title="OPD Billing"
+            className="h-8"
           >
-            <DollarSign className="h-4 w-4" />
+            <DollarSign className="h-3.5 w-3.5 mr-1.5" />
+            Billing
           </Button>
           <Button
             size="sm"
-            variant="ghost"
+            variant="outline"
             onClick={(e) => {
               e.stopPropagation();
               handleConsultation(visit);
             }}
-            className="h-8 w-8 p-0"
-            title="Consultation"
+            className="h-8"
           >
-            <Stethoscope className="h-4 w-4" />
+            <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
+            Consult
           </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(visit);
-            }}
-            className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-            title="Delete Visit"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleView(visit);
+                }}
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                View Details
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit(visit);
+                }}
+              >
+                <Pencil className="h-4 w-4 mr-2" />
+                Edit Visit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDelete(visit);
+                }}
+                className="text-destructive"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete Visit
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       ),
     },
