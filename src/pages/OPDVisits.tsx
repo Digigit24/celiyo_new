@@ -631,57 +631,6 @@ export const OPDVisits: React.FC = () => {
         onDelete={handleDrawerDelete}
         onModeChange={(newMode) => setDrawerMode(newMode)}
       />
-
-      {/* Sticky Cost Widget - Always Visible */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <Card className="border-2 border-primary shadow-2xl w-80">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-bold flex items-center gap-2">
-                <DollarSign className="h-4 w-4 text-primary" />
-                Total Revenue
-              </h4>
-              <Badge variant="secondary" className="text-xs">
-                {visits.length} visits
-              </Badge>
-            </div>
-
-            <div className="space-y-2">
-              {/* Current Page Total */}
-              <div className="flex justify-between items-center pb-2 border-b">
-                <span className="text-xs text-muted-foreground">Current Page</span>
-                <span className="text-lg font-bold text-primary">
-                  ₹{visits.reduce((sum, visit) => sum + (parseFloat(visit.total_amount || '0')), 0).toFixed(2)}
-                </span>
-              </div>
-
-              {/* Today's Revenue */}
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">Today's Total</span>
-                <span className="text-base font-semibold text-green-600">
-                  ₹{statistics?.revenue_today || '0'}
-                </span>
-              </div>
-
-              {/* Paid vs Pending */}
-              <div className="grid grid-cols-2 gap-2 pt-2">
-                <div className="bg-green-50 p-2 rounded">
-                  <p className="text-xs text-muted-foreground">Paid</p>
-                  <p className="text-sm font-bold text-green-700">
-                    ₹{visits.filter(v => v.payment_status === 'paid').reduce((sum, visit) => sum + (parseFloat(visit.total_amount || '0')), 0).toFixed(2)}
-                  </p>
-                </div>
-                <div className="bg-orange-50 p-2 rounded">
-                  <p className="text-xs text-muted-foreground">Pending</p>
-                  <p className="text-sm font-bold text-orange-700">
-                    ₹{visits.filter(v => v.payment_status !== 'paid').reduce((sum, visit) => sum + (parseFloat(visit.total_amount || '0')), 0).toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };
