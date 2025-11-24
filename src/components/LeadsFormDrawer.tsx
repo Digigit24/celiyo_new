@@ -10,6 +10,7 @@ import { useCRM } from '@/hooks/useCRM';
 import LeadBasicInfo from './lead-drawer/LeadBasicInfo';
 import LeadAddressInfo from './lead-drawer/LeadAddressInfo';
 import LeadActivities from './lead-drawer/LeadActivities';
+import LeadCustomFields from './lead-drawer/LeadCustomFields';
 import { SideDrawer, type DrawerActionButton, type DrawerHeaderAction } from '@/components/SideDrawer';
 
 // Form handle interface for collecting form values
@@ -53,7 +54,8 @@ export function LeadsFormDrawer({
 
   // Form refs to collect values
   const basicInfoRef = useRef<LeadFormHandle | null>(null);
-  const addressInfoRef = useRef<PartialLeadFormHandle | null>(null); // ⬅️ Change this
+  const addressInfoRef = useRef<PartialLeadFormHandle | null>(null);
+  const customFieldsRef = useRef<PartialLeadFormHandle | null>(null);
 
   // Sync internal mode with prop
   useEffect(() => {
@@ -114,6 +116,7 @@ export function LeadsFormDrawer({
       // Collect values from all form tabs
       const basicValues = await basicInfoRef.current?.getFormValues();
       const addressValues = await addressInfoRef.current?.getFormValues();
+      const customFieldsValues = await customFieldsRef.current?.getFormValues();
 
       if (!basicValues) {
         toast.error('Please fill in all required fields correctly');
@@ -125,6 +128,7 @@ export function LeadsFormDrawer({
       const allValues: CreateLeadPayload = {
         ...basicValues,
         ...addressValues,
+        ...customFieldsValues,
       };
 
       console.log('Form values:', allValues);
@@ -247,9 +251,10 @@ export function LeadsFormDrawer({
   const drawerContent = (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="basic">Basic Info</TabsTrigger>
           <TabsTrigger value="address">Address</TabsTrigger>
+          <TabsTrigger value="custom">Custom Fields</TabsTrigger>
           <TabsTrigger value="activities" disabled={currentMode === 'create'}>
             Activities
           </TabsTrigger>
@@ -267,6 +272,14 @@ export function LeadsFormDrawer({
         <TabsContent value="address" className="mt-6 space-y-6">
           <LeadAddressInfo
             ref={addressInfoRef}
+            lead={lead}
+            mode={currentMode}
+          />
+        </TabsContent>
+
+        <TabsContent value="custom" className="mt-6 space-y-6">
+          <LeadCustomFields
+            ref={customFieldsRef}
             lead={lead}
             mode={currentMode}
           />

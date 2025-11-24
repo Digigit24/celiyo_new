@@ -29,6 +29,7 @@ import type { Lead, CreateLeadPayload, PriorityEnum } from '@/types/crmTypes';
 import type { LeadFormHandle } from '../LeadsFormDrawer';
 import { useCRM } from '@/hooks/useCRM';
 import { useAuth } from '@/hooks/useAuth';
+import { useUsers } from '@/hooks/useUsers';
 import { PRIORITY_OPTIONS } from '@/types/crmTypes';
 
 const leadBasicSchema = z.object({
@@ -43,6 +44,7 @@ const leadBasicSchema = z.object({
   value_currency: z.string().max(3, 'Currency code too long').optional(),
   source: z.string().max(100, 'Source is too long').optional(),
   owner_user_id: z.string().optional(),
+  assigned_to: z.string().optional(),
   last_contacted_at: z.string().optional(),
   next_follow_up_at: z.string().optional(),
   notes: z.string().optional(),
@@ -60,11 +62,19 @@ const LeadBasicInfo = forwardRef<LeadFormHandle, LeadBasicInfoProps>(
   ({ lead, mode, onSuccess }, ref) => {
     const { user } = useAuth();
     const { useLeadStatuses } = useCRM();
-    
+    const { useUsersList } = useUsers();
+
     // Fetch lead statuses
     const { data: statusesData, isLoading: statusesLoading } = useLeadStatuses({
       is_active: true,
       ordering: 'order_index',
+    });
+
+    // Fetch users for assigned_to dropdown
+    const { data: usersData, isLoading: usersLoading } = useUsersList({
+      page: 1,
+      page_size: 1000,
+      is_active: true,
     });
 
     const isReadOnly = mode === 'view';
@@ -87,6 +97,7 @@ const LeadBasicInfo = forwardRef<LeadFormHandle, LeadBasicInfoProps>(
         value_currency: 'USD',
         source: '',
         owner_user_id: user?.id || '',
+        assigned_to: '',
         notes: '',
       },
     });
@@ -106,6 +117,7 @@ const LeadBasicInfo = forwardRef<LeadFormHandle, LeadBasicInfoProps>(
           value_currency: lead.value_currency || 'USD',
           source: lead.source || '',
           owner_user_id: lead.owner_user_id || user?.id || '',
+          assigned_to: lead.assigned_to || '',
           last_contacted_at: lead.last_contacted_at || '',
           next_follow_up_at: lead.next_follow_up_at || '',
           notes: lead.notes || '',
@@ -122,6 +134,7 @@ const LeadBasicInfo = forwardRef<LeadFormHandle, LeadBasicInfoProps>(
           value_currency: 'USD',
           source: '',
           owner_user_id: user?.id || '',
+          assigned_to: '',
           notes: '',
         });
       }
@@ -146,6 +159,7 @@ const LeadBasicInfo = forwardRef<LeadFormHandle, LeadBasicInfoProps>(
                 value_currency: data.value_currency || undefined,
                 source: data.source || undefined,
                 owner_user_id: data.owner_user_id || undefined,
+                assigned_to: data.assigned_to || undefined,
                 last_contacted_at: data.last_contacted_at || undefined,
                 next_follow_up_at: data.next_follow_up_at || undefined,
                 notes: data.notes || undefined,
@@ -379,6 +393,37 @@ const LeadBasicInfo = forwardRef<LeadFormHandle, LeadBasicInfoProps>(
                 placeholder="Website, Referral, Trade Show, etc."
                 disabled={isReadOnly}
               />
+            )}
+          />
+        </div>
+
+        {/* Assigned To */}
+        <div className="space-y-2">
+          <Label htmlFor="assigned_to">Assigned To</Label>
+          <Controller
+            name="assigned_to"
+            control={control}
+            render={({ field }) => (
+              <Select
+                value={field.value || ''}
+                onValueChange={field.onChange}
+                disabled={isReadOnly || usersLoading}
+              >
+                <SelectTrigger id="assigned_to">
+                  <SelectValue placeholder={usersLoading ? 'Loading users...' : 'Select user'} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">No assignment</SelectItem>
+                  {usersData?.results?.map((user) => (
+                    <SelectItem key={user.id} value={user.id}>
+                      <div className="flex items-center gap-2">
+                        <span>{user.first_name} {user.last_name}</span>
+                        <span className="text-xs text-muted-foreground">({user.email})</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
           />
         </div>

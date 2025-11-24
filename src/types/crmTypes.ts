@@ -130,6 +130,8 @@ export interface Lead {
   value_currency?: string;
   source?: string;
   owner_user_id: string;
+  assigned_to?: string; // UUID of assigned user
+  metadata?: Record<string, any>; // Custom fields stored as JSON
   last_contacted_at?: string;
   next_follow_up_at?: string;
   notes?: string;
@@ -301,6 +303,8 @@ export interface CreateLeadPayload {
   value_currency?: string;
   source?: string;
   owner_user_id?: string;
+  assigned_to?: string;
+  metadata?: Record<string, any>;
   last_contacted_at?: string;
   next_follow_up_at?: string;
   notes?: string;
