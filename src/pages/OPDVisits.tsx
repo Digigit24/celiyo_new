@@ -238,7 +238,7 @@ export const OPDVisits: React.FC = () => {
       header: 'Actions',
       key: 'actions',
       cell: (visit) => (
-        <div className="flex items-center gap-2">
+        <div className="flex items-center justify-end gap-2">
           <Button
             size="sm"
             variant="outline"
