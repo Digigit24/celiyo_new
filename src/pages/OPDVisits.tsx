@@ -149,6 +149,7 @@ export const OPDVisits: React.FC = () => {
     {
       header: 'Visit',
       key: 'visit_number',
+      className: 'w-[12%]',
       cell: (visit) => (
         <div className="flex flex-col">
           <span className="font-medium font-mono text-sm">{visit.visit_number}</span>
@@ -164,6 +165,7 @@ export const OPDVisits: React.FC = () => {
     {
       header: 'Patient',
       key: 'patient',
+      className: 'w-[18%]',
       cell: (visit) => (
         <div className="flex flex-col">
           <span className="font-medium">{visit.patient_details?.full_name || 'N/A'}</span>
@@ -174,6 +176,7 @@ export const OPDVisits: React.FC = () => {
     {
       header: 'Doctor',
       key: 'doctor',
+      className: 'w-[18%]',
       cell: (visit) => (
         <div className="flex flex-col">
           <span className="font-medium">{visit.doctor_details?.full_name || 'N/A'}</span>
@@ -186,6 +189,7 @@ export const OPDVisits: React.FC = () => {
     {
       header: 'Type',
       key: 'type',
+      className: 'w-[12%]',
       cell: (visit) => (
         <div className="flex flex-col gap-1">
           <Badge variant="secondary" className="text-xs w-fit">
@@ -203,6 +207,7 @@ export const OPDVisits: React.FC = () => {
     {
       header: 'Status',
       key: 'status',
+      className: 'w-[10%]',
       cell: (visit) => {
         const statusConfig = {
           waiting: { label: 'Waiting', className: 'bg-orange-600' },
@@ -222,6 +227,7 @@ export const OPDVisits: React.FC = () => {
     {
       header: 'Payment',
       key: 'payment',
+      className: 'w-[12%]',
       cell: (visit) => (
         <div className="flex flex-col text-sm">
           <span className="font-medium">₹{visit.total_amount || '0'}</span>
@@ -237,6 +243,7 @@ export const OPDVisits: React.FC = () => {
     {
       header: 'Actions',
       key: 'actions',
+      className: 'w-[18%]',
       cell: (visit) => (
         <div className="flex items-center justify-end gap-2">
           <Button
