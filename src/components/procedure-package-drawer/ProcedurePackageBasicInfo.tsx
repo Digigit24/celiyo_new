@@ -121,7 +121,27 @@ export const ProcedurePackageBasicInfo: React.FC<ProcedurePackageBasicInfoProps>
      p.code.toLowerCase().includes(procedureSearch.toLowerCase()))
   );
 
-  const selectedProcedures = allProcedures.filter(p => selectedProcedureIds.includes(p.id));
+  // Display procedures based on mode and data availability
+  const selectedProcedures = (() => {
+    // In view mode, always show procedures from package data
+    if (mode === 'view' && pkg?.procedures) {
+      return pkg.procedures;
+    }
+
+    // In edit mode, try to match from allProcedures first, fallback to package data
+    if (mode === 'edit' && pkg?.procedures) {
+      const matchedFromFetched = allProcedures.filter(p => selectedProcedureIds.includes(p.id));
+      // If we found all procedures in the fetched data, use that
+      if (matchedFromFetched.length === selectedProcedureIds.length) {
+        return matchedFromFetched;
+      }
+      // Otherwise use the package data
+      return pkg.procedures;
+    }
+
+    // In create mode, filter from fetched procedures
+    return allProcedures.filter(p => selectedProcedureIds.includes(p.id));
+  })();
 
   const onFormSubmit = (data: ProcedurePackageFormData) => {
     if (selectedProcedureIds.length === 0) {
