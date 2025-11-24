@@ -224,38 +224,6 @@ export const OPDVisits: React.FC = () => {
         </div>
       ),
     },
-    {
-      header: 'Actions',
-      key: 'actions',
-      cell: (visit) => (
-        <div className="flex gap-1.5">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleBilling(visit);
-            }}
-            className="h-8 w-8 p-0"
-            title="OPD Billing"
-          >
-            <DollarSign className="h-4 w-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleConsultation(visit);
-            }}
-            className="h-8 w-8 p-0"
-            title="Consultation"
-          >
-            <Stethoscope className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
   ];
 
   // Mobile card renderer
