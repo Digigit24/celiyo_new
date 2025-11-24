@@ -1,6 +1,6 @@
 // src/components/task-drawer/TaskBasicInfo.tsx
 import { forwardRef, useImperativeHandle, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
@@ -21,6 +21,7 @@ import {
 import type { Task, CreateTaskPayload, UpdateTaskPayload, Lead, TaskStatusEnum, PriorityEnum } from '@/types/crmTypes';
 import { TASK_STATUS_OPTIONS, PRIORITY_OPTIONS } from '@/types/crmTypes';
 import { formatDistanceToNow, format } from 'date-fns';
+import { useUsers } from '@/hooks/useUsers';
 
 // Validation schemas
 const createTaskSchema = z.object({
@@ -65,6 +66,14 @@ const TaskBasicInfo = forwardRef<TaskBasicInfoHandle, TaskBasicInfoProps>(
 
     const schema = isCreateMode ? createTaskSchema : updateTaskSchema;
 
+    // Fetch users for assignee and reporter dropdowns
+    const { useUsersList } = useUsers();
+    const { data: usersData, isLoading: usersLoading } = useUsersList({
+      page: 1,
+      page_size: 1000,
+      is_active: true,
+    });
+
     const defaultValues = isCreateMode
       ? {
           lead: undefined,
@@ -94,6 +103,7 @@ const TaskBasicInfo = forwardRef<TaskBasicInfoHandle, TaskBasicInfoProps>(
       watch,
       setValue,
       reset,
+      control,
     } = useForm<any>({
       resolver: zodResolver(schema),
       defaultValues,
@@ -384,42 +394,92 @@ const TaskBasicInfo = forwardRef<TaskBasicInfoHandle, TaskBasicInfoProps>(
           </CardContent>
         </Card>
 
-        {/* Assignment (Optional for now) */}
+        {/* Assignment */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Assignment</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Assignee */}
             <div className="space-y-2">
-              <Label htmlFor="assignee_user_id">Assignee User ID</Label>
+              <Label htmlFor="assignee_user_id">Assignee</Label>
               {isReadOnly ? (
                 <div className="pt-2">
-                  <p className="font-mono text-sm">{task?.assignee_user_id || 'Not assigned'}</p>
+                  <p className="font-medium">
+                    {task?.assignee_user_id ? (
+                      usersData?.results?.find(u => u.id === task.assignee_user_id)
+                        ? `${usersData.results.find(u => u.id === task.assignee_user_id)?.first_name} ${usersData.results.find(u => u.id === task.assignee_user_id)?.last_name}`
+                        : task.assignee_user_id
+                    ) : (
+                      'Not assigned'
+                    )}
+                  </p>
                 </div>
               ) : (
-                <Input
-                  id="assignee_user_id"
-                  {...register('assignee_user_id')}
-                  placeholder="Enter assignee user ID"
-                  disabled={isReadOnly}
-                  className={errors.assignee_user_id ? 'border-destructive' : ''}
+                <Controller
+                  name="assignee_user_id"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || 'unassigned'}
+                      onValueChange={(value) => field.onChange(value === 'unassigned' ? '' : value)}
+                      disabled={isReadOnly || usersLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select assignee" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unassigned">No assignment</SelectItem>
+                        {usersData?.results?.map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.first_name} {user.last_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
               )}
             </div>
 
+            {/* Reporter */}
             <div className="space-y-2">
-              <Label htmlFor="reporter_user_id">Reporter User ID</Label>
+              <Label htmlFor="reporter_user_id">Reporter</Label>
               {isReadOnly ? (
                 <div className="pt-2">
-                  <p className="font-mono text-sm">{task?.reporter_user_id || 'Not set'}</p>
+                  <p className="font-medium">
+                    {task?.reporter_user_id ? (
+                      usersData?.results?.find(u => u.id === task.reporter_user_id)
+                        ? `${usersData.results.find(u => u.id === task.reporter_user_id)?.first_name} ${usersData.results.find(u => u.id === task.reporter_user_id)?.last_name}`
+                        : task.reporter_user_id
+                    ) : (
+                      'Not set'
+                    )}
+                  </p>
                 </div>
               ) : (
-                <Input
-                  id="reporter_user_id"
-                  {...register('reporter_user_id')}
-                  placeholder="Enter reporter user ID"
-                  disabled={isReadOnly}
-                  className={errors.reporter_user_id ? 'border-destructive' : ''}
+                <Controller
+                  name="reporter_user_id"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || 'unassigned'}
+                      onValueChange={(value) => field.onChange(value === 'unassigned' ? '' : value)}
+                      disabled={isReadOnly || usersLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select reporter" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="unassigned">Not set</SelectItem>
+                        {usersData?.results?.map((user) => (
+                          <SelectItem key={user.id} value={user.id}>
+                            {user.first_name} {user.last_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
               )}
             </div>

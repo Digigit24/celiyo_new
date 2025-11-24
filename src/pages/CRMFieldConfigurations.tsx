@@ -4,11 +4,12 @@ import { useCRM } from '@/hooks/useCRM';
 import { useAuth } from '@/hooks/useAuth';
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
 import { FieldConfigurationFormDrawer } from '@/components/FieldConfigurationFormDrawer';
+import { SortableFieldConfigTable } from '@/components/crm/SortableFieldConfigTable';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Plus, RefreshCw, Settings2, Eye, EyeOff } from 'lucide-react';
+import { Plus, RefreshCw, Settings2, Eye, EyeOff, Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
 import type { LeadFieldConfiguration, LeadFieldConfigurationsQueryParams } from '@/types/crmTypes';
@@ -17,9 +18,11 @@ type DrawerMode = 'view' | 'edit' | 'create';
 
 export const CRMFieldConfigurations: React.FC = () => {
   const { user, hasModuleAccess } = useAuth();
-  const { hasCRMAccess, useFieldConfigurations, deleteFieldConfiguration } = useCRM();
+  const { hasCRMAccess, useFieldConfigurations, deleteFieldConfiguration, patchFieldConfiguration } = useCRM();
 
   const [activeTab, setActiveTab] = useState<'all' | 'standard' | 'custom'>('all');
+  const [isSavingOrder, setIsSavingOrder] = useState(false);
+  const [pendingReorder, setPendingReorder] = useState<LeadFieldConfiguration[] | null>(null);
 
   // Query parameters state
   const [queryParams, setQueryParams] = useState<LeadFieldConfigurationsQueryParams>({
@@ -113,7 +116,42 @@ export const CRMFieldConfigurations: React.FC = () => {
 
   const handleRefresh = useCallback(() => {
     mutate();
+    setPendingReorder(null);
     toast.success('Field configurations refreshed');
+  }, [mutate]);
+
+  const handleReorder = useCallback((reorderedFields: LeadFieldConfiguration[]) => {
+    setPendingReorder(reorderedFields);
+  }, []);
+
+  const handleSaveOrder = useCallback(async () => {
+    if (!pendingReorder) return;
+
+    setIsSavingOrder(true);
+    try {
+      // Update each field's display_order
+      await Promise.all(
+        pendingReorder.map((field) =>
+          patchFieldConfiguration(field.id, {
+            display_order: field.display_order,
+            field_type: field.field_type // Required for custom fields
+          })
+        )
+      );
+
+      toast.success('Field order saved successfully');
+      setPendingReorder(null);
+      mutate(); // Refresh the list
+    } catch (error: any) {
+      toast.error(error?.message || 'Failed to save field order');
+    } finally {
+      setIsSavingOrder(false);
+    }
+  }, [pendingReorder, patchFieldConfiguration, mutate]);
+
+  const handleCancelReorder = useCallback(() => {
+    setPendingReorder(null);
+    mutate(); // Reset to original order
   }, [mutate]);
 
   // Field type badge helper
@@ -300,6 +338,36 @@ export const CRMFieldConfigurations: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {pendingReorder && (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCancelReorder}
+                disabled={isSavingOrder}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleSaveOrder}
+                disabled={isSavingOrder}
+              >
+                {isSavingOrder ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save Order
+                  </>
+                )}
+              </Button>
+            </>
+          )}
           <Button variant="outline" size="sm" onClick={handleRefresh}>
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
@@ -364,22 +432,16 @@ export const CRMFieldConfigurations: React.FC = () => {
             <CardHeader>
               <CardTitle>All Field Configurations</CardTitle>
               <CardDescription>
-                View and manage all field configurations for leads
+                Drag and drop to reorder fields. Changes will be saved when you click "Save Order".
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DataTable
-                rows={filteredConfigurations}
-                isLoading={isLoading}
-                columns={columns}
-                renderMobileCard={(config, actions) => renderMobileCard(config)}
-                getRowId={(config) => config.id}
-                getRowLabel={(config) => config.field_label}
+              <SortableFieldConfigTable
+                fields={pendingReorder || filteredConfigurations}
+                onReorder={handleReorder}
                 onView={handleViewConfiguration}
                 onEdit={handleEditConfiguration}
                 onDelete={handleDeleteConfiguration}
-                emptyTitle="No field configurations found"
-                emptySubtitle="Get started by creating your first field configuration"
               />
             </CardContent>
           </Card>
@@ -390,22 +452,16 @@ export const CRMFieldConfigurations: React.FC = () => {
             <CardHeader>
               <CardTitle>Standard Fields</CardTitle>
               <CardDescription>
-                Pre-defined Lead model fields with configurable visibility and display settings
+                Pre-defined Lead model fields with configurable visibility and display settings. Drag to reorder.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DataTable
-                rows={filteredConfigurations}
-                isLoading={isLoading}
-                columns={columns}
-                renderMobileCard={(config, actions) => renderMobileCard(config)}
-                getRowId={(config) => config.id}
-                getRowLabel={(config) => config.field_label}
+              <SortableFieldConfigTable
+                fields={pendingReorder || filteredConfigurations}
+                onReorder={handleReorder}
                 onView={handleViewConfiguration}
                 onEdit={handleEditConfiguration}
                 onDelete={handleDeleteConfiguration}
-                emptyTitle="No standard field configurations found"
-                emptySubtitle="Standard fields can be configured once created in the backend"
               />
             </CardContent>
           </Card>
@@ -416,31 +472,29 @@ export const CRMFieldConfigurations: React.FC = () => {
             <CardHeader>
               <CardTitle>Custom Fields</CardTitle>
               <CardDescription>
-                Dynamic fields stored in Lead metadata for custom data collection
+                Dynamic fields stored in Lead metadata for custom data collection. Drag to reorder.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DataTable
-                rows={filteredConfigurations}
-                isLoading={isLoading}
-                columns={columns}
-                renderMobileCard={(config, actions) => renderMobileCard(config)}
-                getRowId={(config) => config.id}
-                getRowLabel={(config) => config.field_label}
-                onView={handleViewConfiguration}
-                onEdit={handleEditConfiguration}
-                onDelete={handleDeleteConfiguration}
-                emptyTitle="No custom fields configured yet"
-                emptySubtitle={
-                  <div className="text-center">
-                    <p className="mb-4">Get started by creating your first custom field</p>
-                    <Button onClick={handleCreateConfiguration} variant="outline">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Create Custom Field
-                    </Button>
-                  </div>
-                }
-              />
+              {filteredConfigurations.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground mb-4">
+                    No custom fields configured yet. Get started by creating your first custom field.
+                  </p>
+                  <Button onClick={handleCreateConfiguration} variant="outline">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Custom Field
+                  </Button>
+                </div>
+              ) : (
+                <SortableFieldConfigTable
+                  fields={pendingReorder || filteredConfigurations}
+                  onReorder={handleReorder}
+                  onView={handleViewConfiguration}
+                  onEdit={handleEditConfiguration}
+                  onDelete={handleDeleteConfiguration}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
