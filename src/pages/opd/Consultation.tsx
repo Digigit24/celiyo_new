@@ -186,57 +186,192 @@ export const OPDConsultation: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Tabs for Consultation, Billing, History, Profile */}
-      <Card>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <div className="border-b px-6 pt-6">
-            <TabsList className="w-full justify-start h-auto p-0 bg-transparent">
-              <TabsTrigger
-                value="consultation"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
-              >
-                Consultation
-              </TabsTrigger>
-              <TabsTrigger
-                value="billing"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
-              >
-                Billing
-              </TabsTrigger>
-              <TabsTrigger
-                value="history"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
-              >
-                History
-              </TabsTrigger>
-              <TabsTrigger
-                value="profile"
-                className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
-              >
-                Profile
-              </TabsTrigger>
-            </TabsList>
+      {/* Main Content with Sticky Sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Main Content Area */}
+        <div className="lg:col-span-8">
+          <Card>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <div className="border-b px-6 pt-6">
+                <TabsList className="w-full justify-start h-auto p-0 bg-transparent">
+                  <TabsTrigger
+                    value="consultation"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+                  >
+                    Consultation
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="billing"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+                  >
+                    Billing
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="history"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+                  >
+                    History
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="profile"
+                    className="data-[state=active]:border-b-2 data-[state=active]:border-primary rounded-none"
+                  >
+                    Profile
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              <div className="p-6">
+                <TabsContent value="consultation" className="mt-0">
+                  <ConsultationTab visit={visit} />
+                </TabsContent>
+
+                <TabsContent value="billing" className="mt-0">
+                  <BillingTab visit={visit} />
+                </TabsContent>
+
+                <TabsContent value="history" className="mt-0">
+                  <HistoryTab patientId={visit.patient} />
+                </TabsContent>
+
+                <TabsContent value="profile" className="mt-0">
+                  <ProfileTab patientId={visit.patient} />
+                </TabsContent>
+              </div>
+            </Tabs>
+          </Card>
+        </div>
+
+        {/* Sticky Cost Summary Sidebar */}
+        <div className="lg:col-span-4">
+          <div className="sticky top-6">
+            <Card className="border-2 border-primary/20">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                  <Activity className="h-5 w-5 text-primary" />
+                  Cost Summary
+                </h3>
+
+                <div className="space-y-4">
+                  {/* Consultation Fee */}
+                  <div className="flex justify-between items-center pb-3 border-b">
+                    <div>
+                      <p className="text-sm font-medium">Consultation Fee</p>
+                      <p className="text-xs text-muted-foreground">
+                        {visit.visit_type === 'follow_up' ? 'Follow-up Visit' : 'First Visit'}
+                      </p>
+                    </div>
+                    <p className="text-lg font-semibold">₹{visit.consultation_fee || doctor?.consultation_fee || '0'}</p>
+                  </div>
+
+                  {/* Additional Charges */}
+                  {visit.additional_charges && parseInt(visit.additional_charges) > 0 && (
+                    <div className="flex justify-between items-center pb-3 border-b">
+                      <div>
+                        <p className="text-sm font-medium">Additional Charges</p>
+                        <p className="text-xs text-muted-foreground">Tests & Procedures</p>
+                      </div>
+                      <p className="text-lg font-semibold">₹{visit.additional_charges}</p>
+                    </div>
+                  )}
+
+                  {/* Discount */}
+                  {visit.discount && parseInt(visit.discount) > 0 && (
+                    <div className="flex justify-between items-center pb-3 border-b text-green-600">
+                      <div>
+                        <p className="text-sm font-medium">Discount</p>
+                        <p className="text-xs opacity-75">Applied</p>
+                      </div>
+                      <p className="text-lg font-semibold">-₹{visit.discount}</p>
+                    </div>
+                  )}
+
+                  {/* Total Amount */}
+                  <div className="flex justify-between items-center pt-2 bg-primary/5 -mx-6 px-6 py-4 rounded-lg">
+                    <div>
+                      <p className="text-base font-bold">Total Amount</p>
+                      <p className="text-xs text-muted-foreground">Amount Payable</p>
+                    </div>
+                    <p className="text-2xl font-bold text-primary">₹{visit.total_amount || '0'}</p>
+                  </div>
+
+                  {/* Payment Status */}
+                  <div className="pt-4 border-t">
+                    <div className="flex justify-between items-center mb-3">
+                      <p className="text-sm font-medium">Payment Status</p>
+                      <Badge
+                        variant={visit.payment_status === 'paid' ? 'default' : 'secondary'}
+                        className={`${visit.payment_status === 'paid' ? 'bg-green-600' : 'bg-orange-600'}`}
+                      >
+                        {visit.payment_status?.replace('_', ' ').toUpperCase() || 'PENDING'}
+                      </Badge>
+                    </div>
+
+                    {visit.payment_status !== 'paid' && (
+                      <Button className="w-full" size="lg">
+                        <Activity className="h-4 w-4 mr-2" />
+                        Process Payment
+                      </Button>
+                    )}
+
+                    {visit.payment_status === 'paid' && (
+                      <div className="space-y-2 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Paid On</span>
+                          <span className="font-medium">{formatVisitDate(visit.visit_date)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Payment Mode</span>
+                          <span className="font-medium">Cash</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Quick Actions */}
+                  <div className="pt-4 border-t space-y-2">
+                    <Button variant="outline" className="w-full" size="sm">
+                      <Activity className="h-4 w-4 mr-2" />
+                      Generate Invoice
+                    </Button>
+                    <Button variant="outline" className="w-full" size="sm">
+                      <Activity className="h-4 w-4 mr-2" />
+                      Print Receipt
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Visit Quick Info */}
+            <Card className="mt-4">
+              <CardContent className="p-4">
+                <h4 className="text-sm font-semibold mb-3">Visit Information</h4>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Visit Number</span>
+                    <span className="font-medium font-mono">{visit.visit_number}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Visit Date</span>
+                    <span className="font-medium">{formatVisitDate(visit.visit_date)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Visit Time</span>
+                    <span className="font-medium">{visit.visit_time}</span>
+                  </div>
+                  {visit.queue_number && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Queue Number</span>
+                      <Badge variant="outline" className="text-xs">#{visit.queue_number}</Badge>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
-
-          <div className="p-6">
-            <TabsContent value="consultation" className="mt-0">
-              <ConsultationTab visit={visit} />
-            </TabsContent>
-
-            <TabsContent value="billing" className="mt-0">
-              <BillingTab visit={visit} />
-            </TabsContent>
-
-            <TabsContent value="history" className="mt-0">
-              <HistoryTab patientId={visit.patient} />
-            </TabsContent>
-
-            <TabsContent value="profile" className="mt-0">
-              <ProfileTab patientId={visit.patient} />
-            </TabsContent>
-          </div>
-        </Tabs>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };
