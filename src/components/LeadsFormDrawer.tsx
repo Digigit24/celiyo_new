@@ -118,9 +118,18 @@ export function LeadsFormDrawer({
       const addressValues = await addressInfoRef.current?.getFormValues();
       const customFieldsValues = await customFieldsRef.current?.getFormValues();
 
+      // Validate each section separately
       if (!basicValues) {
-        toast.error('Please fill in all required fields correctly');
+        toast.error('Please fill in all required fields in Basic Info tab');
         setActiveTab('basic');
+        setIsSaving(false);
+        return;
+      }
+
+      if (customFieldsValues === null) {
+        toast.error('Please fill in all required custom fields');
+        setActiveTab('custom');
+        setIsSaving(false);
         return;
       }
 
@@ -128,7 +137,7 @@ export function LeadsFormDrawer({
       const allValues: CreateLeadPayload = {
         ...basicValues,
         ...addressValues,
-        ...customFieldsValues,
+        ...(customFieldsValues || {}),
       };
 
       console.log('Form values:', allValues);
