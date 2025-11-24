@@ -18,6 +18,8 @@ import {
   Users,
   CheckCircle2,
   AlertCircle,
+  FileText,
+  Stethoscope,
 } from 'lucide-react';
 import { OpdVisit, OpdVisitListParams } from '@/types/opdVisit.types';
 import { format } from 'date-fns';
@@ -108,6 +110,18 @@ export const OPDVisits: React.FC = () => {
 
   const handleDrawerDelete = () => {
     mutateVisits();
+  };
+
+  const handleBilling = (visit: OpdVisit) => {
+    // TODO: Implement billing functionality
+    console.log('Open billing for visit:', visit.id);
+    // You can navigate to billing page or open a billing drawer
+  };
+
+  const handleConsultation = (visit: OpdVisit) => {
+    // TODO: Implement consultation functionality
+    console.log('Open consultation for visit:', visit.id);
+    // You can navigate to consultation page or open a consultation drawer
   };
 
   // Format date and time for display
@@ -210,6 +224,38 @@ export const OPDVisits: React.FC = () => {
         </div>
       ),
     },
+    {
+      header: 'Actions',
+      key: 'actions',
+      cell: (visit) => (
+        <div className="flex gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleBilling(visit);
+            }}
+            className="h-8 px-3"
+          >
+            <DollarSign className="h-3.5 w-3.5 mr-1.5" />
+            Billing
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleConsultation(visit);
+            }}
+            className="h-8 px-3"
+          >
+            <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
+            Consult
+          </Button>
+        </div>
+      ),
+    },
   ];
 
   // Mobile card renderer
@@ -274,6 +320,34 @@ export const OPDVisits: React.FC = () => {
           >
             ₹{visit.total_amount || '0'} • {visit.payment_status ? visit.payment_status.replace('_', ' ').toUpperCase() : 'PENDING'}
           </Badge>
+        </div>
+
+        {/* Quick Action Buttons */}
+        <div className="flex gap-2 pt-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleBilling(visit);
+            }}
+            className="flex-1"
+          >
+            <DollarSign className="h-3.5 w-3.5 mr-1.5" />
+            Billing
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleConsultation(visit);
+            }}
+            className="flex-1"
+          >
+            <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
+            Consult
+          </Button>
         </div>
 
         {/* Action Buttons */}
