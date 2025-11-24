@@ -228,7 +228,7 @@ export const OPDVisits: React.FC = () => {
       header: 'Actions',
       key: 'actions',
       cell: (visit) => (
-        <div className="flex gap-2">
+        <div className="flex gap-1.5">
           <Button
             size="sm"
             variant="outline"
@@ -236,10 +236,10 @@ export const OPDVisits: React.FC = () => {
               e.stopPropagation();
               handleBilling(visit);
             }}
-            className="h-8 px-3"
+            className="h-8 w-8 p-0"
+            title="OPD Billing"
           >
-            <DollarSign className="h-3.5 w-3.5 mr-1.5" />
-            Billing
+            <DollarSign className="h-4 w-4" />
           </Button>
           <Button
             size="sm"
@@ -248,10 +248,10 @@ export const OPDVisits: React.FC = () => {
               e.stopPropagation();
               handleConsultation(visit);
             }}
-            className="h-8 px-3"
+            className="h-8 w-8 p-0"
+            title="Consultation"
           >
-            <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
-            Consult
+            <Stethoscope className="h-4 w-4" />
           </Button>
         </div>
       ),
