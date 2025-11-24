@@ -371,15 +371,15 @@ const OPDVisitBasicInfo = forwardRef<OPDVisitBasicInfoHandle, OPDVisitBasicInfoP
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <Label className="text-muted-foreground">Doctor</Label>
-                  <p className="font-medium">{visit.doctor?.full_name}</p>
+                  <p className="font-medium">{visit.doctor_details?.full_name || 'N/A'}</p>
                   <p className="text-xs text-muted-foreground">
-                    {visit.doctor?.specialties?.map(s => s.name).join(', ')}
+                    {visit.doctor_details?.specialties?.map(s => s.name).join(', ')}
                   </p>
                 </div>
                 <div>
                   <Label className="text-muted-foreground">Patient</Label>
-                  <p className="font-medium">{visit.patient?.full_name}</p>
-                  <p className="text-xs text-muted-foreground">{visit.patient?.patient_id} • {visit.patient?.mobile_primary}</p>
+                  <p className="font-medium">{visit.patient_details?.full_name || 'N/A'}</p>
+                  <p className="text-xs text-muted-foreground">{visit.patient_details?.patient_id} • {visit.patient_details?.mobile_primary}</p>
                 </div>
               </div>
             </CardContent>

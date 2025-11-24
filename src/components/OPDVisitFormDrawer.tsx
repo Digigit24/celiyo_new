@@ -181,7 +181,7 @@ export default function OPDVisitFormDrawer({
     currentMode === 'create'
       ? undefined
       : visit
-      ? `${visit.patient?.full_name} • ${visit.doctor?.full_name} • ${visit.visit_date} ${visit.visit_time}`
+      ? `${visit.patient_details?.full_name || 'N/A'} • ${visit.doctor_details?.full_name || 'N/A'} • ${visit.visit_date} ${visit.visit_time}`
       : undefined;
 
   const headerActions: DrawerHeaderAction[] =

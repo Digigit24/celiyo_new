@@ -10,14 +10,36 @@ export type VisitType = 'new' | 'follow_up' | 'emergency' | 'referral';
 export type PaymentStatus = 'pending' | 'paid' | 'partially_paid' | 'refunded';
 export type VisitPriority = 'low' | 'normal' | 'high' | 'urgent';
 
+// ==================== PATIENT & DOCTOR DETAILS ====================
+export interface PatientDetails {
+  patient_id: string;
+  full_name: string;
+  age: number;
+  gender: string;
+  blood_group: string;
+  mobile_primary: string;
+}
+
+export interface DoctorDetails {
+  id: number;
+  full_name: string;
+  specialties: Array<{ id: number; name: string }>;
+  consultation_fee: string;
+  follow_up_fee: string;
+}
+
 // ==================== MAIN OPD VISIT INTERFACE ====================
 export interface OpdVisit {
   id: number;
   visit_number: string; // Unique visit ID like OPD2025XXXX
 
-  // Patient & Doctor
-  patient: Patient;
-  doctor: Doctor;
+  // Patient & Doctor (IDs)
+  patient: number;
+  doctor: number;
+
+  // Patient & Doctor (Nested Objects from API)
+  patient_details?: PatientDetails;
+  doctor_details?: DoctorDetails;
 
   // Visit Details
   visit_date: string;
