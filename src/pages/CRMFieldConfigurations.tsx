@@ -1,5 +1,5 @@
 // src/pages/CRMFieldConfigurations.tsx
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useCRM } from '@/hooks/useCRM';
 import { useAuth } from '@/hooks/useAuth';
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
@@ -38,11 +38,14 @@ export const CRMFieldConfigurations: React.FC = () => {
   const { data: configurationsData, error, isLoading, mutate } = useFieldConfigurations(queryParams);
 
   // Filter configurations based on active tab
-  const filteredConfigurations = configurationsData?.results?.filter((config) => {
-    if (activeTab === 'standard') return config.is_standard;
-    if (activeTab === 'custom') return !config.is_standard;
-    return true;
-  }) || [];
+  const filteredConfigurations = useMemo(() => {
+    const results = configurationsData?.results || [];
+    return results.filter((config) => {
+      if (activeTab === 'standard') return config.is_standard;
+      if (activeTab === 'custom') return !config.is_standard;
+      return true;
+    });
+  }, [configurationsData?.results, activeTab]);
 
   // Check access
   if (!hasCRMAccess) {
@@ -286,13 +289,16 @@ export const CRMFieldConfigurations: React.FC = () => {
   );
 
   // Statistics
-  const stats = {
-    total: configurationsData?.results?.length || 0,
-    standard: (configurationsData?.results || []).filter(c => c.is_standard).length,
-    custom: (configurationsData?.results || []).filter(c => !c.is_standard).length,
-    visible: (configurationsData?.results || []).filter(c => c.is_visible).length,
-    required: (configurationsData?.results || []).filter(c => c.is_required).length,
-  };
+  const stats = useMemo(() => {
+    const results = configurationsData?.results || [];
+    return {
+      total: results.length,
+      standard: results.filter(c => c.is_standard).length,
+      custom: results.filter(c => !c.is_standard).length,
+      visible: results.filter(c => c.is_visible).length,
+      required: results.filter(c => c.is_required).length,
+    };
+  }, [configurationsData?.results]);
 
   return (
     <div className="container mx-auto p-6 space-y-6">
@@ -378,7 +384,7 @@ export const CRMFieldConfigurations: React.FC = () => {
             <CardContent>
               <DataTable
                 columns={columns}
-                data={filteredConfigurations || []}
+                data={filteredConfigurations}
                 rowActions={rowActions}
                 onRowClick={handleViewConfiguration}
                 isLoading={isLoading}
@@ -401,7 +407,7 @@ export const CRMFieldConfigurations: React.FC = () => {
             <CardContent>
               <DataTable
                 columns={columns}
-                data={filteredConfigurations || []}
+                data={filteredConfigurations}
                 rowActions={rowActions}
                 onRowClick={handleViewConfiguration}
                 isLoading={isLoading}
@@ -424,7 +430,7 @@ export const CRMFieldConfigurations: React.FC = () => {
             <CardContent>
               <DataTable
                 columns={columns}
-                data={filteredConfigurations || []}
+                data={filteredConfigurations}
                 rowActions={rowActions}
                 onRowClick={handleViewConfiguration}
                 isLoading={isLoading}
