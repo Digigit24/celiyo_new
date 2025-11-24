@@ -196,12 +196,12 @@ export const ProcedurePackageBasicInfo: React.FC<ProcedurePackageBasicInfoProps>
               value={procedureSearch}
               onChange={(e) => setProcedureSearch(e.target.value)}
             />
-            {procedureSearch && filteredProcedures.length > 0 && (
-              <div className="mt-2 border rounded-md max-h-48 overflow-y-auto">
-                {filteredProcedures.slice(0, 10).map((procedure) => (
+            {filteredProcedures.length > 0 && (
+              <div className="mt-2 border rounded-md max-h-48 overflow-y-auto bg-background">
+                {filteredProcedures.slice(0, 20).map((procedure) => (
                   <div
                     key={procedure.id}
-                    className="p-2 hover:bg-muted cursor-pointer flex justify-between items-center"
+                    className="p-2 hover:bg-muted cursor-pointer flex justify-between items-center border-b last:border-b-0"
                     onClick={() => handleAddProcedure(procedure.id)}
                   >
                     <div>
@@ -210,6 +210,11 @@ export const ProcedurePackageBasicInfo: React.FC<ProcedurePackageBasicInfoProps>
                     </div>
                   </div>
                 ))}
+                {filteredProcedures.length > 20 && (
+                  <div className="p-2 text-xs text-muted-foreground text-center">
+                    {filteredProcedures.length - 20} more procedures available. Use search to filter.
+                  </div>
+                )}
               </div>
             )}
           </div>
