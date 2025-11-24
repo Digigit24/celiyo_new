@@ -132,7 +132,10 @@ export const CRMFieldConfigurations: React.FC = () => {
       // Update each field's display_order
       await Promise.all(
         pendingReorder.map((field) =>
-          patchFieldConfiguration(field.id, { display_order: field.display_order })
+          patchFieldConfiguration(field.id, {
+            display_order: field.display_order,
+            field_type: field.field_type // Required for custom fields
+          })
         )
       );
 
