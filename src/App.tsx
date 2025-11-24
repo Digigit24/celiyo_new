@@ -81,8 +81,8 @@ const AppLayout = () => {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/inbox" element={<Inbox />} />
-            <Route path="/opd" element={<OPDVisits />} />  {/* ✅ Updated to show new OPD Visits page */}
-            
+            <Route path="/opd" element={<Navigate to="/opd/visits" replace />} />  {/* Redirect to visits page */}
+
             {/* CRM Routes */}
             <Route path="/crm" element={<CRMLeads />} />
             <Route path="/crm/leads" element={<CRMLeads />} />
