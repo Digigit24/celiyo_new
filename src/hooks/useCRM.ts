@@ -8,16 +8,20 @@ import {
   LeadActivity,
   LeadOrder,
   Task,
+  LeadFieldConfiguration,
   LeadsResponse,
   LeadStatusesResponse,
   LeadActivitiesResponse,
   LeadOrdersResponse,
   TasksResponse,
+  LeadFieldConfigurationsResponse,
+  FieldSchemaResponse,
   LeadsQueryParams,
   LeadStatusesQueryParams,
   LeadActivitiesQueryParams,
   LeadOrdersQueryParams,
   TasksQueryParams,
+  LeadFieldConfigurationsQueryParams,
   CreateLeadPayload,
   UpdateLeadPayload,
   CreateLeadStatusPayload,
@@ -27,7 +31,9 @@ import {
   CreateLeadOrderPayload,
   UpdateLeadOrderPayload,
   CreateTaskPayload,
-  UpdateTaskPayload
+  UpdateTaskPayload,
+  CreateLeadFieldConfigurationPayload,
+  UpdateLeadFieldConfigurationPayload
 } from '@/types/crmTypes';
 import { useAuth } from './useAuth';
 
@@ -553,6 +559,148 @@ export const useCRM = () => {
     }
   }, [hasCRMAccess]);
 
+  // ==================== FIELD CONFIGURATIONS HOOKS ====================
+
+  // Get field configurations with SWR caching
+  const useFieldConfigurations = (params?: LeadFieldConfigurationsQueryParams) => {
+    const key = ['field-configurations', params];
+
+    return useSWR<LeadFieldConfigurationsResponse>(
+      key,
+      () => crmService.getFieldConfigurations(params),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch field configurations:', err);
+          setError(err.message || 'Failed to fetch field configurations');
+        }
+      }
+    );
+  };
+
+  // Get single field configuration with SWR caching
+  const useFieldConfiguration = (id: number | null) => {
+    const key = id ? ['field-configuration', id] : null;
+
+    return useSWR<LeadFieldConfiguration>(
+      key,
+      () => crmService.getFieldConfiguration(id!),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch field configuration:', err);
+          setError(err.message || 'Failed to fetch field configuration');
+        }
+      }
+    );
+  };
+
+  // Get field schema with SWR caching
+  const useFieldSchema = () => {
+    const key = ['field-schema'];
+
+    return useSWR<FieldSchemaResponse>(
+      key,
+      () => crmService.getFieldSchema(),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch field schema:', err);
+          setError(err.message || 'Failed to fetch field schema');
+        }
+      }
+    );
+  };
+
+  // Create field configuration
+  const createFieldConfiguration = useCallback(async (configData: CreateLeadFieldConfigurationPayload) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const newConfig = await crmService.createFieldConfiguration(configData);
+      return newConfig;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to create field configuration';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Update field configuration
+  const updateFieldConfiguration = useCallback(async (id: number, configData: UpdateLeadFieldConfigurationPayload) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const updatedConfig = await crmService.updateFieldConfiguration(id, configData);
+      return updatedConfig;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to update field configuration';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Patch field configuration
+  const patchFieldConfiguration = useCallback(async (id: number, configData: Partial<UpdateLeadFieldConfigurationPayload>) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const updatedConfig = await crmService.patchFieldConfiguration(id, configData);
+      return updatedConfig;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to update field configuration';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
+  // Delete field configuration
+  const deleteFieldConfiguration = useCallback(async (id: number) => {
+    if (!hasCRMAccess) {
+      throw new Error('CRM module not enabled for this user');
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await crmService.deleteFieldConfiguration(id);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to delete field configuration';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [hasCRMAccess]);
+
   return {
     hasCRMAccess,
     isLoading,
@@ -592,5 +740,14 @@ export const useCRM = () => {
     updateTask,
     patchTask,
     deleteTask,
+
+    // Field Configurations
+    useFieldConfigurations,
+    useFieldConfiguration,
+    useFieldSchema,
+    createFieldConfiguration,
+    updateFieldConfiguration,
+    patchFieldConfiguration,
+    deleteFieldConfiguration,
   };
 };

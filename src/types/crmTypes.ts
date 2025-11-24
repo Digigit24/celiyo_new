@@ -22,6 +22,22 @@ export enum TaskStatusEnum {
   CANCELLED = 'CANCELLED'
 }
 
+export enum FieldTypeEnum {
+  TEXT = 'TEXT',
+  NUMBER = 'NUMBER',
+  EMAIL = 'EMAIL',
+  PHONE = 'PHONE',
+  DATE = 'DATE',
+  DATETIME = 'DATETIME',
+  DROPDOWN = 'DROPDOWN',
+  MULTISELECT = 'MULTISELECT',
+  CHECKBOX = 'CHECKBOX',
+  URL = 'URL',
+  TEXTAREA = 'TEXTAREA',
+  DECIMAL = 'DECIMAL',
+  CURRENCY = 'CURRENCY'
+}
+
 export interface LeadStatus {
   id: number;
   tenant_id: string;
@@ -76,6 +92,27 @@ export interface Task {
   created_at: string;
   updated_at: string;
   completed_at?: string;
+}
+
+export interface LeadFieldConfiguration {
+  id: number;
+  tenant_id?: string;
+  field_name: string;
+  field_label: string;
+  is_standard: boolean;
+  field_type?: FieldTypeEnum;
+  is_visible: boolean;
+  is_required: boolean;
+  is_active: boolean;
+  default_value?: string;
+  options?: string[] | any; // JSON field for dropdown/multiselect options
+  placeholder?: string;
+  help_text?: string;
+  display_order: number;
+  validation_rules?: Record<string, any>; // JSON field
+  created_at: string;
+  updated_at: string;
+  category?: 'standard' | 'custom'; // Computed field from serializer
 }
 
 export interface Lead {
@@ -141,6 +178,18 @@ export interface TasksResponse {
   next: string | null;
   previous: string | null;
   results: Task[];
+}
+
+export interface LeadFieldConfigurationsResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: LeadFieldConfiguration[];
+}
+
+export interface FieldSchemaResponse {
+  standard_fields: LeadFieldConfiguration[];
+  custom_fields: LeadFieldConfiguration[];
 }
 
 // Query Parameters Types
@@ -226,6 +275,19 @@ export interface TasksQueryParams {
   [key: string]: string | number | boolean | undefined;
 }
 
+export interface LeadFieldConfigurationsQueryParams {
+  page?: number;
+  page_size?: number;
+  search?: string;
+  field_type?: FieldTypeEnum;
+  is_required?: boolean;
+  is_active?: boolean;
+  is_visible?: boolean;
+  is_standard?: boolean;
+  ordering?: string;
+  [key: string]: string | number | boolean | undefined;
+}
+
 // Create/Update Types
 export interface CreateLeadPayload {
   name: string;
@@ -297,6 +359,24 @@ export interface CreateTaskPayload {
 }
 
 export interface UpdateTaskPayload extends Partial<CreateTaskPayload> {}
+
+export interface CreateLeadFieldConfigurationPayload {
+  field_name: string;
+  field_label: string;
+  is_standard?: boolean;
+  field_type?: FieldTypeEnum;
+  is_visible?: boolean;
+  is_required?: boolean;
+  is_active?: boolean;
+  default_value?: string;
+  options?: string[] | any;
+  placeholder?: string;
+  help_text?: string;
+  display_order?: number;
+  validation_rules?: Record<string, any>;
+}
+
+export interface UpdateLeadFieldConfigurationPayload extends Partial<CreateLeadFieldConfigurationPayload> {}
 
 // Filter and Sort Options
 export const PRIORITY_OPTIONS = [
@@ -371,4 +451,31 @@ export const TASK_ORDERING_OPTIONS = [
   { value: '-title', label: 'Title (Z-A)' },
   { value: 'status', label: 'Status (A-Z)' },
   { value: '-status', label: 'Status (Z-A)' }
+];
+
+export const FIELD_TYPE_OPTIONS = [
+  { value: FieldTypeEnum.TEXT, label: 'Text' },
+  { value: FieldTypeEnum.NUMBER, label: 'Number' },
+  { value: FieldTypeEnum.EMAIL, label: 'Email' },
+  { value: FieldTypeEnum.PHONE, label: 'Phone' },
+  { value: FieldTypeEnum.DATE, label: 'Date' },
+  { value: FieldTypeEnum.DATETIME, label: 'Date Time' },
+  { value: FieldTypeEnum.DROPDOWN, label: 'Dropdown' },
+  { value: FieldTypeEnum.MULTISELECT, label: 'Multi Select' },
+  { value: FieldTypeEnum.CHECKBOX, label: 'Checkbox' },
+  { value: FieldTypeEnum.URL, label: 'URL' },
+  { value: FieldTypeEnum.TEXTAREA, label: 'Text Area' },
+  { value: FieldTypeEnum.DECIMAL, label: 'Decimal' },
+  { value: FieldTypeEnum.CURRENCY, label: 'Currency' }
+];
+
+export const FIELD_CONFIGURATION_ORDERING_OPTIONS = [
+  { value: 'display_order', label: 'Display Order (First to Last)' },
+  { value: '-display_order', label: 'Display Order (Last to First)' },
+  { value: 'field_label', label: 'Field Label (A-Z)' },
+  { value: '-field_label', label: 'Field Label (Z-A)' },
+  { value: 'created_at', label: 'Created (Oldest)' },
+  { value: '-created_at', label: 'Created (Newest)' },
+  { value: 'updated_at', label: 'Updated (Oldest)' },
+  { value: '-updated_at', label: 'Updated (Newest)' }
 ];

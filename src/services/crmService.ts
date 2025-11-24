@@ -7,16 +7,20 @@ import {
   LeadActivity,
   LeadOrder,
   Task,
+  LeadFieldConfiguration,
   LeadsResponse,
   LeadStatusesResponse,
   LeadActivitiesResponse,
   LeadOrdersResponse,
   TasksResponse,
+  LeadFieldConfigurationsResponse,
+  FieldSchemaResponse,
   LeadsQueryParams,
   LeadStatusesQueryParams,
   LeadActivitiesQueryParams,
   LeadOrdersQueryParams,
   TasksQueryParams,
+  LeadFieldConfigurationsQueryParams,
   CreateLeadPayload,
   UpdateLeadPayload,
   CreateLeadStatusPayload,
@@ -26,7 +30,9 @@ import {
   CreateLeadOrderPayload,
   UpdateLeadOrderPayload,
   CreateTaskPayload,
-  UpdateTaskPayload
+  UpdateTaskPayload,
+  CreateLeadFieldConfigurationPayload,
+  UpdateLeadFieldConfigurationPayload
 } from '@/types/crmTypes';
 
 class CRMService {
@@ -501,6 +507,116 @@ class CRMService {
       const message = error.response?.data?.error ||
                      error.response?.data?.message ||
                      'Failed to delete task';
+      throw new Error(message);
+    }
+  }
+
+  // ==================== FIELD CONFIGURATIONS ====================
+
+  // Get field configurations
+  async getFieldConfigurations(params?: LeadFieldConfigurationsQueryParams): Promise<LeadFieldConfigurationsResponse> {
+    try {
+      const queryString = buildQueryString(params);
+      const response = await crmClient.get<LeadFieldConfigurationsResponse>(
+        `${API_CONFIG.CRM.FIELD_CONFIGURATIONS}${queryString}`
+      );
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
+                     'Failed to fetch field configurations';
+      throw new Error(message);
+    }
+  }
+
+  // Get single field configuration by ID
+  async getFieldConfiguration(id: number): Promise<LeadFieldConfiguration> {
+    try {
+      const response = await crmClient.get<LeadFieldConfiguration>(
+        API_CONFIG.CRM.FIELD_CONFIGURATION_DETAIL.replace(':id', id.toString())
+      );
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
+                     'Failed to fetch field configuration';
+      throw new Error(message);
+    }
+  }
+
+  // Get field schema organized by standard and custom fields
+  async getFieldSchema(): Promise<FieldSchemaResponse> {
+    try {
+      const response = await crmClient.get<FieldSchemaResponse>(
+        API_CONFIG.CRM.FIELD_SCHEMA
+      );
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
+                     'Failed to fetch field schema';
+      throw new Error(message);
+    }
+  }
+
+  // Create new field configuration
+  async createFieldConfiguration(configData: CreateLeadFieldConfigurationPayload): Promise<LeadFieldConfiguration> {
+    try {
+      const response = await crmClient.post<LeadFieldConfiguration>(
+        API_CONFIG.CRM.FIELD_CONFIGURATION_CREATE,
+        configData
+      );
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
+                     'Failed to create field configuration';
+      throw new Error(message);
+    }
+  }
+
+  // Update field configuration (full update)
+  async updateFieldConfiguration(id: number, configData: UpdateLeadFieldConfigurationPayload): Promise<LeadFieldConfiguration> {
+    try {
+      const response = await crmClient.put<LeadFieldConfiguration>(
+        API_CONFIG.CRM.FIELD_CONFIGURATION_UPDATE.replace(':id', id.toString()),
+        configData
+      );
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
+                     'Failed to update field configuration';
+      throw new Error(message);
+    }
+  }
+
+  // Partially update field configuration
+  async patchFieldConfiguration(id: number, configData: Partial<UpdateLeadFieldConfigurationPayload>): Promise<LeadFieldConfiguration> {
+    try {
+      const response = await crmClient.patch<LeadFieldConfiguration>(
+        API_CONFIG.CRM.FIELD_CONFIGURATION_UPDATE.replace(':id', id.toString()),
+        configData
+      );
+      return response.data;
+    } catch (error: any) {
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
+                     'Failed to update field configuration';
+      throw new Error(message);
+    }
+  }
+
+  // Delete field configuration
+  async deleteFieldConfiguration(id: number): Promise<void> {
+    try {
+      await crmClient.delete(
+        API_CONFIG.CRM.FIELD_CONFIGURATION_DELETE.replace(':id', id.toString())
+      );
+    } catch (error: any) {
+      const message = error.response?.data?.error ||
+                     error.response?.data?.message ||
+                     'Failed to delete field configuration';
       throw new Error(message);
     }
   }
