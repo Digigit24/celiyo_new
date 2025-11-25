@@ -23,6 +23,16 @@ import {
   TemplateFieldOptionsQueryParams,
   CreateTemplateFieldOptionPayload,
   UpdateTemplateFieldOptionPayload,
+  TemplateResponse,
+  TemplateResponsesResponse,
+  TemplateResponsesQueryParams,
+  CreateTemplateResponsePayload,
+  UpdateTemplateResponsePayload,
+  TemplateFieldResponse,
+  TemplateFieldResponsesResponse,
+  TemplateFieldResponsesQueryParams,
+  CreateTemplateFieldResponsePayload,
+  UpdateTemplateFieldResponsePayload,
 } from '@/types/opdTemplate.types';
 import { useAuth } from './useAuth';
 
@@ -413,6 +423,191 @@ export const useOPDTemplate = () => {
     }
   }, []);
 
+  // ==================== TEMPLATE RESPONSES HOOKS ====================
+
+  const useTemplateResponses = (params?: TemplateResponsesQueryParams) => {
+    const key = ['template-responses', params];
+
+    return useSWR<TemplateResponsesResponse>(
+      key,
+      () => opdTemplateService.getTemplateResponses(params),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch template responses:', err);
+          setError(err.message || 'Failed to fetch template responses');
+        },
+      }
+    );
+  };
+
+  const useTemplateResponse = (id: number | null) => {
+    const key = id ? ['template-response', id] : null;
+
+    return useSWR<TemplateResponse>(
+      key,
+      () => opdTemplateService.getTemplateResponse(id!),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch template response:', err);
+          setError(err.message || 'Failed to fetch template response');
+        },
+      }
+    );
+  };
+
+  const createTemplateResponse = useCallback(
+    async (data: CreateTemplateResponsePayload): Promise<TemplateResponse> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const result = await opdTemplateService.createTemplateResponse(data);
+        return result;
+      } catch (err: any) {
+        const errorMessage = err.message || 'Failed to create template response';
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  const updateTemplateResponse = useCallback(
+    async (id: number, data: UpdateTemplateResponsePayload): Promise<TemplateResponse> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const result = await opdTemplateService.updateTemplateResponse(id, data);
+        return result;
+      } catch (err: any) {
+        const errorMessage = err.message || 'Failed to update template response';
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  const deleteTemplateResponse = useCallback(async (id: number): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await opdTemplateService.deleteTemplateResponse(id);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to delete template response';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // ==================== TEMPLATE FIELD RESPONSES HOOKS ====================
+
+  const useTemplateFieldResponses = (params?: TemplateFieldResponsesQueryParams) => {
+    const key = ['template-field-responses', params];
+
+    return useSWR<TemplateFieldResponsesResponse>(
+      key,
+      () => opdTemplateService.getTemplateFieldResponses(params),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch template field responses:', err);
+          setError(err.message || 'Failed to fetch template field responses');
+        },
+      }
+    );
+  };
+
+  const useTemplateFieldResponse = (id: number | null) => {
+    const key = id ? ['template-field-response', id] : null;
+
+    return useSWR<TemplateFieldResponse>(
+      key,
+      () => opdTemplateService.getTemplateFieldResponse(id!),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        onError: (err) => {
+          console.error('Failed to fetch template field response:', err);
+          setError(err.message || 'Failed to fetch template field response');
+        },
+      }
+    );
+  };
+
+  const createTemplateFieldResponse = useCallback(
+    async (data: CreateTemplateFieldResponsePayload): Promise<TemplateFieldResponse> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const result = await opdTemplateService.createTemplateFieldResponse(data);
+        return result;
+      } catch (err: any) {
+        const errorMessage = err.message || 'Failed to create template field response';
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  const updateTemplateFieldResponse = useCallback(
+    async (
+      id: number,
+      data: UpdateTemplateFieldResponsePayload
+    ): Promise<TemplateFieldResponse> => {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        const result = await opdTemplateService.updateTemplateFieldResponse(id, data);
+        return result;
+      } catch (err: any) {
+        const errorMessage = err.message || 'Failed to update template field response';
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  const deleteTemplateFieldResponse = useCallback(async (id: number): Promise<void> => {
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await opdTemplateService.deleteTemplateFieldResponse(id);
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to delete template field response';
+      setError(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     hasHMSAccess,
     isLoading,
@@ -442,5 +637,17 @@ export const useOPDTemplate = () => {
     createTemplateFieldOption,
     updateTemplateFieldOption,
     deleteTemplateFieldOption,
+    // Template Responses
+    useTemplateResponses,
+    useTemplateResponse,
+    createTemplateResponse,
+    updateTemplateResponse,
+    deleteTemplateResponse,
+    // Template Field Responses
+    useTemplateFieldResponses,
+    useTemplateFieldResponse,
+    createTemplateFieldResponse,
+    updateTemplateFieldResponse,
+    deleteTemplateFieldResponse,
   };
 };

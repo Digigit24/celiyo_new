@@ -22,6 +22,16 @@ import {
   TemplateFieldOptionsQueryParams,
   CreateTemplateFieldOptionPayload,
   UpdateTemplateFieldOptionPayload,
+  TemplateResponse,
+  TemplateResponsesResponse,
+  TemplateResponsesQueryParams,
+  CreateTemplateResponsePayload,
+  UpdateTemplateResponsePayload,
+  TemplateFieldResponse,
+  TemplateFieldResponsesResponse,
+  TemplateFieldResponsesQueryParams,
+  CreateTemplateFieldResponsePayload,
+  UpdateTemplateFieldResponsePayload,
 } from '@/types/opdTemplate.types';
 
 class OPDTemplateService {
@@ -353,6 +363,172 @@ class OPDTemplateService {
         error.response?.data?.error ||
         error.response?.data?.message ||
         'Failed to delete template field option';
+      throw new Error(message);
+    }
+  }
+
+  // ==================== TEMPLATE RESPONSES ====================
+
+  async getTemplateResponses(
+    params?: TemplateResponsesQueryParams
+  ): Promise<TemplateResponsesResponse> {
+    try {
+      const queryString = buildQueryString(params);
+      const response = await hmsClient.get<TemplateResponsesResponse>(
+        `${this.baseURL}/template-responses/${queryString}`
+      );
+      return response.data;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to fetch template responses';
+      throw new Error(message);
+    }
+  }
+
+  async getTemplateResponse(id: number): Promise<TemplateResponse> {
+    try {
+      const response = await hmsClient.get<TemplateResponse>(
+        `${this.baseURL}/template-responses/${id}/`
+      );
+      return response.data;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to fetch template response';
+      throw new Error(message);
+    }
+  }
+
+  async createTemplateResponse(data: CreateTemplateResponsePayload): Promise<TemplateResponse> {
+    try {
+      const response = await hmsClient.post<TemplateResponse>(
+        `${this.baseURL}/template-responses/`,
+        data
+      );
+      return response.data;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to create template response';
+      throw new Error(message);
+    }
+  }
+
+  async updateTemplateResponse(
+    id: number,
+    data: UpdateTemplateResponsePayload
+  ): Promise<TemplateResponse> {
+    try {
+      const response = await hmsClient.patch<TemplateResponse>(
+        `${this.baseURL}/template-responses/${id}/`,
+        data
+      );
+      return response.data;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to update template response';
+      throw new Error(message);
+    }
+  }
+
+  async deleteTemplateResponse(id: number): Promise<void> {
+    try {
+      await hmsClient.delete(`${this.baseURL}/template-responses/${id}/`);
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to delete template response';
+      throw new Error(message);
+    }
+  }
+
+  // ==================== TEMPLATE FIELD RESPONSES ====================
+
+  async getTemplateFieldResponses(
+    params?: TemplateFieldResponsesQueryParams
+  ): Promise<TemplateFieldResponsesResponse> {
+    try {
+      const queryString = buildQueryString(params);
+      const response = await hmsClient.get<TemplateFieldResponsesResponse>(
+        `${this.baseURL}/template-field-responses/${queryString}`
+      );
+      return response.data;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to fetch template field responses';
+      throw new Error(message);
+    }
+  }
+
+  async getTemplateFieldResponse(id: number): Promise<TemplateFieldResponse> {
+    try {
+      const response = await hmsClient.get<TemplateFieldResponse>(
+        `${this.baseURL}/template-field-responses/${id}/`
+      );
+      return response.data;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to fetch template field response';
+      throw new Error(message);
+    }
+  }
+
+  async createTemplateFieldResponse(
+    data: CreateTemplateFieldResponsePayload
+  ): Promise<TemplateFieldResponse> {
+    try {
+      const response = await hmsClient.post<TemplateFieldResponse>(
+        `${this.baseURL}/template-field-responses/`,
+        data
+      );
+      return response.data;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to create template field response';
+      throw new Error(message);
+    }
+  }
+
+  async updateTemplateFieldResponse(
+    id: number,
+    data: UpdateTemplateFieldResponsePayload
+  ): Promise<TemplateFieldResponse> {
+    try {
+      const response = await hmsClient.patch<TemplateFieldResponse>(
+        `${this.baseURL}/template-field-responses/${id}/`,
+        data
+      );
+      return response.data;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to update template field response';
+      throw new Error(message);
+    }
+  }
+
+  async deleteTemplateFieldResponse(id: number): Promise<void> {
+    try {
+      await hmsClient.delete(`${this.baseURL}/template-field-responses/${id}/`);
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to delete template field response';
       throw new Error(message);
     }
   }

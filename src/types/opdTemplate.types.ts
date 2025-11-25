@@ -221,3 +221,106 @@ export interface TemplateFieldOptionsResponse {
   previous: string | null;
   results: TemplateFieldOption[];
 }
+
+// ==================== TEMPLATE RESPONSE ====================
+export type TemplateResponseStatus = 'draft' | 'completed';
+
+export interface TemplateResponse {
+  id: number;
+  tenant_id: string;
+  visit: number;
+  template: number;
+  template_name?: string;
+  status: TemplateResponseStatus;
+  filled_by: string; // UUID
+  filled_by_name?: string;
+  completed_at: string | null;
+  created_at: string;
+  updated_at: string;
+  field_responses?: TemplateFieldResponse[];
+}
+
+export interface CreateTemplateResponsePayload {
+  visit: number;
+  template: number;
+  status?: TemplateResponseStatus;
+  filled_by?: string; // UUID - optional if backend auto-fills from request user
+}
+
+export interface UpdateTemplateResponsePayload {
+  status?: TemplateResponseStatus;
+  completed_at?: string | null;
+}
+
+export interface TemplateResponsesQueryParams {
+  visit?: number;
+  template?: number;
+  status?: TemplateResponseStatus;
+  filled_by?: string;
+  page?: number;
+  page_size?: number;
+  ordering?: string;
+}
+
+export interface TemplateResponsesResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: TemplateResponse[];
+}
+
+// ==================== TEMPLATE FIELD RESPONSE ====================
+export interface TemplateFieldResponse {
+  id: number;
+  tenant_id: string;
+  response: number;
+  field: number;
+  field_label?: string;
+  field_type?: FieldType;
+  // Value fields (only one will be populated based on field_type)
+  value_text: string | null;
+  value_number: number | null;
+  value_date: string | null;
+  value_datetime: string | null;
+  value_boolean: boolean | null;
+  // For select/radio/multiselect
+  selected_options: number[]; // Array of TemplateFieldOption IDs
+  selected_option_labels?: string[]; // Read-only, populated by backend
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateTemplateFieldResponsePayload {
+  response: number;
+  field: number;
+  value_text?: string | null;
+  value_number?: number | null;
+  value_date?: string | null;
+  value_datetime?: string | null;
+  value_boolean?: boolean | null;
+  selected_options?: number[];
+}
+
+export interface UpdateTemplateFieldResponsePayload {
+  value_text?: string | null;
+  value_number?: number | null;
+  value_date?: string | null;
+  value_datetime?: string | null;
+  value_boolean?: boolean | null;
+  selected_options?: number[];
+}
+
+export interface TemplateFieldResponsesQueryParams {
+  response?: number;
+  field?: number;
+  page?: number;
+  page_size?: number;
+  ordering?: string;
+}
+
+export interface TemplateFieldResponsesResponse {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: TemplateFieldResponse[];
+}
