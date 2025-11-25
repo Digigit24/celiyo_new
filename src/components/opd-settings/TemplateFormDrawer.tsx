@@ -1,7 +1,7 @@
 // src/components/opd-settings/TemplateFormDrawer.tsx
 import { useState, useEffect, useCallback } from 'react';
 import { useOPDTemplate } from '@/hooks/useOPDTemplate';
-import { SideDrawer, type DrawerHeaderAction } from '@/components/SideDrawer';
+import { SideDrawer, type DrawerActionButton } from '@/components/SideDrawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -193,8 +193,8 @@ export function TemplateFormDrawer({
     }
   }, [templateId, deleteTemplate, onSuccess]);
 
-  // Header actions
-  const getHeaderActions = useCallback((): DrawerHeaderAction[] => {
+  // Footer buttons
+  const getFooterButtons = useCallback((): DrawerActionButton[] => {
     if (mode === 'view') {
       return [
         {
@@ -253,8 +253,8 @@ export function TemplateFormDrawer({
       onOpenChange={onOpenChange}
       title={title}
       mode={mode}
-      actions={getHeaderActions()}
-      loading={!templateData && templateId !== null && mode !== 'create'}
+      footerButtons={getFooterButtons()}
+      isLoading={!templateData && templateId !== null && mode !== 'create'}
     >
       <div className="space-y-6">
         {/* Template Information */}

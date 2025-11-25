@@ -1,7 +1,7 @@
 // src/components/opd-settings/TemplateFieldEditor.tsx
 import { useState, useEffect, useCallback } from 'react';
 import { useOPDTemplate } from '@/hooks/useOPDTemplate';
-import { SideDrawer, type DrawerHeaderAction } from '@/components/SideDrawer';
+import { SideDrawer, type DrawerActionButton } from '@/components/SideDrawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -254,9 +254,9 @@ export function TemplateFieldEditor({
     }
   }, [fieldId, deleteTemplateField, onSuccess]);
 
-  // Header actions
-  const getHeaderActions = useCallback((): DrawerHeaderAction[] => {
-    const actions: DrawerHeaderAction[] = [
+  // Footer buttons
+  const getFooterButtons = useCallback((): DrawerActionButton[] => {
+    const actions: DrawerActionButton[] = [
       {
         label: 'Cancel',
         onClick: onClose,
@@ -293,7 +293,7 @@ export function TemplateFieldEditor({
       onOpenChange={onOpenChange}
       title={mode === 'create' ? 'Create Field' : 'Edit Field'}
       mode="edit"
-      actions={getHeaderActions()}
+      footerButtons={getFooterButtons()}
     >
       <div className="space-y-6">
         {/* Field Configuration */}

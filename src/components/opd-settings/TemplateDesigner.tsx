@@ -277,17 +277,6 @@ export function TemplateDesigner({
     setSelectedFieldId(null);
   }, []);
 
-  // Header actions for the drawer
-  const getHeaderActions = useCallback(() => {
-    return [
-      {
-        label: 'Add Field',
-        onClick: handleCreateField,
-        variant: 'default' as const,
-      },
-    ];
-  }, [handleCreateField]);
-
   return (
     <>
       <SideDrawer
@@ -295,7 +284,6 @@ export function TemplateDesigner({
         onOpenChange={onOpenChange}
         title={templateData ? `Design Template - ${templateData.name}` : 'Template Designer'}
         mode="view"
-        actions={getHeaderActions()}
       >
         <div className="space-y-6">
           {/* Template Info */}
