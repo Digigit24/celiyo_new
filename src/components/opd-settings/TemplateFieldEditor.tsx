@@ -244,6 +244,7 @@ export function TemplateFieldEditor({
 
       // Step 1: Create or update the field
       if (mode === 'create') {
+        console.log('Creating field with payload:', formData);
         const createdField = await createTemplateField(formData);
         savedFieldId = createdField.id;
         toast.success('Field created successfully');
@@ -264,6 +265,7 @@ export function TemplateFieldEditor({
           display_order: formData.display_order,
           is_active: formData.is_active,
         };
+        console.log('Updating field with payload:', updatePayload);
         await updateTemplateField(fieldId, updatePayload);
         savedFieldId = fieldId;
         toast.success('Field updated successfully');
