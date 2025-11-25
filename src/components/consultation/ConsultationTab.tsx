@@ -81,15 +81,16 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
     }
   }, [fieldsData]);
 
-  const handleFieldChange = (fieldKey: string, value: any) => {
+  const handleFieldChange = (fieldId: number, value: any) => {
     setFormData(prev => ({
       ...prev,
-      [fieldKey]: value,
+      [fieldId]: value,
     }));
   };
 
   const handleSave = () => {
     console.log('Form Data:', formData);
+    console.log('Fields:', fieldsData?.results);
     toast.success('Consultation saved successfully');
   };
 
@@ -98,7 +99,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
   };
 
   const renderField = (field: TemplateField) => {
-    const value = formData[field.field_key] || '';
+    const value = formData[field.id] || '';
 
     switch (field.field_type) {
       case 'text':
@@ -107,16 +108,16 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
       case 'url':
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.field_key}>
+            <Label htmlFor={`field-${field.id}`}>
               {field.field_label}
               {field.is_required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <Input
-              id={field.field_key}
+              id={`field-${field.id}`}
               type={field.field_type === 'email' ? 'email' : field.field_type === 'phone' ? 'tel' : field.field_type === 'url' ? 'url' : 'text'}
               placeholder={field.placeholder || ''}
               value={value}
-              onChange={(e) => handleFieldChange(field.field_key, e.target.value)}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
               required={field.is_required}
               minLength={field.min_length}
               maxLength={field.max_length}
@@ -131,15 +132,15 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
       case 'textarea':
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.field_key}>
+            <Label htmlFor={`field-${field.id}`}>
               {field.field_label}
               {field.is_required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <Textarea
-              id={field.field_key}
+              id={`field-${field.id}`}
               placeholder={field.placeholder || ''}
               value={value}
-              onChange={(e) => handleFieldChange(field.field_key, e.target.value)}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
               required={field.is_required}
               minLength={field.min_length}
               maxLength={field.max_length}
@@ -154,16 +155,16 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
       case 'number':
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.field_key}>
+            <Label htmlFor={`field-${field.id}`}>
               {field.field_label}
               {field.is_required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <Input
-              id={field.field_key}
+              id={`field-${field.id}`}
               type="number"
               placeholder={field.placeholder || ''}
               value={value}
-              onChange={(e) => handleFieldChange(field.field_key, e.target.value)}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
               required={field.is_required}
               min={field.min_value}
               max={field.max_value}
@@ -177,15 +178,15 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
       case 'date':
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.field_key}>
+            <Label htmlFor={`field-${field.id}`}>
               {field.field_label}
               {field.is_required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <Input
-              id={field.field_key}
+              id={`field-${field.id}`}
               type="date"
               value={value}
-              onChange={(e) => handleFieldChange(field.field_key, e.target.value)}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
               required={field.is_required}
             />
             {field.help_text && (
@@ -197,15 +198,15 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
       case 'datetime':
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.field_key}>
+            <Label htmlFor={`field-${field.id}`}>
               {field.field_label}
               {field.is_required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <Input
-              id={field.field_key}
+              id={`field-${field.id}`}
               type="datetime-local"
               value={value}
-              onChange={(e) => handleFieldChange(field.field_key, e.target.value)}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
               required={field.is_required}
             />
             {field.help_text && (
@@ -218,11 +219,11 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         return (
           <div key={field.id} className="flex items-center space-x-2">
             <Checkbox
-              id={field.field_key}
+              id={`field-${field.id}`}
               checked={value || false}
-              onCheckedChange={(checked) => handleFieldChange(field.field_key, checked)}
+              onCheckedChange={(checked) => handleFieldChange(field.id, checked)}
             />
-            <Label htmlFor={field.field_key} className="cursor-pointer">
+            <Label htmlFor={`field-${field.id}`} className="cursor-pointer">
               {field.field_label}
               {field.is_required && <span className="text-destructive ml-1">*</span>}
             </Label>
@@ -235,15 +236,15 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
       case 'select':
         return (
           <div key={field.id} className="space-y-2">
-            <Label htmlFor={field.field_key}>
+            <Label htmlFor={`field-${field.id}`}>
               {field.field_label}
               {field.is_required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <Select
               value={value}
-              onValueChange={(val) => handleFieldChange(field.field_key, val)}
+              onValueChange={(val) => handleFieldChange(field.id, val)}
             >
-              <SelectTrigger id={field.field_key}>
+              <SelectTrigger id={`field-${field.id}`}>
                 <SelectValue placeholder={field.placeholder || 'Select an option'} />
               </SelectTrigger>
               <SelectContent>
@@ -276,7 +277,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             </Label>
             <RadioGroup
               value={value}
-              onValueChange={(val) => handleFieldChange(field.field_key, val)}
+              onValueChange={(val) => handleFieldChange(field.id, val)}
             >
               {field.options && field.options.length > 0 ? (
                 field.options
@@ -284,8 +285,8 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((option) => (
                     <div key={option.id} className="flex items-center space-x-2">
-                      <RadioGroupItem value={option.value} id={`${field.field_key}-${option.value}`} />
-                      <Label htmlFor={`${field.field_key}-${option.value}`} className="cursor-pointer">
+                      <RadioGroupItem value={option.value} id={`field-${field.id}-${option.value}`} />
+                      <Label htmlFor={`field-${field.id}-${option.value}`} className="cursor-pointer">
                         {option.label}
                       </Label>
                     </div>
@@ -318,16 +319,16 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                     return (
                       <div key={option.id} className="flex items-center space-x-2">
                         <Checkbox
-                          id={`${field.field_key}-${option.value}`}
+                          id={`field-${field.id}-${option.value}`}
                           checked={isChecked}
                           onCheckedChange={(checked) => {
                             const newValues = checked
                               ? [...selectedValues, option.value]
                               : selectedValues.filter((v: string) => v !== option.value);
-                            handleFieldChange(field.field_key, newValues);
+                            handleFieldChange(field.id, newValues);
                           }}
                         />
-                        <Label htmlFor={`${field.field_key}-${option.value}`} className="cursor-pointer">
+                        <Label htmlFor={`field-${field.id}-${option.value}`} className="cursor-pointer">
                           {option.label}
                         </Label>
                       </div>
@@ -429,7 +430,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                   {fieldsData.results
                     .sort((a, b) => a.display_order - b.display_order)
                     .map((field) => {
-                      const value = formData[field.field_key];
+                      const value = formData[field.id];
                       if (!value || (Array.isArray(value) && value.length === 0) || value === false) return null;
 
                       // Determine if field should span full width
@@ -462,7 +463,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
 
                 {/* Check if no fields have values */}
                 {fieldsData.results.every(field => {
-                  const value = formData[field.field_key];
+                  const value = formData[field.id];
                   return !value || (Array.isArray(value) && value.length === 0) || value === false;
                 }) && (
                   <div className="text-center py-12 text-gray-400">
