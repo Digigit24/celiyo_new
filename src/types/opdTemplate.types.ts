@@ -111,7 +111,8 @@ export interface TemplateField {
   tenant_id: string;
   template: number;
   field_type: FieldType;
-  field_name: string; // Backend uses field_name not field_label
+  field_label: string;
+  field_name: string;
   field_key: string;
   placeholder?: string;
   help_text?: string;
@@ -132,7 +133,8 @@ export interface TemplateField {
 export interface CreateTemplateFieldPayload {
   template: number;
   field_type: FieldType;
-  field_name: string; // Backend expects field_name not field_label
+  field_label: string;
+  field_name: string;
   field_key: string;
   placeholder?: string;
   help_text?: string;
@@ -149,7 +151,8 @@ export interface CreateTemplateFieldPayload {
 
 export interface UpdateTemplateFieldPayload {
   field_type?: FieldType;
-  field_name?: string; // Backend expects field_name not field_label
+  field_label?: string;
+  field_name?: string;
   field_key?: string;
   placeholder?: string;
   help_text?: string;

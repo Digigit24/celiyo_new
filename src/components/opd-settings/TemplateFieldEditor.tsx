@@ -80,6 +80,7 @@ export function TemplateFieldEditor({
   const [formData, setFormData] = useState<CreateTemplateFieldPayload>({
     template: templateId || 0,
     field_type: 'text',
+    field_label: '',
     field_name: '',
     field_key: '',
     placeholder: '',
@@ -112,6 +113,7 @@ export function TemplateFieldEditor({
       setFormData({
         template: fieldData.template,
         field_type: fieldData.field_type,
+        field_label: fieldData.field_label,
         field_name: fieldData.field_name,
         field_key: fieldData.field_key,
         placeholder: fieldData.placeholder || '',
@@ -142,6 +144,7 @@ export function TemplateFieldEditor({
       setFormData({
         template: templateId || 0,
         field_type: 'text',
+        field_label: '',
         field_name: '',
         field_key: '',
         placeholder: '',
@@ -161,16 +164,16 @@ export function TemplateFieldEditor({
       setFormData((prev) => ({ ...prev, [field]: value }));
       setErrors((prev) => ({ ...prev, [field]: '' }));
 
-      // Auto-generate field_key from field_name
-      if (field === 'field_name' && typeof value === 'string') {
-        const key = value
+      // Auto-generate field_name and field_key from field_label in create mode
+      if (field === 'field_label' && typeof value === 'string' && mode === 'create') {
+        const generatedName = value
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '_')
           .replace(/^_|_$/g, '');
-        setFormData((prev) => ({ ...prev, field_key: key }));
+        setFormData((prev) => ({ ...prev, field_name: generatedName, field_key: generatedName }));
       }
     },
-    []
+    [mode]
   );
 
   // Add option
@@ -251,6 +254,7 @@ export function TemplateFieldEditor({
       } else if (mode === 'edit' && fieldId) {
         const updatePayload: UpdateTemplateFieldPayload = {
           field_type: formData.field_type,
+          field_label: formData.field_label,
           field_name: formData.field_name,
           field_key: formData.field_key,
           placeholder: formData.placeholder,

@@ -146,12 +146,17 @@ export function FieldConfigurationFormDrawer({
       });
       setOptionsInput('');
     }
+    setErrors({});
   }, [configData, mode]);
 
-  // Clear errors when form data changes
+  // Clear options when field type changes to a type that doesn't need them
   useEffect(() => {
-    setErrors({});
-  }, [formData]);
+    const fieldTypeNeedsOptions = formData.field_type === 'DROPDOWN' || formData.field_type === 'MULTISELECT';
+    if (!fieldTypeNeedsOptions && optionsInput.trim()) {
+      setOptionsInput('');
+      setFormData(prev => ({ ...prev, options: [] }));
+    }
+  }, [formData.field_type]);
 
   // Validation
   const validateForm = (): boolean => {
@@ -178,6 +183,12 @@ export function FieldConfigurationFormDrawer({
       }
     }
 
+    // Ensure options are not set for field types that don't need them
+    const fieldTypeNeedsOptions = formData.field_type === 'DROPDOWN' || formData.field_type === 'MULTISELECT';
+    if (!fieldTypeNeedsOptions && (optionsInput.trim() || (formData.options && formData.options.length > 0))) {
+      newErrors.options = `Options are not applicable for ${formData.field_type} field type`;
+    }
+
     if (formData.display_order < 0) {
       newErrors.display_order = 'Display order must be non-negative';
     }
@@ -192,21 +203,24 @@ export function FieldConfigurationFormDrawer({
 
     setIsSubmitting(true);
     try {
-      // Process options
-      let processedOptions = formData.options;
-      if (formData.field_type === 'DROPDOWN' || formData.field_type === 'MULTISELECT') {
-        processedOptions = optionsInput
+      // Process options based on field type
+      const fieldTypeNeedsOptions = formData.field_type === 'DROPDOWN' || formData.field_type === 'MULTISELECT';
+
+      let payload: any = {
+        ...formData,
+      };
+
+      if (fieldTypeNeedsOptions) {
+        // Parse and validate options for dropdown/multiselect
+        const parsedOptions = optionsInput
           .split('\n')
           .map(o => o.trim())
           .filter(o => o.length > 0);
+        payload.options = parsedOptions;
       } else {
-        processedOptions = undefined;
+        // For other field types, explicitly set options to null or omit it
+        payload.options = null;
       }
-
-      const payload = {
-        ...formData,
-        options: processedOptions,
-      };
 
       if (mode === 'create') {
         await createFieldConfiguration(payload);
@@ -414,9 +428,20 @@ export function FieldConfigurationFormDrawer({
               <Input
                 id="field_label"
                 value={formData.field_label}
-                onChange={(e) =>
-                  setFormData({ ...formData, field_label: e.target.value })
-                }
+                onChange={(e) => {
+                  const newLabel = e.target.value;
+
+                  // Auto-generate field_name from field_label in create mode
+                  if (mode === 'create') {
+                    const generatedName = newLabel
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, '_')
+                      .replace(/^_|_$/g, '');
+                    setFormData({ ...formData, field_label: newLabel, field_name: generatedName });
+                  } else {
+                    setFormData({ ...formData, field_label: newLabel });
+                  }
+                }}
                 placeholder="e.g., Custom Field 1"
                 disabled={isViewMode}
               />

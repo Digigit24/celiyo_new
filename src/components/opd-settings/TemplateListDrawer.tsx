@@ -11,7 +11,6 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Plus, RefreshCw, Eye, Edit, Trash2, Copy, Wrench } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatDistanceToNow } from 'date-fns';
 import type { Template, TemplatesQueryParams } from '@/types/opdTemplate.types';
 
 type DrawerMode = 'view' | 'edit' | 'create';
@@ -194,15 +193,6 @@ export function TemplateListDrawer({
         ),
         className: 'text-center',
       },
-      {
-        header: 'Updated',
-        key: 'updated_at',
-        cell: (template) => (
-          <span className="text-sm text-muted-foreground">
-            {formatDate(template.updated_at)}
-          </span>
-        ),
-      },
     ],
     [formatDate]
   );
@@ -224,11 +214,8 @@ export function TemplateListDrawer({
           </Badge>
         </div>
 
-        <div className="flex items-center justify-between text-sm">
+        <div className="flex items-center text-sm">
           <span className="text-muted-foreground">Order: {template.display_order}</span>
-          <span className="text-muted-foreground">
-            {formatDate(template.updated_at)}
-          </span>
         </div>
 
         <div className="flex gap-2 pt-2 flex-wrap">

@@ -1,5 +1,5 @@
 // src/components/consultation/ConsultationTab.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,90 +7,90 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { FileText, Printer, Save } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { FileText, Printer, Save, Loader2 } from 'lucide-react';
 import { OpdVisit } from '@/types/opdVisit.types';
 import { toast } from 'sonner';
+import { useOPDTemplate } from '@/hooks/useOPDTemplate';
+import type { Template, TemplateField } from '@/types/opdTemplate.types';
 
 interface ConsultationTabProps {
   visit: OpdVisit;
 }
 
 export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
+  const { useTemplateGroups, useTemplates, useTemplateFields } = useOPDTemplate();
   const [mode, setMode] = useState<'entry' | 'preview'>('entry');
+  const [selectedTemplateGroup, setSelectedTemplateGroup] = useState<string>('');
+  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
+  const [formData, setFormData] = useState<Record<string, any>>({});
 
-  // Chief Complaint State
-  const [chiefComplaint, setChiefComplaint] = useState({
-    site: [] as string[],
-    type: [] as string[],
-    duration: '',
-    radiation: false,
-    radiationDetails: '',
-    aggravatedOn: [] as string[],
-    relievedOn: [] as string[],
-    tingling: false,
-    numbness: false,
-    burning: false,
-    weakness: false,
-    ems: false,
-    associatedFeatures: '',
+  // Fetch template groups
+  const { data: groupsData, isLoading: isLoadingGroups } = useTemplateGroups({
+    show_inactive: false,
+    ordering: 'display_order',
   });
 
-  // Medical History State
-  const [medicalHistory, setMedicalHistory] = useState({
-    dm: false,
-    htn: false,
-    tb: false,
-    thyroid: false,
-    allergies: false,
-    allergiesDetails: '',
-    addiction: false,
-    addictionDetails: '',
-    occupation: '',
-    diet: '',
+  // Fetch templates for selected group
+  const { data: templatesData, isLoading: isLoadingTemplates } = useTemplates({
+    group: selectedTemplateGroup ? parseInt(selectedTemplateGroup) : undefined,
+    is_active: true,
+    ordering: 'display_order',
   });
 
-  // Examination State
-  const [examination, setExamination] = useState({
-    lsSpine: {
-      side: 'bilateral' as 'left' | 'right' | 'bilateral',
-      rom: '',
-      tenderness: '',
-      slr: '',
-      other: '',
-    },
-    cSpine: {
-      side: 'bilateral' as 'left' | 'right' | 'bilateral',
-      rom: '',
-      tenderness: '',
-      other: '',
-    },
-    knee: {
-      side: 'bilateral' as 'left' | 'right' | 'bilateral',
-      rom: '',
-      tenderness: '',
-      swelling: '',
-      stability: '',
-      other: '',
-    },
-    shoulder: {
-      side: 'bilateral' as 'left' | 'right' | 'bilateral',
-      rom: '',
-      tenderness: '',
-      impingement: '',
-      other: '',
-    },
+  // Fetch fields for selected template
+  const { data: fieldsData, isLoading: isLoadingFields } = useTemplateFields({
+    template: selectedTemplate ? parseInt(selectedTemplate) : undefined,
+    is_active: true,
+    ordering: 'display_order',
   });
 
-  // Diagnosis & Treatment
-  const [diagnosis, setDiagnosis] = useState(visit.diagnosis || '');
-  const [treatmentPlan, setTreatmentPlan] = useState(visit.treatment_plan || '');
-  const [prescription, setPrescription] = useState(visit.prescription || '');
-  const [additionalNotes, setAdditionalNotes] = useState(visit.notes || '');
+  // Reset template selection when group changes
+  useEffect(() => {
+    setSelectedTemplate('');
+    setFormData({});
+  }, [selectedTemplateGroup]);
+
+  // Reset form data when template changes
+  useEffect(() => {
+    setFormData({});
+  }, [selectedTemplate]);
+
+  // Log fetched data
+  useEffect(() => {
+    if (groupsData) {
+      console.log('Template Groups:', groupsData);
+    }
+  }, [groupsData]);
+
+  useEffect(() => {
+    if (templatesData) {
+      console.log('Templates:', templatesData);
+    }
+  }, [templatesData]);
+
+  useEffect(() => {
+    if (fieldsData) {
+      console.log('Template Fields:', fieldsData);
+    }
+  }, [fieldsData]);
+
+  const handleFieldChange = (fieldId: number, value: any) => {
+    setFormData(prev => ({
+      ...prev,
+      [fieldId]: value,
+    }));
+  };
 
   const handleSave = () => {
-    // TODO: Implement save functionality with API call
+    console.log('Form Data:', formData);
+    console.log('Fields:', fieldsData?.results);
     toast.success('Consultation saved successfully');
   };
 
@@ -98,20 +98,262 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
     window.print();
   };
 
-  const toggleChiefComplaintArray = (field: 'site' | 'type' | 'aggravatedOn' | 'relievedOn', value: string) => {
-    setChiefComplaint(prev => ({
-      ...prev,
-      [field]: prev[field].includes(value)
-        ? prev[field].filter(v => v !== value)
-        : [...prev[field], value],
-    }));
+  const renderField = (field: TemplateField) => {
+    const value = formData[field.id] || '';
+
+    switch (field.field_type) {
+      case 'text':
+      case 'email':
+      case 'phone':
+      case 'url':
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={`field-${field.id}`}>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Input
+              id={`field-${field.id}`}
+              type={field.field_type === 'email' ? 'email' : field.field_type === 'phone' ? 'tel' : field.field_type === 'url' ? 'url' : 'text'}
+              placeholder={field.placeholder || ''}
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              required={field.is_required}
+              minLength={field.min_length}
+              maxLength={field.max_length}
+              pattern={field.pattern}
+            />
+            {field.help_text && (
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+            )}
+          </div>
+        );
+
+      case 'textarea':
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={`field-${field.id}`}>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Textarea
+              id={`field-${field.id}`}
+              placeholder={field.placeholder || ''}
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              required={field.is_required}
+              minLength={field.min_length}
+              maxLength={field.max_length}
+              rows={4}
+            />
+            {field.help_text && (
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+            )}
+          </div>
+        );
+
+      case 'number':
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={`field-${field.id}`}>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Input
+              id={`field-${field.id}`}
+              type="number"
+              placeholder={field.placeholder || ''}
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              required={field.is_required}
+              min={field.min_value}
+              max={field.max_value}
+            />
+            {field.help_text && (
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+            )}
+          </div>
+        );
+
+      case 'date':
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={`field-${field.id}`}>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Input
+              id={`field-${field.id}`}
+              type="date"
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              required={field.is_required}
+            />
+            {field.help_text && (
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+            )}
+          </div>
+        );
+
+      case 'datetime':
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={`field-${field.id}`}>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Input
+              id={`field-${field.id}`}
+              type="datetime-local"
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              required={field.is_required}
+            />
+            {field.help_text && (
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+            )}
+          </div>
+        );
+
+      case 'checkbox':
+        return (
+          <div key={field.id} className="flex items-center space-x-2">
+            <Checkbox
+              id={`field-${field.id}`}
+              checked={value || false}
+              onCheckedChange={(checked) => handleFieldChange(field.id, checked)}
+            />
+            <Label htmlFor={`field-${field.id}`} className="cursor-pointer">
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            {field.help_text && (
+              <p className="text-xs text-muted-foreground ml-2">({field.help_text})</p>
+            )}
+          </div>
+        );
+
+      case 'select':
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={`field-${field.id}`}>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Select
+              value={value}
+              onValueChange={(val) => handleFieldChange(field.id, val)}
+            >
+              <SelectTrigger id={`field-${field.id}`}>
+                <SelectValue placeholder={field.placeholder || 'Select an option'} />
+              </SelectTrigger>
+              <SelectContent>
+                {field.options && field.options.length > 0 ? (
+                  field.options
+                    .filter(opt => opt.is_active)
+                    .sort((a, b) => a.display_order - b.display_order)
+                    .map((option) => (
+                      <SelectItem key={option.id} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))
+                ) : (
+                  <div className="p-2 text-sm text-muted-foreground">No options available</div>
+                )}
+              </SelectContent>
+            </Select>
+            {field.help_text && (
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+            )}
+          </div>
+        );
+
+      case 'radio':
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <RadioGroup
+              value={value}
+              onValueChange={(val) => handleFieldChange(field.id, val)}
+            >
+              {field.options && field.options.length > 0 ? (
+                field.options
+                  .filter(opt => opt.is_active)
+                  .sort((a, b) => a.display_order - b.display_order)
+                  .map((option) => (
+                    <div key={option.id} className="flex items-center space-x-2">
+                      <RadioGroupItem value={option.value} id={`field-${field.id}-${option.value}`} />
+                      <Label htmlFor={`field-${field.id}-${option.value}`} className="cursor-pointer">
+                        {option.label}
+                      </Label>
+                    </div>
+                  ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No options available</p>
+              )}
+            </RadioGroup>
+            {field.help_text && (
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+            )}
+          </div>
+        );
+
+      case 'multiselect':
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <div className="grid grid-cols-2 gap-2">
+              {field.options && field.options.length > 0 ? (
+                field.options
+                  .filter(opt => opt.is_active)
+                  .sort((a, b) => a.display_order - b.display_order)
+                  .map((option) => {
+                    const selectedValues = value || [];
+                    const isChecked = selectedValues.includes(option.value);
+                    return (
+                      <div key={option.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`field-${field.id}-${option.value}`}
+                          checked={isChecked}
+                          onCheckedChange={(checked) => {
+                            const newValues = checked
+                              ? [...selectedValues, option.value]
+                              : selectedValues.filter((v: string) => v !== option.value);
+                            handleFieldChange(field.id, newValues);
+                          }}
+                        />
+                        <Label htmlFor={`field-${field.id}-${option.value}`} className="cursor-pointer">
+                          {option.label}
+                        </Label>
+                      </div>
+                    );
+                  })
+              ) : (
+                <p className="text-sm text-muted-foreground">No options available</p>
+              )}
+            </div>
+            {field.help_text && (
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
   };
 
   if (mode === 'preview') {
     return (
       <div className="space-y-6">
-        {/* Mode Toggle */}
-        <div className="flex justify-between items-center">
+        {/* Mode Toggle - No Print */}
+        <div className="flex justify-between items-center print:hidden">
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setMode('entry')}>
               <FileText className="h-4 w-4 mr-2" />
@@ -124,471 +366,299 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           </div>
         </div>
 
-        {/* Preview Content */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Consultation Documentation - Preview</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Chief Complaint Preview */}
-            <div>
-              <h3 className="font-semibold mb-2">Chief Complaint (C/O Pain)</h3>
-              <div className="space-y-1 text-sm">
-                {chiefComplaint.site.length > 0 && (
-                  <p><strong>Site:</strong> {chiefComplaint.site.join(', ')}</p>
-                )}
-                {chiefComplaint.type.length > 0 && (
-                  <p><strong>Type:</strong> {chiefComplaint.type.join(', ')}</p>
-                )}
-                {chiefComplaint.duration && (
-                  <p><strong>Duration:</strong> {chiefComplaint.duration}</p>
-                )}
-                {chiefComplaint.radiation && (
-                  <p><strong>Radiation:</strong> {chiefComplaint.radiationDetails || 'Yes'}</p>
-                )}
-                {chiefComplaint.aggravatedOn.length > 0 && (
-                  <p><strong>Aggravated on:</strong> {chiefComplaint.aggravatedOn.join(', ')}</p>
-                )}
-                {chiefComplaint.relievedOn.length > 0 && (
-                  <p><strong>Relieved on:</strong> {chiefComplaint.relievedOn.join(', ')}</p>
-                )}
-                {chiefComplaint.associatedFeatures && (
-                  <p><strong>Associated Features:</strong> {chiefComplaint.associatedFeatures}</p>
-                )}
+        {/* A4 Paper with Letterhead */}
+        <div className="mx-auto bg-white shadow-lg print:shadow-none" style={{ width: '210mm', minHeight: '297mm' }}>
+          {/* Letterhead Header */}
+          <div className="border-b-4 border-primary p-8 bg-gradient-to-r from-primary/5 to-primary/10">
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-bold text-primary">Medical Center</h1>
+                <p className="text-sm text-muted-foreground mt-1">Excellence in Healthcare</p>
+              </div>
+              <div className="text-right text-sm">
+                <p className="font-semibold">Contact Information</p>
+                <p className="text-muted-foreground">Phone: +1 (555) 123-4567</p>
+                <p className="text-muted-foreground">Email: info@medicalcenter.com</p>
+                <p className="text-muted-foreground">www.medicalcenter.com</p>
               </div>
             </div>
+          </div>
 
-            <Separator />
+          {/* Patient & Visit Information */}
+          <div className="p-8 border-b">
+            <h2 className="text-xl font-bold mb-4 text-center">CONSULTATION RECORD</h2>
 
-            {/* Medical History Preview */}
-            <div>
-              <h3 className="font-semibold mb-2">Past Medical History</h3>
-              <div className="flex flex-wrap gap-2">
-                {medicalHistory.dm && <Badge>DM</Badge>}
-                {medicalHistory.htn && <Badge>HTN</Badge>}
-                {medicalHistory.tb && <Badge>TB</Badge>}
-                {medicalHistory.thyroid && <Badge>Thyroid</Badge>}
-                {medicalHistory.allergies && <Badge>Allergies: {medicalHistory.allergiesDetails}</Badge>}
-                {medicalHistory.addiction && <Badge>Addiction: {medicalHistory.addictionDetails}</Badge>}
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
+              <div className="flex">
+                <span className="font-semibold w-32">Patient Name:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400">{visit.patient_details?.full_name || 'N/A'}</span>
               </div>
-              {medicalHistory.occupation && (
-                <p className="text-sm mt-2"><strong>Occupation:</strong> {medicalHistory.occupation}</p>
-              )}
-              {medicalHistory.diet && (
-                <p className="text-sm"><strong>Diet:</strong> {medicalHistory.diet}</p>
-              )}
+              <div className="flex">
+                <span className="font-semibold w-32">Patient ID:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400">{visit.patient_details?.patient_id || 'N/A'}</span>
+              </div>
+              <div className="flex">
+                <span className="font-semibold w-32">Age/Gender:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400">
+                  {visit.patient_details?.age || 'N/A'} years / {visit.patient_details?.gender || 'N/A'}
+                </span>
+              </div>
+              <div className="flex">
+                <span className="font-semibold w-32">Visit Date:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400">{visit.visit_date || 'N/A'}</span>
+              </div>
+              <div className="flex">
+                <span className="font-semibold w-32">Doctor:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400">{visit.doctor_details?.full_name || 'N/A'}</span>
+              </div>
+              <div className="flex">
+                <span className="font-semibold w-32">Visit Number:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400">{visit.visit_number || 'N/A'}</span>
+              </div>
             </div>
+          </div>
 
-            <Separator />
+          {/* Form Fields Content */}
+          <div className="p-8 min-h-[600px]">
+            {selectedTemplate && fieldsData?.results && fieldsData.results.length > 0 ? (
+              <div className="space-y-6">
+                <h3 className="text-lg font-bold border-b-2 border-gray-300 pb-2 mb-4">
+                  {templatesData?.results.find(t => t.id.toString() === selectedTemplate)?.name}
+                </h3>
 
-            {/* Diagnosis & Treatment Preview */}
-            <div>
-              <h3 className="font-semibold mb-2">Diagnosis</h3>
-              <p className="text-sm">{diagnosis || 'Not recorded'}</p>
+                <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                  {fieldsData.results
+                    .sort((a, b) => a.display_order - b.display_order)
+                    .map((field) => {
+                      const value = formData[field.id];
+                      if (!value || (Array.isArray(value) && value.length === 0) || value === false) return null;
+
+                      // Determine if field should span full width
+                      const isFullWidth = field.field_type === 'textarea' ||
+                                        (typeof value === 'string' && value.length > 50);
+
+                      return (
+                        <div
+                          key={field.id}
+                          className={`${isFullWidth ? 'col-span-2' : 'col-span-1'}`}
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
+                              {field.field_label}
+                            </span>
+                            <div className={`${isFullWidth ? 'min-h-[60px]' : 'min-h-[30px]'} border-b border-gray-300 pb-1`}>
+                              <span className="text-sm">
+                                {Array.isArray(value)
+                                  ? value.join(', ')
+                                  : typeof value === 'boolean'
+                                    ? (value ? '✓ Yes' : 'No')
+                                    : value}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                {/* Check if no fields have values */}
+                {fieldsData.results.every(field => {
+                  const value = formData[field.id];
+                  return !value || (Array.isArray(value) && value.length === 0) || value === false;
+                }) && (
+                  <div className="text-center py-12 text-gray-400">
+                    <p>No data recorded</p>
+                    <p className="text-sm">Please fill out the form in Edit Mode</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-400">
+                <p>No template selected</p>
+                <p className="text-sm">Please select a template and fill out the form</p>
+              </div>
+            )}
+          </div>
+
+          {/* Letterhead Footer */}
+          <div className="border-t-4 border-primary p-6 bg-gradient-to-r from-primary/5 to-primary/10 mt-auto">
+            <div className="flex justify-between items-center text-xs text-muted-foreground">
+              <div>
+                <p className="font-semibold">Medical Center</p>
+                <p>123 Healthcare Avenue, Medical District</p>
+                <p>City, State 12345</p>
+              </div>
+              <div className="text-right">
+                <p>This is an official medical document</p>
+                <p>Generated on: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</p>
+                <p className="font-semibold mt-1">Confidential Medical Record</p>
+              </div>
             </div>
+          </div>
+        </div>
 
-            <div>
-              <h3 className="font-semibold mb-2">Treatment Plan</h3>
-              <p className="text-sm whitespace-pre-wrap">{treatmentPlan || 'Not recorded'}</p>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-2">Prescription</h3>
-              <p className="text-sm whitespace-pre-wrap">{prescription || 'Not recorded'}</p>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Print Styles */}
+        <style jsx>{`
+          @media print {
+            @page {
+              size: A4;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+            }
+            .print\\:hidden {
+              display: none !important;
+            }
+            .print\\:shadow-none {
+              box-shadow: none !important;
+            }
+          }
+        `}</style>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Mode Toggle */}
-      <div className="flex justify-between items-center">
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setMode('preview')}>
-            <FileText className="h-4 w-4 mr-2" />
-            Preview Mode
-          </Button>
-        </div>
-        <Button onClick={handleSave}>
-          <Save className="h-4 w-4 mr-2" />
-          Save Consultation
-        </Button>
-      </div>
-
-      {/* Chief Complaint Section */}
+      {/* Template Group Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>Chief Complaint (C/O Pain)</CardTitle>
+          <CardTitle>Select Template</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Site */}
+          {/* Template Group Dropdown */}
           <div className="space-y-2">
-            <Label>Site</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {['Neck', 'Lower Back', 'Upper Back', 'Shoulder', 'Knee', 'Hip', 'Ankle', 'Wrist'].map(site => (
-                <div key={site} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`site-${site}`}
-                    checked={chiefComplaint.site.includes(site)}
-                    onCheckedChange={() => toggleChiefComplaintArray('site', site)}
-                  />
-                  <label htmlFor={`site-${site}`} className="text-sm cursor-pointer">
-                    {site}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Type */}
-          <div className="space-y-2">
-            <Label>Type</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {['Sharp', 'Dull', 'Aching', 'Burning', 'Throbbing', 'Shooting', 'Stabbing', 'Radiating'].map(type => (
-                <div key={type} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`type-${type}`}
-                    checked={chiefComplaint.type.includes(type)}
-                    onCheckedChange={() => toggleChiefComplaintArray('type', type)}
-                  />
-                  <label htmlFor={`type-${type}`} className="text-sm cursor-pointer">
-                    {type}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Duration */}
-          <div className="space-y-2">
-            <Label htmlFor="duration">Duration</Label>
-            <Input
-              id="duration"
-              placeholder="e.g., 2 weeks, 3 months"
-              value={chiefComplaint.duration}
-              onChange={(e) => setChiefComplaint(prev => ({ ...prev, duration: e.target.value }))}
-            />
-          </div>
-
-          {/* Radiation */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="radiation"
-                checked={chiefComplaint.radiation}
-                onCheckedChange={(checked) => setChiefComplaint(prev => ({ ...prev, radiation: checked as boolean }))}
-              />
-              <Label htmlFor="radiation" className="cursor-pointer">Radiation</Label>
-            </div>
-            {chiefComplaint.radiation && (
-              <Input
-                placeholder="Describe radiation pattern"
-                value={chiefComplaint.radiationDetails}
-                onChange={(e) => setChiefComplaint(prev => ({ ...prev, radiationDetails: e.target.value }))}
-              />
-            )}
-          </div>
-
-          {/* Aggravated On */}
-          <div className="space-y-2">
-            <Label>Aggravated On</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {['Walking', 'Standing', 'Sitting', 'Lying down', 'Bending', 'Lifting'].map(item => (
-                <div key={item} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`aggravated-${item}`}
-                    checked={chiefComplaint.aggravatedOn.includes(item)}
-                    onCheckedChange={() => toggleChiefComplaintArray('aggravatedOn', item)}
-                  />
-                  <label htmlFor={`aggravated-${item}`} className="text-sm cursor-pointer">
-                    {item}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Relieved On */}
-          <div className="space-y-2">
-            <Label>Relieved On</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {['Rest', 'Ice', 'Heat', 'Medication', 'Massage', 'Exercise'].map(item => (
-                <div key={item} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`relieved-${item}`}
-                    checked={chiefComplaint.relievedOn.includes(item)}
-                    onCheckedChange={() => toggleChiefComplaintArray('relievedOn', item)}
-                  />
-                  <label htmlFor={`relieved-${item}`} className="text-sm cursor-pointer">
-                    {item}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Associated Symptoms */}
-          <div className="space-y-2">
-            <Label>Associated Symptoms</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="tingling"
-                  checked={chiefComplaint.tingling}
-                  onCheckedChange={(checked) => setChiefComplaint(prev => ({ ...prev, tingling: checked as boolean }))}
-                />
-                <label htmlFor="tingling" className="text-sm cursor-pointer">Tingling</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="numbness"
-                  checked={chiefComplaint.numbness}
-                  onCheckedChange={(checked) => setChiefComplaint(prev => ({ ...prev, numbness: checked as boolean }))}
-                />
-                <label htmlFor="numbness" className="text-sm cursor-pointer">Numbness</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="burning"
-                  checked={chiefComplaint.burning}
-                  onCheckedChange={(checked) => setChiefComplaint(prev => ({ ...prev, burning: checked as boolean }))}
-                />
-                <label htmlFor="burning" className="text-sm cursor-pointer">Burning</label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="weakness"
-                  checked={chiefComplaint.weakness}
-                  onCheckedChange={(checked) => setChiefComplaint(prev => ({ ...prev, weakness: checked as boolean }))}
-                />
-                <label htmlFor="weakness" className="text-sm cursor-pointer">Weakness</label>
-              </div>
-            </div>
-          </div>
-
-          {/* Associated Features */}
-          <div className="space-y-2">
-            <Label htmlFor="associated-features">Other Associated Features</Label>
-            <Textarea
-              id="associated-features"
-              placeholder="Describe other associated features..."
-              value={chiefComplaint.associatedFeatures}
-              onChange={(e) => setChiefComplaint(prev => ({ ...prev, associatedFeatures: e.target.value }))}
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Past Medical History */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Past Medical History</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="dm"
-                checked={medicalHistory.dm}
-                onCheckedChange={(checked) => setMedicalHistory(prev => ({ ...prev, dm: checked as boolean }))}
-              />
-              <label htmlFor="dm" className="text-sm cursor-pointer">Diabetes Mellitus</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="htn"
-                checked={medicalHistory.htn}
-                onCheckedChange={(checked) => setMedicalHistory(prev => ({ ...prev, htn: checked as boolean }))}
-              />
-              <label htmlFor="htn" className="text-sm cursor-pointer">Hypertension</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="tb"
-                checked={medicalHistory.tb}
-                onCheckedChange={(checked) => setMedicalHistory(prev => ({ ...prev, tb: checked as boolean }))}
-              />
-              <label htmlFor="tb" className="text-sm cursor-pointer">Tuberculosis</label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="thyroid"
-                checked={medicalHistory.thyroid}
-                onCheckedChange={(checked) => setMedicalHistory(prev => ({ ...prev, thyroid: checked as boolean }))}
-              />
-              <label htmlFor="thyroid" className="text-sm cursor-pointer">Thyroid</label>
-            </div>
-          </div>
-
-          {/* Allergies */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="allergies"
-                checked={medicalHistory.allergies}
-                onCheckedChange={(checked) => setMedicalHistory(prev => ({ ...prev, allergies: checked as boolean }))}
-              />
-              <Label htmlFor="allergies" className="cursor-pointer">Allergies</Label>
-            </div>
-            {medicalHistory.allergies && (
-              <Input
-                placeholder="Specify allergies..."
-                value={medicalHistory.allergiesDetails}
-                onChange={(e) => setMedicalHistory(prev => ({ ...prev, allergiesDetails: e.target.value }))}
-              />
-            )}
-          </div>
-
-          {/* Addiction */}
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="addiction"
-                checked={medicalHistory.addiction}
-                onCheckedChange={(checked) => setMedicalHistory(prev => ({ ...prev, addiction: checked as boolean }))}
-              />
-              <Label htmlFor="addiction" className="cursor-pointer">Addiction</Label>
-            </div>
-            {medicalHistory.addiction && (
-              <Input
-                placeholder="Specify addiction (smoking, alcohol, etc.)..."
-                value={medicalHistory.addictionDetails}
-                onChange={(e) => setMedicalHistory(prev => ({ ...prev, addictionDetails: e.target.value }))}
-              />
-            )}
-          </div>
-
-          {/* Occupation & Diet */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="occupation">Occupation</Label>
-              <Input
-                id="occupation"
-                placeholder="Patient's occupation"
-                value={medicalHistory.occupation}
-                onChange={(e) => setMedicalHistory(prev => ({ ...prev, occupation: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="diet">Diet</Label>
-              <Input
-                id="diet"
-                placeholder="Vegetarian, Non-vegetarian, etc."
-                value={medicalHistory.diet}
-                onChange={(e) => setMedicalHistory(prev => ({ ...prev, diet: e.target.value }))}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Physical Examination - L/S Spine */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Physical Examination - Lumbar/Sacral Spine</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Side</Label>
-            <RadioGroup
-              value={examination.lsSpine.side}
-              onValueChange={(value) => setExamination(prev => ({
-                ...prev,
-                lsSpine: { ...prev.lsSpine, side: value as 'left' | 'right' | 'bilateral' }
-              }))}
+            <Label htmlFor="template-group">Template Group</Label>
+            <Select
+              value={selectedTemplateGroup}
+              onValueChange={setSelectedTemplateGroup}
+              disabled={isLoadingGroups}
             >
-              <div className="flex gap-4">
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="left" id="ls-left" />
-                  <Label htmlFor="ls-left" className="cursor-pointer">Left</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="right" id="ls-right" />
-                  <Label htmlFor="ls-right" className="cursor-pointer">Right</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <RadioGroupItem value="bilateral" id="ls-bilateral" />
-                  <Label htmlFor="ls-bilateral" className="cursor-pointer">Bilateral</Label>
-                </div>
-              </div>
-            </RadioGroup>
+              <SelectTrigger id="template-group" className="w-full">
+                <SelectValue placeholder={isLoadingGroups ? "Loading template groups..." : "Select a template group"} />
+              </SelectTrigger>
+              <SelectContent>
+                {isLoadingGroups ? (
+                  <div className="flex items-center justify-center p-2">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <span className="text-sm">Loading...</span>
+                  </div>
+                ) : groupsData?.results && groupsData.results.length > 0 ? (
+                  groupsData.results.map((group) => (
+                    <SelectItem key={group.id} value={group.id.toString()}>
+                      {group.name}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="p-2 text-sm text-muted-foreground text-center">
+                    No template groups available
+                  </div>
+                )}
+              </SelectContent>
+            </Select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Template Dropdown - Only show if group is selected */}
+          {selectedTemplateGroup && (
             <div className="space-y-2">
-              <Label htmlFor="ls-rom">Range of Motion</Label>
-              <Textarea id="ls-rom" placeholder="ROM findings..." value={examination.lsSpine.rom} onChange={(e) => setExamination(prev => ({ ...prev, lsSpine: { ...prev.lsSpine, rom: e.target.value } }))} />
+              <Label htmlFor="template">Template</Label>
+              <Select
+                value={selectedTemplate}
+                onValueChange={setSelectedTemplate}
+                disabled={isLoadingTemplates}
+              >
+                <SelectTrigger id="template" className="w-full">
+                  <SelectValue placeholder={isLoadingTemplates ? "Loading templates..." : "Select a template"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {isLoadingTemplates ? (
+                    <div className="flex items-center justify-center p-2">
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <span className="text-sm">Loading...</span>
+                    </div>
+                  ) : templatesData?.results && templatesData.results.length > 0 ? (
+                    templatesData.results.map((template) => (
+                      <SelectItem key={template.id} value={template.id.toString()}>
+                        {template.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-2 text-sm text-muted-foreground text-center">
+                      No templates available for this group
+                    </div>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="ls-tenderness">Tenderness</Label>
-              <Textarea id="ls-tenderness" placeholder="Tenderness findings..." value={examination.lsSpine.tenderness} onChange={(e) => setExamination(prev => ({ ...prev, lsSpine: { ...prev.lsSpine, tenderness: e.target.value } }))} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ls-slr">SLR Test</Label>
-              <Input id="ls-slr" placeholder="SLR test results..." value={examination.lsSpine.slr} onChange={(e) => setExamination(prev => ({ ...prev, lsSpine: { ...prev.lsSpine, slr: e.target.value } }))} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="ls-other">Other Findings</Label>
-              <Input id="ls-other" placeholder="Other findings..." value={examination.lsSpine.other} onChange={(e) => setExamination(prev => ({ ...prev, lsSpine: { ...prev.lsSpine, other: e.target.value } }))} />
-            </div>
-          </div>
+          )}
         </CardContent>
       </Card>
 
-      {/* Diagnosis & Treatment Plan */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Diagnosis & Treatment Plan</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="diagnosis">Diagnosis</Label>
-            <Textarea
-              id="diagnosis"
-              placeholder="Enter diagnosis..."
-              value={diagnosis}
-              onChange={(e) => setDiagnosis(e.target.value)}
-              rows={3}
-            />
+      {/* Dynamic Form Fields - Only show if template is selected */}
+      {selectedTemplate && (
+        <>
+          {/* Mode Toggle */}
+          <div className="flex justify-between items-center">
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setMode('preview')}>
+                <FileText className="h-4 w-4 mr-2" />
+                Preview Mode
+              </Button>
+            </div>
+            <Button onClick={handleSave}>
+              <Save className="h-4 w-4 mr-2" />
+              Save Consultation
+            </Button>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="treatment-plan">Treatment Plan</Label>
-            <Textarea
-              id="treatment-plan"
-              placeholder="Enter treatment plan..."
-              value={treatmentPlan}
-              onChange={(e) => setTreatmentPlan(e.target.value)}
-              rows={4}
-            />
-          </div>
+          {isLoadingFields ? (
+            <Card>
+              <CardContent className="p-8 flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin mr-2" />
+                <span>Loading template fields...</span>
+              </CardContent>
+            </Card>
+          ) : fieldsData?.results && fieldsData.results.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {templatesData?.results.find(t => t.id.toString() === selectedTemplate)?.name}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {fieldsData.results
+                  .sort((a, b) => a.display_order - b.display_order)
+                  .map((field) => renderField(field))}
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="p-8 text-center text-muted-foreground">
+                No fields configured for this template
+              </CardContent>
+            </Card>
+          )}
+        </>
+      )}
 
-          <div className="space-y-2">
-            <Label htmlFor="prescription">Prescription</Label>
-            <Textarea
-              id="prescription"
-              placeholder="Enter prescription..."
-              value={prescription}
-              onChange={(e) => setPrescription(e.target.value)}
-              rows={5}
-            />
-          </div>
+      {/* Show message when no template is selected */}
+      {!selectedTemplate && selectedTemplateGroup && (
+        <Card>
+          <CardContent className="p-8 text-center text-muted-foreground">
+            Please select a template to continue
+          </CardContent>
+        </Card>
+      )}
 
-          <div className="space-y-2">
-            <Label htmlFor="additional-notes">Additional Notes</Label>
-            <Textarea
-              id="additional-notes"
-              placeholder="Any additional notes..."
-              value={additionalNotes}
-              onChange={(e) => setAdditionalNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {!selectedTemplateGroup && (
+        <Card>
+          <CardContent className="p-8 text-center text-muted-foreground">
+            Please select a template group to begin
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
