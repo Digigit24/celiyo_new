@@ -265,6 +265,17 @@ export function TemplateListDrawer({
     [handleDesignTemplate, handleDuplicateTemplate, handleToggleActive]
   );
 
+  // Header actions for the drawer
+  const getHeaderActions = useCallback(() => {
+    return [
+      {
+        label: 'Add Template',
+        onClick: handleCreateTemplate,
+        variant: 'default' as const,
+      },
+    ];
+  }, [handleCreateTemplate]);
+
   return (
     <>
       <SideDrawer
@@ -272,6 +283,7 @@ export function TemplateListDrawer({
         onOpenChange={onOpenChange}
         title={groupData ? `Templates - ${groupData.name}` : 'Templates'}
         mode="view"
+        actions={getHeaderActions()}
       >
         <div className="space-y-6">
           <Card>
