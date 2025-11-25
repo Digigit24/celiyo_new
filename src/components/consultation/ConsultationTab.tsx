@@ -9,16 +9,32 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { FileText, Printer, Save } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { FileText, Printer, Save, Loader2 } from 'lucide-react';
 import { OpdVisit } from '@/types/opdVisit.types';
 import { toast } from 'sonner';
+import { useOPDTemplate } from '@/hooks/useOPDTemplate';
 
 interface ConsultationTabProps {
   visit: OpdVisit;
 }
 
 export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
+  const { useTemplateGroups } = useOPDTemplate();
   const [mode, setMode] = useState<'entry' | 'preview'>('entry');
+  const [selectedTemplateGroup, setSelectedTemplateGroup] = useState<string>('');
+
+  // Fetch template groups
+  const { data: groupsData, isLoading: isLoadingGroups } = useTemplateGroups({
+    show_inactive: false,
+    ordering: 'display_order',
+  });
 
   // Chief Complaint State
   const [chiefComplaint, setChiefComplaint] = useState({
@@ -204,6 +220,55 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
 
   return (
     <div className="space-y-6">
+      {/* Template Group Selection */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Select Template Group</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            <Label htmlFor="template-group">Template Group</Label>
+            <Select
+              value={selectedTemplateGroup}
+              onValueChange={setSelectedTemplateGroup}
+              disabled={isLoadingGroups}
+            >
+              <SelectTrigger id="template-group" className="w-full">
+                <SelectValue placeholder={isLoadingGroups ? "Loading template groups..." : "Select a template group"} />
+              </SelectTrigger>
+              <SelectContent>
+                {isLoadingGroups ? (
+                  <div className="flex items-center justify-center p-2">
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <span className="text-sm">Loading...</span>
+                  </div>
+                ) : groupsData?.results && groupsData.results.length > 0 ? (
+                  groupsData.results.map((group) => (
+                    <SelectItem key={group.id} value={group.id.toString()}>
+                      {group.name}
+                      {group.description && (
+                        <span className="text-xs text-muted-foreground ml-2">
+                          - {group.description}
+                        </span>
+                      )}
+                    </SelectItem>
+                  ))
+                ) : (
+                  <div className="p-2 text-sm text-muted-foreground text-center">
+                    No template groups available
+                  </div>
+                )}
+              </SelectContent>
+            </Select>
+            {selectedTemplateGroup && (
+              <p className="text-sm text-muted-foreground">
+                Selected: {groupsData?.results.find(g => g.id.toString() === selectedTemplateGroup)?.name}
+              </p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Mode Toggle */}
       <div className="flex justify-between items-center">
         <div className="flex gap-2">
