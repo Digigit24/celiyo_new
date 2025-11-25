@@ -220,26 +220,29 @@ export const GeneralSettingsTab: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Page Header with Actions */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Template Groups</h2>
+          <p className="text-muted-foreground">
+            Manage template groups for different specialties and visit types
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => mutate()}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
+          <Button onClick={handleCreateGroup}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Group
+          </Button>
+        </div>
+      </div>
+
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>OPD Template Groups</CardTitle>
-              <CardDescription>
-                Manage template groups for different specialties and visit types
-              </CardDescription>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => mutate()}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
-              <Button onClick={handleCreateGroup}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Group
-              </Button>
-            </div>
-          </div>
+          <CardTitle>All Template Groups</CardTitle>
         </CardHeader>
         <CardContent>
           <DataTable
