@@ -150,6 +150,18 @@ export function TemplateListDrawer({
     setSelectedTemplateForDesigner(null);
   }, []);
 
+  // Helper to safely format dates
+  const formatDate = useCallback((dateString: string | null | undefined) => {
+    if (!dateString) return 'Never';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'Invalid date';
+      return formatDistanceToNow(date, { addSuffix: true });
+    } catch (error) {
+      return 'Invalid date';
+    }
+  }, []);
+
   // Define columns for desktop table
   const columns: DataTableColumn<Template>[] = useMemo(
     () => [
@@ -187,12 +199,12 @@ export function TemplateListDrawer({
         key: 'updated_at',
         cell: (template) => (
           <span className="text-sm text-muted-foreground">
-            {formatDistanceToNow(new Date(template.updated_at), { addSuffix: true })}
+            {formatDate(template.updated_at)}
           </span>
         ),
       },
     ],
-    []
+    [formatDate]
   );
 
   // Render mobile card
@@ -215,7 +227,7 @@ export function TemplateListDrawer({
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Order: {template.display_order}</span>
           <span className="text-muted-foreground">
-            {formatDistanceToNow(new Date(template.updated_at), { addSuffix: true })}
+            {formatDate(template.updated_at)}
           </span>
         </div>
 
@@ -242,7 +254,7 @@ export function TemplateListDrawer({
         </div>
       </div>
     ),
-    [handleDesignTemplate]
+    [handleDesignTemplate, formatDate]
   );
 
   // Extra actions in dropdown
