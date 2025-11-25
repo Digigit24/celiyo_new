@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Plus, RefreshCw, Eye, Edit, Trash2, FileText } from 'lucide-react';
 import { toast } from 'sonner';
-import { formatDistanceToNow } from 'date-fns';
 import type { TemplateGroup, TemplateGroupsQueryParams } from '@/types/opdTemplate.types';
 
 type DrawerMode = 'view' | 'edit' | 'create';
@@ -141,13 +140,14 @@ export const GeneralSettingsTab: React.FC = () => {
         className: 'text-center',
       },
       {
-        header: 'Updated',
-        key: 'updated_at',
+        header: 'Templates',
+        key: 'template_count',
         cell: (group) => (
           <span className="text-sm text-muted-foreground">
-            {formatDistanceToNow(new Date(group.updated_at), { addSuffix: true })}
+            {(group as any).template_count || 0} templates
           </span>
         ),
+        className: 'text-center',
       },
     ],
     []
@@ -172,7 +172,7 @@ export const GeneralSettingsTab: React.FC = () => {
         <div className="flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Order: {group.display_order}</span>
           <span className="text-muted-foreground">
-            {formatDistanceToNow(new Date(group.updated_at), { addSuffix: true })}
+            {(group as any).template_count || 0} templates
           </span>
         </div>
 
