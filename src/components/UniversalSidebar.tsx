@@ -231,6 +231,12 @@ const menuItems: MenuItem[] = [
         icon: Receipt,
         path: "/opd/procedure-bills",
       },
+      {
+        id: "opd-settings",
+        label: "Settings",
+        icon: Settings2,
+        path: "/opd/settings",
+      },
     ],
   },
   {

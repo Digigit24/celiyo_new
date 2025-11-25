@@ -42,6 +42,7 @@ import VisitFindings from "./pages/opd-production/VisitFindings";
 import ProcedureMasters from "./pages/opd-production/ProcedureMasters";
 import ProcedurePackages from "./pages/opd-production/ProcedurePackages";
 import ProcedureBills from "./pages/opd-production/ProcedureBills";
+import { OPDSettings } from "./pages/OPDSettings";
 import { Users } from "./pages/Users";
 import { Roles } from "./pages/Roles";
 import { Debug } from "./pages/Debug";
@@ -111,6 +112,8 @@ const AppLayout = () => {
             <Route path="/opd/procedures" element={<ProcedureMasters />} />
             <Route path="/opd/packages" element={<ProcedurePackages />} />
             <Route path="/opd/procedure-bills" element={<ProcedureBills />} />
+            <Route path="/opd/settings" element={<Navigate to="/opd/settings/general" replace />} />
+            <Route path="/opd/settings/:tab" element={<OPDSettings />} />
 
             {/* WhatsApp Routes */}
             <Route path="/whatsapp/contacts" element={<Contacts />} />
