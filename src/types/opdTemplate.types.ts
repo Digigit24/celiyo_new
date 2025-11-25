@@ -183,7 +183,7 @@ export interface TemplateFieldsResponse {
 export interface TemplateFieldOption {
   id: number;
   tenant_id: string;
-  field: number;
+  field_name: number; // Backend uses field_name not field
   label: string;
   value: string;
   display_order: number;
@@ -208,7 +208,7 @@ export interface UpdateTemplateFieldOptionPayload {
 }
 
 export interface TemplateFieldOptionsQueryParams {
-  field?: number;
+  field_name?: number; // Backend uses field_name parameter
   is_active?: boolean;
   page?: number;
   page_size?: number;
