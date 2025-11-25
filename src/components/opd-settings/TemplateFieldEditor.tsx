@@ -65,8 +65,16 @@ export function TemplateFieldEditor({
   onSuccess,
   onClose,
 }: TemplateFieldEditorProps) {
-  const { useTemplateField, createTemplateField, updateTemplateField, deleteTemplateField } =
-    useOPDTemplate();
+  const {
+    useTemplateField,
+    useTemplateFieldOptions,
+    createTemplateField,
+    updateTemplateField,
+    deleteTemplateField,
+    createTemplateFieldOption,
+    updateTemplateFieldOption,
+    deleteTemplateFieldOption,
+  } = useOPDTemplate();
 
   // Form state
   const [formData, setFormData] = useState<CreateTemplateFieldPayload>({
@@ -81,7 +89,16 @@ export function TemplateFieldEditor({
     is_active: true,
   });
 
-  const [options, setOptions] = useState<string[]>([]);
+  // Options state - now tracking full option objects
+  interface OptionItem {
+    id?: number; // undefined for new options
+    label: string;
+    value: string;
+    display_order: number;
+    isDeleted?: boolean;
+  }
+
+  const [options, setOptions] = useState<OptionItem[]>([]);
   const [newOption, setNewOption] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -112,7 +129,14 @@ export function TemplateFieldEditor({
 
       // Load options if field has them
       if (fieldData.options && Array.isArray(fieldData.options)) {
-        setOptions(fieldData.options.map((opt) => opt.label));
+        setOptions(
+          fieldData.options.map((opt) => ({
+            id: opt.id,
+            label: opt.label,
+            value: opt.value,
+            display_order: opt.display_order,
+          }))
+        );
       }
     } else if (mode === 'create') {
       setFormData({
@@ -152,14 +176,30 @@ export function TemplateFieldEditor({
   // Add option
   const handleAddOption = useCallback(() => {
     if (newOption.trim()) {
-      setOptions((prev) => [...prev, newOption.trim()]);
+      const value = newOption.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+      const newOptionItem: OptionItem = {
+        label: newOption.trim(),
+        value: value,
+        display_order: options.length,
+      };
+      setOptions((prev) => [...prev, newOptionItem]);
       setNewOption('');
     }
-  }, [newOption]);
+  }, [newOption, options.length]);
 
   // Remove option
   const handleRemoveOption = useCallback((index: number) => {
-    setOptions((prev) => prev.filter((_, i) => i !== index));
+    setOptions((prev) => {
+      const option = prev[index];
+      // If option has an id (existing option), mark as deleted instead of removing
+      if (option.id) {
+        const updated = [...prev];
+        updated[index] = { ...option, isDeleted: true };
+        return updated;
+      }
+      // Otherwise, just remove it
+      return prev.filter((_, i) => i !== index);
+    });
   }, []);
 
   // Validate form
@@ -181,7 +221,8 @@ export function TemplateFieldEditor({
     }
 
     // Validate options for select/radio/multiselect
-    if (FIELD_TYPES_WITH_OPTIONS.includes(formData.field_type) && options.length === 0) {
+    const activeOptions = options.filter((opt) => !opt.isDeleted);
+    if (FIELD_TYPES_WITH_OPTIONS.includes(formData.field_type) && activeOptions.length === 0) {
       newErrors.options = 'At least one option is required for this field type';
     }
 
@@ -199,11 +240,12 @@ export function TemplateFieldEditor({
     setIsSubmitting(true);
 
     try {
-      // Note: Options will be created separately via the field options API
-      // For now, we'll store them in a way the backend can process
+      let savedFieldId: number;
 
+      // Step 1: Create or update the field
       if (mode === 'create') {
-        await createTemplateField(formData);
+        const createdField = await createTemplateField(formData);
+        savedFieldId = createdField.id;
         toast.success('Field created successfully');
       } else if (mode === 'edit' && fieldId) {
         const updatePayload: UpdateTemplateFieldPayload = {
@@ -223,7 +265,46 @@ export function TemplateFieldEditor({
           is_active: formData.is_active,
         };
         await updateTemplateField(fieldId, updatePayload);
+        savedFieldId = fieldId;
         toast.success('Field updated successfully');
+      } else {
+        throw new Error('Invalid mode or missing field ID');
+      }
+
+      // Step 2: Handle options for select/radio/multiselect fields
+      if (FIELD_TYPES_WITH_OPTIONS.includes(formData.field_type)) {
+        const optionPromises: Promise<any>[] = [];
+
+        options.forEach((option, index) => {
+          if (option.isDeleted && option.id) {
+            // Delete existing option
+            optionPromises.push(deleteTemplateFieldOption(option.id));
+          } else if (!option.isDeleted && option.id) {
+            // Update existing option (in case label/value changed or display_order)
+            optionPromises.push(
+              updateTemplateFieldOption(option.id, {
+                label: option.label,
+                value: option.value,
+                display_order: index,
+              })
+            );
+          } else if (!option.isDeleted && !option.id) {
+            // Create new option
+            optionPromises.push(
+              createTemplateFieldOption({
+                field: savedFieldId,
+                label: option.label,
+                value: option.value,
+                display_order: index,
+              })
+            );
+          }
+        });
+
+        // Wait for all option operations to complete
+        if (optionPromises.length > 0) {
+          await Promise.all(optionPromises);
+        }
       }
 
       onSuccess();
@@ -232,7 +313,19 @@ export function TemplateFieldEditor({
     } finally {
       setIsSubmitting(false);
     }
-  }, [formData, mode, fieldId, validate, createTemplateField, updateTemplateField, onSuccess]);
+  }, [
+    formData,
+    options,
+    mode,
+    fieldId,
+    validate,
+    createTemplateField,
+    updateTemplateField,
+    createTemplateFieldOption,
+    updateTemplateFieldOption,
+    deleteTemplateFieldOption,
+    onSuccess,
+  ]);
 
   // Handle delete
   const handleDelete = useCallback(async () => {
@@ -427,18 +520,26 @@ export function TemplateFieldEditor({
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                {options.map((option, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Input value={option} disabled className="flex-1" />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveOption(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
+                {options
+                  .filter((opt) => !opt.isDeleted)
+                  .map((option, index) => {
+                    // Find the real index in the original array
+                    const realIndex = options.findIndex(
+                      (opt) => opt.label === option.label && opt.value === option.value
+                    );
+                    return (
+                      <div key={realIndex} className="flex items-center gap-2">
+                        <Input value={option.label} disabled className="flex-1" />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveOption(realIndex)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    );
+                  })}
               </div>
 
               <div className="flex gap-2">
