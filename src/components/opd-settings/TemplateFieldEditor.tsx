@@ -80,7 +80,7 @@ export function TemplateFieldEditor({
   const [formData, setFormData] = useState<CreateTemplateFieldPayload>({
     template: templateId || 0,
     field_type: 'text',
-    field_label: '',
+    field_name: '',
     field_key: '',
     placeholder: '',
     help_text: '',
@@ -112,7 +112,7 @@ export function TemplateFieldEditor({
       setFormData({
         template: fieldData.template,
         field_type: fieldData.field_type,
-        field_label: fieldData.field_label,
+        field_name: fieldData.field_name,
         field_key: fieldData.field_key,
         placeholder: fieldData.placeholder || '',
         help_text: fieldData.help_text || '',
@@ -142,7 +142,7 @@ export function TemplateFieldEditor({
       setFormData({
         template: templateId || 0,
         field_type: 'text',
-        field_label: '',
+        field_name: '',
         field_key: '',
         placeholder: '',
         help_text: '',
@@ -161,8 +161,8 @@ export function TemplateFieldEditor({
       setFormData((prev) => ({ ...prev, [field]: value }));
       setErrors((prev) => ({ ...prev, [field]: '' }));
 
-      // Auto-generate field_key from field_label
-      if (field === 'field_label' && typeof value === 'string') {
+      // Auto-generate field_key from field_name
+      if (field === 'field_name' && typeof value === 'string') {
         const key = value
           .toLowerCase()
           .replace(/[^a-z0-9]+/g, '_')
@@ -206,8 +206,8 @@ export function TemplateFieldEditor({
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.field_label?.trim()) {
-      newErrors.field_label = 'Field label is required';
+    if (!formData.field_name?.trim()) {
+      newErrors.field_name = 'Field name is required';
     }
 
     if (!formData.field_key?.trim()) {
@@ -250,7 +250,7 @@ export function TemplateFieldEditor({
       } else if (mode === 'edit' && fieldId) {
         const updatePayload: UpdateTemplateFieldPayload = {
           field_type: formData.field_type,
-          field_label: formData.field_label,
+          field_name: formData.field_name,
           field_key: formData.field_key,
           placeholder: formData.placeholder,
           help_text: formData.help_text,
@@ -395,20 +395,20 @@ export function TemplateFieldEditor({
             <CardTitle>Field Configuration</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Field Label */}
+            {/* Field Name */}
             <div className="space-y-2">
-              <Label htmlFor="field_label">
-                Field Label <span className="text-destructive">*</span>
+              <Label htmlFor="field_name">
+                Field Name <span className="text-destructive">*</span>
               </Label>
               <Input
-                id="field_label"
-                value={formData.field_label}
-                onChange={(e) => handleChange('field_label', e.target.value)}
+                id="field_name"
+                value={formData.field_name}
+                onChange={(e) => handleChange('field_name', e.target.value)}
                 placeholder="e.g., Chief Complaint"
-                className={errors.field_label ? 'border-destructive' : ''}
+                className={errors.field_name ? 'border-destructive' : ''}
               />
-              {errors.field_label && (
-                <p className="text-sm text-destructive">{errors.field_label}</p>
+              {errors.field_name && (
+                <p className="text-sm text-destructive">{errors.field_name}</p>
               )}
             </div>
 

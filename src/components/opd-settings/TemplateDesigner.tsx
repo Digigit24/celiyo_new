@@ -97,7 +97,7 @@ function SortableFieldRow({
 
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
-          <span className="font-medium">{field.field_label}</span>
+          <span className="font-medium">{field.field_name}</span>
           {field.is_required && (
             <Badge variant="destructive" className="h-5">
               Required
@@ -250,13 +250,13 @@ export function TemplateDesigner({
       const field = localFields.find((f) => f.id === fieldId);
       if (!field) return;
 
-      if (!confirm(`Are you sure you want to delete the field "${field.field_label}"?`)) {
+      if (!confirm(`Are you sure you want to delete the field "${field.field_name}"?`)) {
         return;
       }
 
       try {
         await deleteTemplateField(fieldId);
-        toast.success(`Field "${field.field_label}" deleted successfully`);
+        toast.success(`Field "${field.field_name}" deleted successfully`);
         mutate(); // Refresh the list
       } catch (error: any) {
         toast.error(error.message || 'Failed to delete field');
