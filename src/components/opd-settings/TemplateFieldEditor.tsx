@@ -292,7 +292,7 @@ export function TemplateFieldEditor({
             // Create new option
             optionPromises.push(
               createTemplateFieldOption({
-                field: savedFieldId,
+                field_name: savedFieldId,
                 label: option.label,
                 value: option.value,
                 display_order: index,

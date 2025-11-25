@@ -193,7 +193,7 @@ export interface TemplateFieldOption {
 }
 
 export interface CreateTemplateFieldOptionPayload {
-  field: number;
+  field_name: number; // Backend expects field_name not field
   label: string;
   value: string;
   display_order?: number;
