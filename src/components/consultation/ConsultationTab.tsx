@@ -351,8 +351,8 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
   if (mode === 'preview') {
     return (
       <div className="space-y-6">
-        {/* Mode Toggle */}
-        <div className="flex justify-between items-center">
+        {/* Mode Toggle - No Print */}
+        <div className="flex justify-between items-center print:hidden">
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setMode('entry')}>
               <FileText className="h-4 w-4 mr-2" />
@@ -365,35 +365,156 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           </div>
         </div>
 
-        {/* Preview Content */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Consultation Documentation - Preview</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {selectedTemplate && fieldsData?.results ? (
-              fieldsData.results
-                .sort((a, b) => a.display_order - b.display_order)
-                .map((field) => {
-                  const value = formData[field.field_key];
-                  if (!value || (Array.isArray(value) && value.length === 0)) return null;
+        {/* A4 Paper with Letterhead */}
+        <div className="mx-auto bg-white shadow-lg print:shadow-none" style={{ width: '210mm', minHeight: '297mm' }}>
+          {/* Letterhead Header */}
+          <div className="border-b-4 border-primary p-8 bg-gradient-to-r from-primary/5 to-primary/10">
+            <div className="flex justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-bold text-primary">Medical Center</h1>
+                <p className="text-sm text-muted-foreground mt-1">Excellence in Healthcare</p>
+              </div>
+              <div className="text-right text-sm">
+                <p className="font-semibold">Contact Information</p>
+                <p className="text-muted-foreground">Phone: +1 (555) 123-4567</p>
+                <p className="text-muted-foreground">Email: info@medicalcenter.com</p>
+                <p className="text-muted-foreground">www.medicalcenter.com</p>
+              </div>
+            </div>
+          </div>
 
-                  return (
-                    <div key={field.id}>
-                      <h3 className="font-semibold text-sm">{field.field_label}</h3>
-                      <p className="text-sm">
-                        {Array.isArray(value) ? value.join(', ') :
-                         typeof value === 'boolean' ? (value ? 'Yes' : 'No') :
-                         value}
-                      </p>
-                    </div>
-                  );
-                })
+          {/* Patient & Visit Information */}
+          <div className="p-8 border-b">
+            <h2 className="text-xl font-bold mb-4 text-center">CONSULTATION RECORD</h2>
+
+            <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
+              <div className="flex">
+                <span className="font-semibold w-32">Patient Name:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400">{visit.patient_details?.full_name || 'N/A'}</span>
+              </div>
+              <div className="flex">
+                <span className="font-semibold w-32">Patient ID:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400">{visit.patient_details?.patient_id || 'N/A'}</span>
+              </div>
+              <div className="flex">
+                <span className="font-semibold w-32">Age/Gender:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400">
+                  {visit.patient_details?.age || 'N/A'} years / {visit.patient_details?.gender || 'N/A'}
+                </span>
+              </div>
+              <div className="flex">
+                <span className="font-semibold w-32">Visit Date:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400">{visit.visit_date || 'N/A'}</span>
+              </div>
+              <div className="flex">
+                <span className="font-semibold w-32">Doctor:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400">{visit.doctor_details?.full_name || 'N/A'}</span>
+              </div>
+              <div className="flex">
+                <span className="font-semibold w-32">Visit Number:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400">{visit.visit_number || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Form Fields Content */}
+          <div className="p-8 min-h-[600px]">
+            {selectedTemplate && fieldsData?.results && fieldsData.results.length > 0 ? (
+              <div className="space-y-6">
+                <h3 className="text-lg font-bold border-b-2 border-gray-300 pb-2 mb-4">
+                  {templatesData?.results.find(t => t.id.toString() === selectedTemplate)?.name}
+                </h3>
+
+                <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                  {fieldsData.results
+                    .sort((a, b) => a.display_order - b.display_order)
+                    .map((field) => {
+                      const value = formData[field.field_key];
+                      if (!value || (Array.isArray(value) && value.length === 0) || value === false) return null;
+
+                      // Determine if field should span full width
+                      const isFullWidth = field.field_type === 'textarea' ||
+                                        (typeof value === 'string' && value.length > 50);
+
+                      return (
+                        <div
+                          key={field.id}
+                          className={`${isFullWidth ? 'col-span-2' : 'col-span-1'}`}
+                        >
+                          <div className="flex flex-col">
+                            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
+                              {field.field_label}
+                            </span>
+                            <div className={`${isFullWidth ? 'min-h-[60px]' : 'min-h-[30px]'} border-b border-gray-300 pb-1`}>
+                              <span className="text-sm">
+                                {Array.isArray(value)
+                                  ? value.join(', ')
+                                  : typeof value === 'boolean'
+                                    ? (value ? '✓ Yes' : 'No')
+                                    : value}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                </div>
+
+                {/* Check if no fields have values */}
+                {fieldsData.results.every(field => {
+                  const value = formData[field.field_key];
+                  return !value || (Array.isArray(value) && value.length === 0) || value === false;
+                }) && (
+                  <div className="text-center py-12 text-gray-400">
+                    <p>No data recorded</p>
+                    <p className="text-sm">Please fill out the form in Edit Mode</p>
+                  </div>
+                )}
+              </div>
             ) : (
-              <p className="text-muted-foreground text-center">No data to preview. Please fill out the form.</p>
+              <div className="text-center py-12 text-gray-400">
+                <p>No template selected</p>
+                <p className="text-sm">Please select a template and fill out the form</p>
+              </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+
+          {/* Letterhead Footer */}
+          <div className="border-t-4 border-primary p-6 bg-gradient-to-r from-primary/5 to-primary/10 mt-auto">
+            <div className="flex justify-between items-center text-xs text-muted-foreground">
+              <div>
+                <p className="font-semibold">Medical Center</p>
+                <p>123 Healthcare Avenue, Medical District</p>
+                <p>City, State 12345</p>
+              </div>
+              <div className="text-right">
+                <p>This is an official medical document</p>
+                <p>Generated on: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</p>
+                <p className="font-semibold mt-1">Confidential Medical Record</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Print Styles */}
+        <style jsx>{`
+          @media print {
+            @page {
+              size: A4;
+              margin: 0;
+            }
+            body {
+              margin: 0;
+              padding: 0;
+            }
+            .print\\:hidden {
+              display: none !important;
+            }
+            .print\\:shadow-none {
+              box-shadow: none !important;
+            }
+          }
+        `}</style>
       </div>
     );
   }
