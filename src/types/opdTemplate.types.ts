@@ -112,6 +112,7 @@ export interface TemplateField {
   template: number;
   field_type: FieldType;
   field_label: string;
+  field_name: string;
   field_key: string;
   placeholder?: string;
   help_text?: string;
@@ -133,6 +134,7 @@ export interface CreateTemplateFieldPayload {
   template: number;
   field_type: FieldType;
   field_label: string;
+  field_name: string;
   field_key: string;
   placeholder?: string;
   help_text?: string;
@@ -150,6 +152,7 @@ export interface CreateTemplateFieldPayload {
 export interface UpdateTemplateFieldPayload {
   field_type?: FieldType;
   field_label?: string;
+  field_name?: string;
   field_key?: string;
   placeholder?: string;
   help_text?: string;
