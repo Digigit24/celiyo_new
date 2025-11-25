@@ -25,7 +25,7 @@ import {
 } from '@/types/opdTemplate.types';
 
 class OPDTemplateService {
-  private baseURL = '/api/opd';
+  private baseURL = '/opd';
 
   // ==================== TEMPLATE GROUPS ====================
 
