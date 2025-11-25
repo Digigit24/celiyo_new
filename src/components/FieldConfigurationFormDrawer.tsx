@@ -414,9 +414,20 @@ export function FieldConfigurationFormDrawer({
               <Input
                 id="field_label"
                 value={formData.field_label}
-                onChange={(e) =>
-                  setFormData({ ...formData, field_label: e.target.value })
-                }
+                onChange={(e) => {
+                  const newLabel = e.target.value;
+
+                  // Auto-generate field_name from field_label in create mode
+                  if (mode === 'create') {
+                    const generatedName = newLabel
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, '_')
+                      .replace(/^_|_$/g, '');
+                    setFormData({ ...formData, field_label: newLabel, field_name: generatedName });
+                  } else {
+                    setFormData({ ...formData, field_label: newLabel });
+                  }
+                }}
                 placeholder="e.g., Custom Field 1"
                 disabled={isViewMode}
               />
