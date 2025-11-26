@@ -209,6 +209,10 @@ export function TemplateFieldEditor({
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
+    if (!formData.field_label?.trim()) {
+      newErrors.field_label = 'Field label is required';
+    }
+
     if (!formData.field_name?.trim()) {
       newErrors.field_name = 'Field name is required';
     }
@@ -401,6 +405,26 @@ export function TemplateFieldEditor({
             <CardTitle>Field Configuration</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Field Label */}
+            <div className="space-y-2">
+              <Label htmlFor="field_label">
+                Field Label <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="field_label"
+                value={formData.field_label}
+                onChange={(e) => handleChange('field_label', e.target.value)}
+                placeholder="e.g., Chief Complaint"
+                className={errors.field_label ? 'border-destructive' : ''}
+              />
+              {errors.field_label && (
+                <p className="text-sm text-destructive">{errors.field_label}</p>
+              )}
+              <p className="text-sm text-muted-foreground">
+                Display name shown in the UI
+              </p>
+            </div>
+
             {/* Field Name */}
             <div className="space-y-2">
               <Label htmlFor="field_name">
@@ -410,12 +434,18 @@ export function TemplateFieldEditor({
                 id="field_name"
                 value={formData.field_name}
                 onChange={(e) => handleChange('field_name', e.target.value)}
-                placeholder="e.g., Chief Complaint"
+                placeholder="e.g., chief_complaint"
                 className={errors.field_name ? 'border-destructive' : ''}
+                disabled={mode === 'create'} // Auto-generated in create mode
               />
               {errors.field_name && (
                 <p className="text-sm text-destructive">{errors.field_name}</p>
               )}
+              <p className="text-sm text-muted-foreground">
+                {mode === 'create'
+                  ? 'Auto-generated from field label'
+                  : 'Technical field name'}
+              </p>
             </div>
 
             {/* Field Key */}
@@ -429,10 +459,13 @@ export function TemplateFieldEditor({
                 onChange={(e) => handleChange('field_key', e.target.value.toLowerCase())}
                 placeholder="e.g., chief_complaint"
                 className={errors.field_key ? 'border-destructive' : ''}
+                disabled={mode === 'create'} // Auto-generated in create mode
               />
               {errors.field_key && <p className="text-sm text-destructive">{errors.field_key}</p>}
               <p className="text-sm text-muted-foreground">
-                Unique identifier (lowercase, numbers, underscores only)
+                {mode === 'create'
+                  ? 'Auto-generated from field label'
+                  : 'Unique identifier (lowercase, numbers, underscores only)'}
               </p>
             </div>
 
