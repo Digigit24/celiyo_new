@@ -498,7 +498,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         </div>
 
         {/* Print Styles */}
-        <style jsx>{`
+        <style>{`
           @media print {
             @page {
               size: A4;
