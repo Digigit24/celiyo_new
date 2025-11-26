@@ -46,15 +46,6 @@ import { useReactToPrint } from 'react-to-print';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-/* ------------------------------- Brand Assets ------------------------------- */
-/** Replace these URLs with your final public image links (PNG/JPG/SVG). */
-const BILL_ASSETS = {
-  header: 'https://your-cdn.com/pulse-side-strip.png',     // full-width header banner
-  footer: 'https://your-cdn.com/pulse-footer.png',     // full-width footer banner
-  sideStrip: 'https://your-cdn.com/pulse-side-strip.png', // thin vertical strip (optional)
-  watermark: 'https://pulsehospitalpcmc.com/assets/logo-DRaM1pzk.png',  // faint center watermark (optional)
-};
-
 /* --------------------------------- Types --------------------------------- */
 
 type BillingData = {
@@ -240,261 +231,6 @@ const BillingDetailsPanel = memo(function BillingDetailsPanel({
     </Card>
   );
 });
-
-/* ------------------------------ A4 Bill Shell ------------------------------ */
-// Clean A4 bill layout with centered header text + left logo slot
-
-// --- Sticky, print-safe two-band footer used at the very bottom of A4 ---
-const PulseBillFooter: React.FC<{
-  addressLine: string;
-  contactLine: string;
-}> = ({ addressLine, contactLine }) => {
-  const RED = '#e53935';
-  const TEAL = '#1f585a';
-  return (
-    <div
-      aria-hidden
-      style={{
-        position: 'absolute',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        pointerEvents: 'none',
-        zIndex: 50, // above footer artwork
-      }}
-    >
-      <div
-        style={{
-          background: RED,
-          color: '#fff',
-          padding: '6px 18mm',
-          fontSize: 12,
-          fontWeight: 700,
-          letterSpacing: 0.3,
-          textTransform: 'uppercase',
-          lineHeight: 1.2,
-        }}
-      >
-        {addressLine}
-      </div>
-      <div
-        style={{
-          background: TEAL,
-          color: '#fff',
-          padding: '6px 18mm',
-          fontSize: 12,
-          fontWeight: 600,
-          lineHeight: 1.2,
-        }}
-      >
-        {contactLine}
-      </div>
-    </div>
-  );
-};
-
-function BillLayoutA4({
-  children,
-  headerSrc,
-  footerSrc,
-  sideStripSrc,
-  watermarkSrc,
-  contentRef,
-
-  // NEW: header content controls
-  headerCenterLines = [
-    'PULSE MULTISPECIALITY HOSPITAL',
-    'S.No. 66/1, Tathawade Chowk, Aundh–Ravet Road, Pimpri-Chinchwad – 411033',
-    'Phone: +91 8805331414  |  Email: pulsemhospital@gmail.com',
-  ],
-  logoSrc = 'https://pulsehospitalpcmc.com/assets/logo-DRaM1pzk.png',              // ← just pass your image link here
-  headerHeight = 140,   // match your art
-  footerHeight = 90,
-  sideStripWidth = 16,
-  logoWidthPx = 120,    // tweak logo size
-  logoMaxHeightPx = 80, // keeps it within header
-  logoLeftPx = 18,      // left inset
-  logoTopPx = 18,       // top inset
-}: {
-  children: React.ReactNode;
-  headerSrc: string;
-  footerSrc: string;
-  sideStripSrc?: string;
-  watermarkSrc?: string;
-  contentRef: React.RefObject<HTMLDivElement>;
-
-  headerCenterLines?: string[];
-  logoSrc?: string;
-  headerHeight?: number;
-  footerHeight?: number;
-  sideStripWidth?: number;
-  logoWidthPx?: number;
-  logoMaxHeightPx?: number;
-  logoLeftPx?: number;
-  logoTopPx?: number;
-}) {
-  return (
-    <div
-      ref={contentRef}
-      className="printable-area relative bg-white shadow-sm ring-1 ring-muted rounded-none"
-      style={{
-        width: '210mm',
-        height: '297mm',              // fixed A4 height so footer can pin to bottom
-        margin: '0 auto',
-        boxSizing: 'border-box',
-        position: 'relative',
-        overflow: 'hidden',           // prevent spill on first page
-      }}
-    >
-      {/* Header artwork */}
-      {headerSrc && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: '0 0 auto 0',
-            height: headerHeight,
-            backgroundImage: `url("${headerSrc}")`,
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'top center',
-            zIndex: 5,
-          }}
-        />
-      )}
-
-      {/* Header content layer: logo + centered text */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: headerHeight,
-          display: 'grid',
-          gridTemplateColumns: '180px 1fr 180px',
-          alignItems: 'center',
-          padding: '0 12px',
-          pointerEvents: 'none',
-          zIndex: 6,
-        }}
-      >
-        <div style={{ position: 'relative', height: '100%' }}>
-          {logoSrc ? (
-            <img
-              src={logoSrc}
-              alt="Logo"
-              style={{
-                position: 'absolute',
-                top: logoTopPx,
-                left: logoLeftPx,
-                width: `${logoWidthPx}px`,
-                maxHeight: `${logoMaxHeightPx}px`,
-                objectFit: 'contain',
-                filter: 'drop-shadow(0 1px 1px rgba(0,0,0,0.18))',
-              }}
-            />
-          ) : null}
-        </div>
-
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: 0.3, marginBottom: 4 }}>
-            {headerCenterLines[0] || ''}
-          </div>
-          {headerCenterLines.slice(1).map((line, idx) => (
-            <div key={idx} style={{ fontSize: 12, lineHeight: 1.25, opacity: 0.9, marginTop: idx ? 2 : 0 }}>
-              {line}
-            </div>
-          ))}
-        </div>
-
-        <div />
-        <div style={{ width: "100%", border: "1px solid #000000", height: 1, position: "absolute", bottom: 10, left: 0 }} />
-      </div>
-
-      {/* Footer artwork (behind two-band footer) */}
-      {footerSrc && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 'auto 0 0 0',
-            height: footerHeight,
-            backgroundImage: `url("${footerSrc}")`,
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'bottom center',
-            zIndex: 10,
-          }}
-        />
-      )}
-
-      {/* Optional side strip */}
-      {sideStripSrc && (
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            top: headerHeight,
-            bottom: footerHeight,
-            width: sideStripWidth,
-            backgroundImage: `url("${sideStripSrc}")`,
-            backgroundSize: 'contain',
-            backgroundRepeat: 'repeat-y',
-            backgroundPosition: 'left top',
-            zIndex: 4,
-          }}
-        />
-      )}
-
-      {/* Optional watermark */}
-      {watermarkSrc && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: `${headerHeight}px 0 ${footerHeight}px 0`,
-            opacity: 0.06,
-            pointerEvents: 'none',
-            backgroundImage: `url("${watermarkSrc}")`,
-            backgroundRepeat: 'no-repeat',
-            backgroundPosition: 'center',
-            backgroundSize: '55%',
-            zIndex: 1,
-          }}
-        />
-      )}
-
-      {/* Main page content */}
-      <div
-        style={{
-          position: 'absolute',
-          top: headerHeight,
-          left: 0,
-          right: 0,
-          bottom: footerHeight + 48, // leave room for the two-band footer (≈ 48px)
-          padding: '0 18mm',
-          overflow: 'hidden',
-          zIndex: 20,
-        }}
-      >
-        {children}
-      </div>
-
-      {/* Two-band footer pinned to the very bottom */}
-      <PulseBillFooter
-        addressLine="S. No. 66/1, Tathawade Chowk, Aundh-Ravet Road, Pimpri-Chinchwad"
-        contactLine="Pune-33 | Phone: 8805331414 | Email: pulseicutpa@gmail.com"
-      />
-
-      <style>{`
-        @page { size: A4; margin: 0; }
-        @media print {
-          html, body { -webkit-print-color-adjust: exact; print-color-adjust: exact; background: #fff; }
-          .printable-area { height: 297mm !important; width: 210mm !important; }
-          .no-print { display: none !important; }
-        }
-      `}</style>
-    </div>
-  );
-}
 
 /* --------------------------------- Page --------------------------------- */
 
@@ -1222,15 +958,27 @@ export default function OPDBilling() {
         <TabsContent value="preview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-2">
-              <BillLayoutA4
-                headerSrc={BILL_ASSETS.header}
-                footerSrc={BILL_ASSETS.footer}
-                sideStripSrc={BILL_ASSETS.sideStrip}
-                watermarkSrc={BILL_ASSETS.watermark}
-                contentRef={printAreaRef}
+              <div
+                ref={printAreaRef}
+                className="bg-white p-8 space-y-6"
+                style={{
+                  maxWidth: '210mm',
+                  margin: '0 auto',
+                }}
               >
+                {/* Hospital Header */}
+                <div className="text-center border-b-2 border-gray-300 pb-4">
+                  <h1 className="text-3xl font-bold text-gray-800">JEEVISHA</h1>
+                  <p className="text-sm text-gray-600 mt-1">Hospital</p>
+                </div>
+
+                {/* Bill Title */}
+                <div className="text-center">
+                  <h2 className="text-2xl font-bold text-gray-700">INVOICE</h2>
+                </div>
+
                 {/* Top meta */}
-                <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-[12px] leading-5">
+                <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
                   <div className="flex justify-between border-b pb-1">
                     <span className="font-semibold">Patient Name</span>
                     <span>{visit.patient_details?.full_name}</span>
@@ -1269,60 +1017,55 @@ export default function OPDBilling() {
                   </div>
                 </div>
 
-                {/* Bill title */}
-                <div className="text-center mt-4 mb-3">
-                  <h3 className="text-xl font-bold tracking-wide">BILL</h3>
-                </div>
-
                 {/* Charges table */}
-                <table className="w-full text-[12px]">
+                <table className="w-full text-sm border-collapse">
                   <thead>
-                    <tr className="border-y">
-                      <th className="text-left py-2 font-semibold">Description</th>
-                      <th className="text-center py-2 font-semibold w-[60px]">Qty</th>
-                      <th className="text-right py-2 font-semibold w-[90px]">Rate</th>
-                      <th className="text-right py-2 font-semibold w-[110px]">Amount (₹)</th>
+                    <tr className="border-y-2 border-gray-300 bg-gray-50">
+                      <th className="text-left py-3 px-2 font-semibold">Description</th>
+                      <th className="text-center py-3 px-2 font-semibold w-16">Qty</th>
+                      <th className="text-right py-3 px-2 font-semibold w-24">Rate</th>
+                      <th className="text-right py-3 px-2 font-semibold w-28">Amount (₹)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {parseFloat(opdFormData.opdAmount) > 0 && (
-                      <tr className="border-b">
-                        <td className="py-2">
+                      <tr className="border-b border-gray-200">
+                        <td className="py-3 px-2">
                           <div>Consultation Fee</div>
-                          <div className="text-[11px] text-muted-foreground capitalize">
+                          <div className="text-xs text-gray-500 capitalize">
                             {opdFormData.chargeType.replace('_', ' ')}
                           </div>
                         </td>
-                        <td className="py-2 text-center">1</td>
-                        <td className="py-2 text-right">{Number(opdFormData.opdAmount).toFixed(2)}</td>
-                        <td className="py-2 text-right font-semibold">
+                        <td className="py-3 px-2 text-center">1</td>
+                        <td className="py-3 px-2 text-right">{Number(opdFormData.opdAmount).toFixed(2)}</td>
+                        <td className="py-3 px-2 text-right font-semibold">
                           {Number(opdFormData.opdAmount).toFixed(2)}
                         </td>
                       </tr>
                     )}
                     {procedureFormData.procedures.map((p) => (
-                      <tr key={p.id} className="border-b">
-                        <td className="py-2">
+                      <tr key={p.id} className="border-b border-gray-200">
+                        <td className="py-3 px-2">
                           <div>{p.procedure_name}</div>
                           {p.procedure_code && (
-                            <div className="text-[11px] text-muted-foreground">Code: {p.procedure_code}</div>
+                            <div className="text-xs text-gray-500">Code: {p.procedure_code}</div>
                           )}
                         </td>
-                        <td className="py-2 text-center">{p.quantity}</td>
-                        <td className="py-2 text-right">{Number(p.unit_price).toFixed(2)}</td>
-                        <td className="py-2 text-right font-semibold">{Number(p.total_price).toFixed(2)}</td>
+                        <td className="py-3 px-2 text-center">{p.quantity}</td>
+                        <td className="py-3 px-2 text-right">{Number(p.unit_price).toFixed(2)}</td>
+                        <td className="py-3 px-2 text-right font-semibold">{Number(p.total_price).toFixed(2)}</td>
                       </tr>
                     ))}
                     {opdFormData.diagnosis && (
-                      <tr className="border-b bg-muted/30">
-                        <td className="py-2 text-[11px]" colSpan={4}>
+                      <tr className="border-b border-gray-200 bg-gray-50">
+                        <td className="py-2 px-2 text-xs" colSpan={4}>
                           <span className="font-semibold">Diagnosis:</span> {opdFormData.diagnosis}
                         </td>
                       </tr>
                     )}
                     {opdFormData.remarks && (
-                      <tr className="border-b bg-muted/30">
-                        <td className="py-2 text-[11px]" colSpan={4}>
+                      <tr className="border-b border-gray-200 bg-gray-50">
+                        <td className="py-2 px-2 text-xs" colSpan={4}>
                           <span className="font-semibold">Remarks:</span> {opdFormData.remarks}
                         </td>
                       </tr>
@@ -1331,9 +1074,9 @@ export default function OPDBilling() {
                 </table>
 
                 {/* Amounts */}
-                <div className="mt-4 space-y-2 text-[13px]">
+                <div className="mt-6 space-y-3 text-sm bg-gray-50 p-4 rounded-lg">
                   <div className="flex justify-between">
-                    <span>Subtotal</span>
+                    <span className="text-gray-600">Subtotal</span>
                     <span className="font-semibold">₹ {billingData.subtotal}</span>
                   </div>
                   {parseFloat(billingData.discount) > 0 && (
@@ -1342,7 +1085,7 @@ export default function OPDBilling() {
                       <span className="font-semibold">- ₹ {billingData.discount}</span>
                     </div>
                   )}
-                  <div className="border-t pt-2 flex justify-between text-[14px] font-bold">
+                  <div className="border-t-2 border-gray-300 pt-3 flex justify-between text-base font-bold">
                     <span>Total Amount</span>
                     <span>₹ {billingData.totalAmount}</span>
                   </div>
@@ -1350,7 +1093,7 @@ export default function OPDBilling() {
                     <span>Amount Received ({billingData.paymentMode.toUpperCase()})</span>
                     <span className="font-semibold">₹ {billingData.receivedAmount}</span>
                   </div>
-                  <div className="flex justify-between text-orange-700 text-[14px] font-bold">
+                  <div className="flex justify-between text-orange-700 text-base font-bold">
                     <span>Balance Due</span>
                     <span>₹ {billingData.balanceAmount}</span>
                   </div>
@@ -1359,17 +1102,17 @@ export default function OPDBilling() {
                 {/* Signatures & Terms */}
                 <div className="mt-8 grid grid-cols-2 gap-8">
                   <div>
-                    <p className="text-[11px] text-muted-foreground mb-2">Patient Signature</p>
-                    <div className="border-b border-muted-foreground h-8" />
+                    <p className="text-xs text-gray-600 mb-2">Patient Signature</p>
+                    <div className="border-b-2 border-gray-300 h-12" />
                   </div>
                   <div>
-                    <p className="text-[11px] text-muted-foreground mb-2">Authorized Signatory</p>
-                    <div className="border-b border-muted-foreground h-8" />
+                    <p className="text-xs text-gray-600 mb-2">Authorized Signatory</p>
+                    <div className="border-b-2 border-gray-300 h-12" />
                   </div>
                 </div>
 
-                <div className="mt-4 text-[10px] text-muted-foreground">
-                  <p className="font-semibold mb-1">Terms & Conditions</p>
+                <div className="mt-6 text-xs text-gray-600">
+                  <p className="font-semibold mb-2">Terms & Conditions</p>
                   <ul className="list-disc list-inside space-y-1">
                     <li>This is a computer generated bill; signature not required.</li>
                     <li>Please retain this copy for future reference.</li>
@@ -1377,10 +1120,10 @@ export default function OPDBilling() {
                   </ul>
                 </div>
 
-                <div className="mt-3 text-center text-[10px] text-muted-foreground">
+                <div className="mt-4 text-center text-xs text-gray-500 border-t pt-4">
                   Generated on: {format(new Date(), 'dd/MM/yyyy hh:mm a')}
                 </div>
-              </BillLayoutA4>
+              </div>
             </Card>
 
             {/* Right Side - Common Billing Details */}
