@@ -79,7 +79,7 @@ const AppLayout = () => {
         <UniversalHeader />
         
         {/* Page Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-auto">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/inbox" element={<Inbox />} />
