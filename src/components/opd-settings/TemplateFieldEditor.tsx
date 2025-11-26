@@ -38,23 +38,32 @@ interface TemplateFieldEditorProps {
   onClose: () => void;
 }
 
-const FIELD_TYPES: { value: FieldType; label: string }[] = [
-  { value: 'text', label: 'Text' },
-  { value: 'textarea', label: 'Text Area' },
-  { value: 'number', label: 'Number' },
-  { value: 'email', label: 'Email' },
-  { value: 'phone', label: 'Phone' },
-  { value: 'url', label: 'URL' },
-  { value: 'date', label: 'Date' },
-  { value: 'datetime', label: 'Date & Time' },
-  { value: 'checkbox', label: 'Checkbox' },
-  { value: 'select', label: 'Dropdown' },
-  { value: 'radio', label: 'Radio' },
-  { value: 'multiselect', label: 'Multi-Select' },
+const FIELD_TYPES: { value: FieldType; label: string; description: string }[] = [
+  { value: 'text', label: 'Text (Short)', description: 'Single line text input' },
+  { value: 'textarea', label: 'Text Area (Long)', description: 'Multi-line text input' },
+  { value: 'number', label: 'Number', description: 'Integer numbers only' },
+  { value: 'decimal', label: 'Decimal', description: 'Decimal numbers with precision' },
+  { value: 'boolean', label: 'Boolean (Yes/No)', description: 'True/False toggle' },
+  { value: 'date', label: 'Date', description: 'Date picker (YYYY-MM-DD)' },
+  { value: 'datetime', label: 'Date & Time', description: 'Date and time picker' },
+  { value: 'time', label: 'Time', description: 'Time picker (HH:MM)' },
+  { value: 'select', label: 'Single Select', description: 'Dropdown with single selection' },
+  { value: 'multiselect', label: 'Multiple Select', description: 'Dropdown with multiple selections' },
+  { value: 'radio', label: 'Radio Buttons', description: 'Single choice from options' },
+  { value: 'checkbox', label: 'Checkboxes', description: 'Multiple choice from options' },
+  { value: 'image', label: 'Image Upload', description: 'Upload image files' },
+  { value: 'file', label: 'File Upload', description: 'Upload any file type' },
+  { value: 'json', label: 'JSON Data', description: 'Structured JSON data' },
 ];
 
 // Field types that support options
-const FIELD_TYPES_WITH_OPTIONS: FieldType[] = ['select', 'radio', 'multiselect'];
+const FIELD_TYPES_WITH_OPTIONS: FieldType[] = ['select', 'radio', 'multiselect', 'checkbox'];
+
+// Field types that support numeric validation
+const FIELD_TYPES_NUMERIC: FieldType[] = ['number', 'decimal'];
+
+// Field types that support text length validation
+const FIELD_TYPES_TEXT: FieldType[] = ['text', 'textarea'];
 
 export function TemplateFieldEditor({
   open,
@@ -385,10 +394,19 @@ export function TemplateFieldEditor({
   }, [mode, isSubmitting, handleSubmit, handleDelete, onClose]);
 
   const showOptions = FIELD_TYPES_WITH_OPTIONS.includes(formData.field_type);
-  const showNumberValidation = formData.field_type === 'number';
-  const showTextValidation = ['text', 'textarea', 'email', 'phone', 'url'].includes(
-    formData.field_type
-  );
+  const showNumberValidation = FIELD_TYPES_NUMERIC.includes(formData.field_type);
+  const showTextValidation = FIELD_TYPES_TEXT.includes(formData.field_type);
+
+  // Fields that typically don't need placeholder (boolean, options-based fields, file uploads)
+  const needsPlaceholder = ![
+    'boolean',
+    'select',
+    'multiselect',
+    'radio',
+    'checkbox',
+    'image',
+    'file',
+  ].includes(formData.field_type);
 
   return (
     <SideDrawer
@@ -484,23 +502,34 @@ export function TemplateFieldEditor({
                 <SelectContent>
                   {FIELD_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                      <div className="flex flex-col">
+                        <span className="font-medium">{type.label}</span>
+                        <span className="text-xs text-muted-foreground">{type.description}</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-sm text-muted-foreground">
+                {FIELD_TYPES.find((t) => t.value === formData.field_type)?.description}
+              </p>
             </div>
 
-            {/* Placeholder */}
-            <div className="space-y-2">
-              <Label htmlFor="placeholder">Placeholder</Label>
-              <Input
-                id="placeholder"
-                value={formData.placeholder}
-                onChange={(e) => handleChange('placeholder', e.target.value)}
-                placeholder="Enter placeholder text..."
-              />
-            </div>
+            {/* Placeholder - only for fields that accept text input */}
+            {needsPlaceholder && (
+              <div className="space-y-2">
+                <Label htmlFor="placeholder">Placeholder</Label>
+                <Input
+                  id="placeholder"
+                  value={formData.placeholder}
+                  onChange={(e) => handleChange('placeholder', e.target.value)}
+                  placeholder="Enter placeholder text..."
+                />
+                <p className="text-sm text-muted-foreground">
+                  Text shown when field is empty
+                </p>
+              </div>
+            )}
 
             {/* Help Text */}
             <div className="space-y-2">
@@ -608,12 +637,15 @@ export function TemplateFieldEditor({
         {showTextValidation && (
           <Card>
             <CardHeader>
-              <CardTitle>Validation Rules</CardTitle>
+              <CardTitle>Text Length Validation</CardTitle>
+              <CardDescription>
+                Set minimum and maximum character limits
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="min_length">Min Length</Label>
+                  <Label htmlFor="min_length">Minimum Length (characters)</Label>
                   <Input
                     id="min_length"
                     type="number"
@@ -622,10 +654,11 @@ export function TemplateFieldEditor({
                       handleChange('min_length', e.target.value ? parseInt(e.target.value) : undefined)
                     }
                     min="0"
+                    placeholder="No limit"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="max_length">Max Length</Label>
+                  <Label htmlFor="max_length">Maximum Length (characters)</Label>
                   <Input
                     id="max_length"
                     type="number"
@@ -634,6 +667,7 @@ export function TemplateFieldEditor({
                       handleChange('max_length', e.target.value ? parseInt(e.target.value) : undefined)
                     }
                     min="0"
+                    placeholder="No limit"
                   />
                 </div>
               </div>
@@ -641,37 +675,51 @@ export function TemplateFieldEditor({
           </Card>
         )}
 
-        {/* Validation Rules - Number */}
+        {/* Validation Rules - Number/Decimal */}
         {showNumberValidation && (
           <Card>
             <CardHeader>
-              <CardTitle>Validation Rules</CardTitle>
+              <CardTitle>
+                {formData.field_type === 'decimal' ? 'Decimal Range Validation' : 'Number Range Validation'}
+              </CardTitle>
+              <CardDescription>
+                Set minimum and maximum allowed values
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="min_value">Min Value</Label>
+                  <Label htmlFor="min_value">Minimum Value</Label>
                   <Input
                     id="min_value"
                     type="number"
+                    step={formData.field_type === 'decimal' ? '0.01' : '1'}
                     value={formData.min_value || ''}
                     onChange={(e) =>
                       handleChange('min_value', e.target.value ? parseFloat(e.target.value) : undefined)
                     }
+                    placeholder="No limit"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="max_value">Max Value</Label>
+                  <Label htmlFor="max_value">Maximum Value</Label>
                   <Input
                     id="max_value"
                     type="number"
+                    step={formData.field_type === 'decimal' ? '0.01' : '1'}
                     value={formData.max_value || ''}
                     onChange={(e) =>
                       handleChange('max_value', e.target.value ? parseFloat(e.target.value) : undefined)
                     }
+                    placeholder="No limit"
                   />
                 </div>
               </div>
+              {formData.field_type === 'decimal' && (
+                <p className="text-sm text-muted-foreground">
+                  Supports decimal values with up to 2 decimal places
+                </p>
+              )}
             </CardContent>
           </Card>
         )}

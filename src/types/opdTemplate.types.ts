@@ -96,15 +96,18 @@ export type FieldType =
   | 'text'
   | 'textarea'
   | 'number'
+  | 'decimal'
+  | 'boolean'
   | 'date'
   | 'datetime'
-  | 'checkbox'
+  | 'time'
   | 'select'
-  | 'radio'
   | 'multiselect'
-  | 'email'
-  | 'phone'
-  | 'url';
+  | 'radio'
+  | 'checkbox'
+  | 'image'
+  | 'file'
+  | 'json';
 
 export interface TemplateField {
   id: number;

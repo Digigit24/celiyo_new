@@ -58,17 +58,20 @@ function SortableFieldRow({
   const getFieldTypeBadge = (fieldType: string) => {
     const colors: Record<string, string> = {
       text: 'bg-blue-100 text-blue-800 border-blue-200',
+      textarea: 'bg-blue-100 text-blue-800 border-blue-200',
       number: 'bg-green-100 text-green-800 border-green-200',
-      email: 'bg-purple-100 text-purple-800 border-purple-200',
-      phone: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+      decimal: 'bg-green-100 text-green-800 border-green-200',
+      boolean: 'bg-purple-100 text-purple-800 border-purple-200',
       date: 'bg-pink-100 text-pink-800 border-pink-200',
       datetime: 'bg-pink-100 text-pink-800 border-pink-200',
+      time: 'bg-pink-100 text-pink-800 border-pink-200',
       select: 'bg-indigo-100 text-indigo-800 border-indigo-200',
       multiselect: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-      checkbox: 'bg-cyan-100 text-cyan-800 border-cyan-200',
       radio: 'bg-cyan-100 text-cyan-800 border-cyan-200',
-      url: 'bg-orange-100 text-orange-800 border-orange-200',
-      textarea: 'bg-blue-100 text-blue-800 border-blue-200',
+      checkbox: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+      image: 'bg-orange-100 text-orange-800 border-orange-200',
+      file: 'bg-orange-100 text-orange-800 border-orange-200',
+      json: 'bg-yellow-100 text-yellow-800 border-yellow-200',
     };
 
     return (
