@@ -368,6 +368,11 @@ export function TemplateFieldEditor({
 
   // Footer buttons
   const getFooterButtons = useCallback((): DrawerActionButton[] => {
+    // Check if options are required but missing
+    const activeOptions = options.filter((opt) => !opt.isDeleted);
+    const needsOptions = FIELD_TYPES_WITH_OPTIONS.includes(formData.field_type);
+    const hasRequiredOptions = !needsOptions || activeOptions.length > 0;
+
     const actions: DrawerActionButton[] = [
       {
         label: 'Cancel',
@@ -379,6 +384,7 @@ export function TemplateFieldEditor({
         onClick: handleSubmit,
         variant: 'default',
         loading: isSubmitting,
+        disabled: isSubmitting || !hasRequiredOptions,
       },
     ];
 
@@ -391,7 +397,7 @@ export function TemplateFieldEditor({
     }
 
     return actions;
-  }, [mode, isSubmitting, handleSubmit, handleDelete, onClose]);
+  }, [mode, isSubmitting, handleSubmit, handleDelete, onClose, formData.field_type, options]);
 
   const showOptions = FIELD_TYPES_WITH_OPTIONS.includes(formData.field_type);
   const showNumberValidation = FIELD_TYPES_NUMERIC.includes(formData.field_type);
@@ -407,6 +413,10 @@ export function TemplateFieldEditor({
     'image',
     'file',
   ].includes(formData.field_type);
+
+  // Check if we're missing required options
+  const activeOptions = options.filter((opt) => !opt.isDeleted);
+  const missingRequiredOptions = showOptions && activeOptions.length === 0;
 
   return (
     <SideDrawer
@@ -580,13 +590,40 @@ export function TemplateFieldEditor({
           </CardContent>
         </Card>
 
-        {/* Options (for select, radio, multiselect) */}
+        {/* Options (for select, radio, multiselect, checkbox) */}
         {showOptions && (
           <Card>
             <CardHeader>
-              <CardTitle>Field Options</CardTitle>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Field Options <span className="text-destructive">*</span></CardTitle>
+                  <CardDescription>
+                    {formData.field_type === 'select' && 'Define dropdown options (at least one required)'}
+                    {formData.field_type === 'multiselect' && 'Define multiple-select options (at least one required)'}
+                    {formData.field_type === 'radio' && 'Define radio button options (at least one required)'}
+                    {formData.field_type === 'checkbox' && 'Define checkbox options (at least one required)'}
+                  </CardDescription>
+                </div>
+                {options.filter((opt) => !opt.isDeleted).length > 0 && (
+                  <Badge variant="secondary">
+                    {options.filter((opt) => !opt.isDeleted).length} option
+                    {options.filter((opt) => !opt.isDeleted).length !== 1 ? 's' : ''}
+                  </Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {options.filter((opt) => !opt.isDeleted).length === 0 && (
+                <div className="border-2 border-dashed rounded-lg p-6 text-center border-yellow-200 bg-yellow-50/50 dark:bg-yellow-950/20">
+                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-1">
+                    No options added yet
+                  </p>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                    Add at least one option to save this field
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-2">
                 {options
                   .filter((opt) => !opt.isDeleted)
@@ -598,6 +635,9 @@ export function TemplateFieldEditor({
                     return (
                       <div key={realIndex} className="flex items-center gap-2">
                         <Input value={option.option_label} disabled className="flex-1" />
+                        <Badge variant="outline" className="min-w-[80px] justify-center">
+                          {option.option_value}
+                        </Badge>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -614,7 +654,7 @@ export function TemplateFieldEditor({
                 <Input
                   value={newOption}
                   onChange={(e) => setNewOption(e.target.value)}
-                  placeholder="Enter option..."
+                  placeholder="Enter option label..."
                   onKeyPress={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -622,13 +662,21 @@ export function TemplateFieldEditor({
                     }
                   }}
                 />
-                <Button onClick={handleAddOption}>
+                <Button onClick={handleAddOption} disabled={!newOption.trim()}>
                   <Plus className="h-4 w-4 mr-2" />
                   Add
                 </Button>
               </div>
 
-              {errors.options && <p className="text-sm text-destructive">{errors.options}</p>}
+              {errors.options && (
+                <div className="rounded-md bg-destructive/10 border border-destructive/20 p-3">
+                  <p className="text-sm font-medium text-destructive">{errors.options}</p>
+                </div>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                Press Enter or click Add to create an option. The value will be auto-generated from the label.
+              </p>
             </CardContent>
           </Card>
         )}
@@ -720,6 +768,43 @@ export function TemplateFieldEditor({
                   Supports decimal values with up to 2 decimal places
                 </p>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Warning when submit is disabled due to missing options */}
+        {missingRequiredOptions && (
+          <Card className="border-yellow-200 bg-yellow-50/50 dark:bg-yellow-950/20">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <div className="rounded-full bg-yellow-100 dark:bg-yellow-900 p-2">
+                  <svg
+                    className="h-5 w-5 text-yellow-600 dark:text-yellow-400"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                    Cannot save field without options
+                  </h4>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                    {formData.field_type === 'checkbox' && 'Checkbox fields require at least one option.'}
+                    {formData.field_type === 'select' && 'Dropdown fields require at least one option.'}
+                    {formData.field_type === 'multiselect' && 'Multiple-select fields require at least one option.'}
+                    {formData.field_type === 'radio' && 'Radio button fields require at least one option.'}
+                    {' '}Please add at least one option above to enable the save button.
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
