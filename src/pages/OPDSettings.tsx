@@ -2,14 +2,14 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Settings2, FileText, Microscope, ListChecks, ClipboardList } from 'lucide-react';
+import { Settings2, FileText, Microscope, ListChecks, ClipboardList, Layers } from 'lucide-react';
 import { GeneralSettingsTab } from '@/components/opd-settings/GeneralSettingsTab';
 import { BillingSettingsTab } from '@/components/opd-settings/BillingSettingsTab';
 import { ProcedureSettingsTab } from '@/components/opd-settings/ProcedureSettingsTab';
-import { FieldConfigurationTab } from '@/components/opd-settings/FieldConfigurationTab';
-import { ClinicalSettingsTab } from '@/components/opd-settings/ClinicalSettingsTab';
+import { TemplatesTab } from '@/components/opd-settings/TemplatesTab';
+import { TemplateFieldsTab } from '@/components/opd-settings/TemplateFieldsTab';
 
-type SettingsTab = 'general' | 'billing' | 'procedures' | 'fields' | 'clinical';
+type SettingsTab = 'general' | 'billing' | 'procedures' | 'templates' | 'template-fields';
 
 export const OPDSettings: React.FC = () => {
   const { tab } = useParams<{ tab?: string }>();
@@ -43,6 +43,20 @@ export const OPDSettings: React.FC = () => {
             <span className="hidden sm:inline">General</span>
           </TabsTrigger>
           <TabsTrigger
+            value="templates"
+            className="flex items-center gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary"
+          >
+            <ClipboardList className="h-4 w-4" />
+            <span className="hidden sm:inline">Templates</span>
+          </TabsTrigger>
+          <TabsTrigger
+            value="template-fields"
+            className="flex items-center gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary"
+          >
+            <Layers className="h-4 w-4" />
+            <span className="hidden sm:inline">Template Fields</span>
+          </TabsTrigger>
+          <TabsTrigger
             value="billing"
             className="flex items-center gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary"
           >
@@ -56,24 +70,18 @@ export const OPDSettings: React.FC = () => {
             <Microscope className="h-4 w-4" />
             <span className="hidden sm:inline">Procedures</span>
           </TabsTrigger>
-          <TabsTrigger
-            value="clinical"
-            className="flex items-center gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary"
-          >
-            <ClipboardList className="h-4 w-4" />
-            <span className="hidden sm:inline">Clinical</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="fields"
-            className="flex items-center gap-2 data-[state=active]:border-b-2 data-[state=active]:border-primary"
-          >
-            <ListChecks className="h-4 w-4" />
-            <span className="hidden sm:inline">Fields</span>
-          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general" className="space-y-4">
           <GeneralSettingsTab />
+        </TabsContent>
+
+        <TabsContent value="templates" className="space-y-4">
+          <TemplatesTab />
+        </TabsContent>
+
+        <TabsContent value="template-fields" className="space-y-4">
+          <TemplateFieldsTab />
         </TabsContent>
 
         <TabsContent value="billing" className="space-y-4">
@@ -82,14 +90,6 @@ export const OPDSettings: React.FC = () => {
 
         <TabsContent value="procedures" className="space-y-4">
           <ProcedureSettingsTab />
-        </TabsContent>
-
-        <TabsContent value="clinical" className="space-y-4">
-          <ClinicalSettingsTab />
-        </TabsContent>
-
-        <TabsContent value="fields" className="space-y-4">
-          <FieldConfigurationTab />
         </TabsContent>
       </Tabs>
     </div>

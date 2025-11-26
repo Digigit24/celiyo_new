@@ -186,32 +186,35 @@ export interface TemplateFieldsResponse {
 export interface TemplateFieldOption {
   id: number;
   tenant_id: string;
-  field_name: number; // Backend uses field_name not field
-  label: string;
-  value: string;
+  field: number; // Field ID
+  option_label: string;
+  option_value: string;
   display_order: number;
   is_active: boolean;
+  metadata?: Record<string, any>;
   created_at: string;
   updated_at: string;
 }
 
 export interface CreateTemplateFieldOptionPayload {
-  field_name: number; // Backend expects field_name not field
-  label: string;
-  value: string;
+  field: number; // Field ID
+  option_label: string;
+  option_value: string;
   display_order?: number;
   is_active?: boolean;
+  metadata?: Record<string, any>;
 }
 
 export interface UpdateTemplateFieldOptionPayload {
-  label?: string;
-  value?: string;
+  option_label?: string;
+  option_value?: string;
   display_order?: number;
   is_active?: boolean;
+  metadata?: Record<string, any>;
 }
 
 export interface TemplateFieldOptionsQueryParams {
-  field_name?: number; // Backend uses field_name parameter
+  field_id?: number; // Filter by field ID
   is_active?: boolean;
   page?: number;
   page_size?: number;

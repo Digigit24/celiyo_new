@@ -93,8 +93,8 @@ export function TemplateFieldEditor({
   // Options state - now tracking full option objects
   interface OptionItem {
     id?: number; // undefined for new options
-    label: string;
-    value: string;
+    option_label: string;
+    option_value: string;
     display_order: number;
     isDeleted?: boolean;
   }
@@ -134,8 +134,8 @@ export function TemplateFieldEditor({
         setOptions(
           fieldData.options.map((opt) => ({
             id: opt.id,
-            label: opt.label,
-            value: opt.value,
+            option_label: opt.option_label,
+            option_value: opt.option_value,
             display_order: opt.display_order,
           }))
         );
@@ -181,8 +181,8 @@ export function TemplateFieldEditor({
     if (newOption.trim()) {
       const value = newOption.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
       const newOptionItem: OptionItem = {
-        label: newOption.trim(),
-        value: value,
+        option_label: newOption.trim(),
+        option_value: value,
         display_order: options.length,
       };
       setOptions((prev) => [...prev, newOptionItem]);
@@ -289,8 +289,8 @@ export function TemplateFieldEditor({
             // Update existing option (in case label/value changed or display_order)
             optionPromises.push(
               updateTemplateFieldOption(option.id, {
-                label: option.label,
-                value: option.value,
+                option_label: option.option_label,
+                option_value: option.option_value,
                 display_order: index,
               })
             );
@@ -298,9 +298,9 @@ export function TemplateFieldEditor({
             // Create new option
             optionPromises.push(
               createTemplateFieldOption({
-                field_name: savedFieldId,
-                label: option.label,
-                value: option.value,
+                field: savedFieldId,
+                option_label: option.option_label,
+                option_value: option.option_value,
                 display_order: index,
               })
             );
@@ -531,11 +531,11 @@ export function TemplateFieldEditor({
                   .map((option, index) => {
                     // Find the real index in the original array
                     const realIndex = options.findIndex(
-                      (opt) => opt.label === option.label && opt.value === option.value
+                      (opt) => opt.option_label === option.option_label && opt.option_value === option.option_value
                     );
                     return (
                       <div key={realIndex} className="flex items-center gap-2">
-                        <Input value={option.label} disabled className="flex-1" />
+                        <Input value={option.option_label} disabled className="flex-1" />
                         <Button
                           variant="ghost"
                           size="sm"
