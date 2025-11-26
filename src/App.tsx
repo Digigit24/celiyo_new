@@ -56,7 +56,7 @@ const AppLayout = () => {
   // Ensure WhatsApp socket stays connected app-wide (persists across route changes)
   useWhatsappSocket();
   return (
-    <div className="min-h-screen flex bg-background text-foreground">
+    <div className="h-screen flex bg-background text-foreground">
       {/* Universal Sidebar */}
       {!isMobile && (
         <UniversalSidebar
