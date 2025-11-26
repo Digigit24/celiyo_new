@@ -260,8 +260,22 @@ export function TemplateFieldEditor({
 
       // Step 1: Create or update the field
       if (mode === 'create') {
-        console.log('Creating field with payload:', formData);
-        const createdField = await createTemplateField(formData);
+        // Prepare the create payload
+        const createPayload: CreateTemplateFieldPayload = { ...formData };
+
+        // Include options for fields that require them
+        if (FIELD_TYPES_WITH_OPTIONS.includes(formData.field_type)) {
+          const activeOptions = options.filter((opt) => !opt.isDeleted);
+          createPayload.options = activeOptions.map((opt, index) => ({
+            option_label: opt.option_label,
+            option_value: opt.option_value,
+            display_order: index,
+            is_active: true,
+          }));
+        }
+
+        console.log('Creating field with payload:', createPayload);
+        const createdField = await createTemplateField(createPayload);
         savedFieldId = createdField.id;
         toast.success('Field created successfully');
       } else if (mode === 'edit' && fieldId) {

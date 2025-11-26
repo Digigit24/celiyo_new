@@ -150,6 +150,14 @@ export interface CreateTemplateFieldPayload {
   default_value?: string;
   display_order?: number;
   is_active?: boolean;
+  // Nested options for select/radio/multiselect/checkbox fields
+  options?: Array<{
+    option_label: string;
+    option_value: string;
+    display_order: number;
+    is_active?: boolean;
+    metadata?: Record<string, any>;
+  }>;
 }
 
 export interface UpdateTemplateFieldPayload {
