@@ -229,6 +229,47 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         );
 
       case 'checkbox':
+        // If field has options, render as checkbox group
+        if (field.options && field.options.length > 0) {
+          return (
+            <div key={field.id} className="space-y-2">
+              <Label>
+                {field.field_label}
+                {field.is_required && <span className="text-destructive ml-1">*</span>}
+              </Label>
+              <div className="grid grid-cols-2 gap-2">
+                {field.options
+                  .filter(opt => opt.is_active)
+                  .sort((a, b) => a.display_order - b.display_order)
+                  .map((option) => {
+                    const selectedValues = value || [];
+                    const isChecked = selectedValues.includes(option.option_value);
+                    return (
+                      <div key={option.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`field-${field.id}-${option.option_value}`}
+                          checked={isChecked}
+                          onCheckedChange={(checked) => {
+                            const newValues = checked
+                              ? [...selectedValues, option.option_value]
+                              : selectedValues.filter((v: string) => v !== option.option_value);
+                            handleFieldChange(field.id, newValues);
+                          }}
+                        />
+                        <Label htmlFor={`field-${field.id}-${option.option_value}`} className="cursor-pointer">
+                          {option.option_label}
+                        </Label>
+                      </div>
+                    );
+                  })}
+              </div>
+              {field.help_text && (
+                <p className="text-xs text-muted-foreground">{field.help_text}</p>
+              )}
+            </div>
+          );
+        }
+        // Otherwise, render as single boolean checkbox
         return (
           <div key={field.id} className="flex items-center space-x-2">
             <Checkbox
