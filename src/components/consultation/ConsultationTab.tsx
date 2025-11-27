@@ -45,6 +45,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
   });
 
   // Fetch fields for selected template
+  // Note: Backend should return options automatically via nested serializer
   const { data: fieldsData, isLoading: isLoadingFields } = useTemplateFields({
     template: selectedTemplate ? parseInt(selectedTemplate) : undefined,
     is_active: true,
@@ -78,6 +79,17 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
   useEffect(() => {
     if (fieldsData) {
       console.log('Template Fields:', fieldsData);
+      console.log('First field with options check:', fieldsData.results?.[0]);
+      if (fieldsData.results && fieldsData.results.length > 0) {
+        fieldsData.results.forEach((field, idx) => {
+          console.log(`Field ${idx} (${field.field_label}):`, {
+            type: field.field_type,
+            hasOptions: !!field.options,
+            optionsCount: field.options?.length || 0,
+            options: field.options
+          });
+        });
+      }
     }
   }, [fieldsData]);
 
