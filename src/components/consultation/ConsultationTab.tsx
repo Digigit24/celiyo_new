@@ -253,8 +253,8 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                     .filter(opt => opt.is_active)
                     .sort((a, b) => a.display_order - b.display_order)
                     .map((option) => (
-                      <SelectItem key={option.id} value={option.value}>
-                        {option.label}
+                      <SelectItem key={option.id} value={option.option_value}>
+                        {option.option_label}
                       </SelectItem>
                     ))
                 ) : (
@@ -285,9 +285,9 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((option) => (
                     <div key={option.id} className="flex items-center space-x-2">
-                      <RadioGroupItem value={option.value} id={`field-${field.id}-${option.value}`} />
-                      <Label htmlFor={`field-${field.id}-${option.value}`} className="cursor-pointer">
-                        {option.label}
+                      <RadioGroupItem value={option.option_value} id={`field-${field.id}-${option.option_value}`} />
+                      <Label htmlFor={`field-${field.id}-${option.option_value}`} className="cursor-pointer">
+                        {option.option_label}
                       </Label>
                     </div>
                   ))
@@ -315,21 +315,21 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((option) => {
                     const selectedValues = value || [];
-                    const isChecked = selectedValues.includes(option.value);
+                    const isChecked = selectedValues.includes(option.option_value);
                     return (
                       <div key={option.id} className="flex items-center space-x-2">
                         <Checkbox
-                          id={`field-${field.id}-${option.value}`}
+                          id={`field-${field.id}-${option.option_value}`}
                           checked={isChecked}
                           onCheckedChange={(checked) => {
                             const newValues = checked
-                              ? [...selectedValues, option.value]
-                              : selectedValues.filter((v: string) => v !== option.value);
+                              ? [...selectedValues, option.option_value]
+                              : selectedValues.filter((v: string) => v !== option.option_value);
                             handleFieldChange(field.id, newValues);
                           }}
                         />
-                        <Label htmlFor={`field-${field.id}-${option.value}`} className="cursor-pointer">
-                          {option.label}
+                        <Label htmlFor={`field-${field.id}-${option.option_value}`} className="cursor-pointer">
+                          {option.option_label}
                         </Label>
                       </div>
                     );
