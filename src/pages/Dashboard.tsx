@@ -15,6 +15,71 @@ import { usePatient } from '@/hooks/usePatient';
 import { useOpdVisit } from '@/hooks/useOpdVisit';
 import { useOPDBill } from '@/hooks/useOPDBill';
 
+// ==================== TOGGLE BETWEEN DEMO & REAL DATA ====================
+// Set to `true` for demo data, `false` for real API data
+const USE_DEMO_DATA = true;
+// ========================================================================
+
+// ==================== DEMO DATA ====================
+const DEMO_DATA = {
+  patients: {
+    total_patients: 1247,
+    active_patients: 1180,
+    inactive_patients: 52,
+    deceased_patients: 15,
+    patients_with_insurance: 834,
+    average_age: 42.5,
+    total_visits: 4832,
+    gender_distribution: {
+      Male: 687,
+      Female: 523,
+      Other: 37,
+    },
+    blood_group_distribution: {
+      'A+': 342,
+      'A-': 87,
+      'B+': 298,
+      'B-': 64,
+      'AB+': 156,
+      'AB-': 43,
+      'O+': 187,
+      'O-': 70,
+    },
+  },
+  visits: {
+    total_visits: 4832,
+    today_visits: 48,
+    waiting_patients: 12,
+    in_progress_patients: 5,
+    completed_today: 31,
+    average_waiting_time: '15 mins',
+    visits_by_type: {
+      new: 1245,
+      follow_up: 2987,
+      emergency: 432,
+      referral: 168,
+    },
+    visits_by_status: {
+      waiting: 12,
+      in_progress: 5,
+      completed: 4698,
+      cancelled: 87,
+      no_show: 30,
+    },
+    revenue_today: '45680',
+    pending_payments: 23,
+  },
+  bills: {
+    total_bills: 3421,
+    total_amount: '12450000',
+    received_amount: '10890000',
+    balance_amount: '1560000',
+    paid_bills: 2856,
+    unpaid_bills: 398,
+    partial_bills: 167,
+  },
+};
+
 interface StatCardProps {
   title: string;
   value: string | number;
@@ -63,16 +128,36 @@ const Dashboard = () => {
   const { useOpdVisitStatistics } = useOpdVisit();
   const { useOPDBillStatistics } = useOPDBill();
 
-  // Fetch real data
-  const { data: patientStats, isLoading: patientLoading } = usePatientStatistics();
-  const { data: visitStats, isLoading: visitLoading } = useOpdVisitStatistics();
-  const { data: billStats, isLoading: billLoading } = useOPDBillStatistics();
+  // Fetch real data (only used when USE_DEMO_DATA = false)
+  const { data: realPatientStats, isLoading: patientLoading } = usePatientStatistics();
+  const { data: realVisitStats, isLoading: visitLoading } = useOpdVisitStatistics();
+  const { data: realBillStats, isLoading: billLoading } = useOPDBillStatistics();
+
+  // Select data source based on toggle
+  const patientStats = USE_DEMO_DATA ? DEMO_DATA.patients : realPatientStats;
+  const visitStats = USE_DEMO_DATA ? DEMO_DATA.visits : realVisitStats;
+  const billStats = USE_DEMO_DATA ? DEMO_DATA.bills : realBillStats;
+  const isLoading = USE_DEMO_DATA ? false : (patientLoading || visitLoading || billLoading);
 
   // Calculate weekly revenue data (last 7 days)
   const weeklyRevenueData = useMemo(() => {
     if (!billStats) return Array(7).fill(0);
     const baseRevenue = parseFloat(billStats.received_amount || '0');
-    // Simulate weekly distribution
+
+    if (USE_DEMO_DATA) {
+      // Demo: More realistic weekly variation
+      return [
+        Math.floor(baseRevenue * 0.11 + Math.random() * 10000),
+        Math.floor(baseRevenue * 0.14 + Math.random() * 10000),
+        Math.floor(baseRevenue * 0.15 + Math.random() * 10000),
+        Math.floor(baseRevenue * 0.16 + Math.random() * 10000),
+        Math.floor(baseRevenue * 0.14 + Math.random() * 10000),
+        Math.floor(baseRevenue * 0.13 + Math.random() * 10000),
+        Math.floor(baseRevenue * 0.12 + Math.random() * 10000),
+      ];
+    }
+
+    // Real data: Simulate weekly distribution
     return [
       Math.floor(baseRevenue * 0.12),
       Math.floor(baseRevenue * 0.15),
@@ -105,6 +190,21 @@ const Dashboard = () => {
   const patientGrowthData = useMemo(() => {
     if (!patientStats) return Array(6).fill(0);
     const totalPatients = patientStats.total_patients || 0;
+
+    if (USE_DEMO_DATA) {
+      // Demo: Show realistic growth trend
+      const baseGrowth = Math.floor(totalPatients * 0.7);
+      return [
+        baseGrowth,
+        baseGrowth + Math.floor(totalPatients * 0.04),
+        baseGrowth + Math.floor(totalPatients * 0.09),
+        baseGrowth + Math.floor(totalPatients * 0.15),
+        baseGrowth + Math.floor(totalPatients * 0.22),
+        totalPatients,
+      ];
+    }
+
+    // Real data: Simulate growth
     const avgGrowth = Math.floor(totalPatients / 20);
     return Array(6)
       .fill(0)
@@ -375,12 +475,21 @@ const Dashboard = () => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent">
-            Dashboard
-          </h1>
-          <p className="text-gray-500 mt-2 text-sm">
-            Welcome back! Here's your hospital overview.
-          </p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent">
+                Dashboard
+              </h1>
+              <p className="text-gray-500 mt-2 text-sm">
+                Welcome back! Here's your hospital overview.
+              </p>
+            </div>
+            {USE_DEMO_DATA && (
+              <div className="px-3 py-1.5 bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-lg">
+                <p className="text-xs font-medium text-indigo-700">Demo Mode</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -389,29 +498,37 @@ const Dashboard = () => {
             title="Total Patients"
             value={patientStats?.total_patients?.toLocaleString() || '0'}
             icon={<Users className="w-7 h-7 text-indigo-600" />}
-            loading={patientLoading}
+            loading={isLoading && !USE_DEMO_DATA}
             gradient="bg-gradient-to-br from-indigo-50 via-white to-indigo-50/30"
+            trend="+12% from last month"
+            trendUp={true}
           />
           <StatCard
             title="Today's Visits"
             value={visitStats?.today_visits?.toLocaleString() || '0'}
             icon={<Calendar className="w-7 h-7 text-emerald-600" />}
-            loading={visitLoading}
+            loading={isLoading && !USE_DEMO_DATA}
             gradient="bg-gradient-to-br from-emerald-50 via-white to-emerald-50/30"
+            trend="+5% from yesterday"
+            trendUp={true}
           />
           <StatCard
             title="Total Revenue"
             value={`₹${parseFloat(billStats?.received_amount || '0').toLocaleString('en-IN', { maximumFractionDigits: 0 })}`}
             icon={<DollarSign className="w-7 h-7 text-amber-600" />}
-            loading={billLoading}
+            loading={isLoading && !USE_DEMO_DATA}
             gradient="bg-gradient-to-br from-amber-50 via-white to-amber-50/30"
+            trend="+8% from last week"
+            trendUp={true}
           />
           <StatCard
             title="Pending Bills"
             value={(billStats?.unpaid_bills || 0) + (billStats?.partial_bills || 0)}
             icon={<FileText className="w-7 h-7 text-rose-600" />}
-            loading={billLoading}
+            loading={isLoading && !USE_DEMO_DATA}
             gradient="bg-gradient-to-br from-rose-50 via-white to-rose-50/30"
+            trend="-3% from yesterday"
+            trendUp={false}
           />
         </div>
 
@@ -423,7 +540,7 @@ const Dashboard = () => {
               <Activity className="w-5 h-5 text-indigo-500" />
               Weekly Revenue
             </h3>
-            {billLoading ? (
+            {isLoading && !USE_DEMO_DATA ? (
               <div className="h-[320px] flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
               </div>
@@ -443,7 +560,7 @@ const Dashboard = () => {
               <Activity className="w-5 h-5 text-indigo-500" />
               Visits by Type
             </h3>
-            {visitLoading ? (
+            {isLoading && !USE_DEMO_DATA ? (
               <div className="h-[320px] flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
               </div>
@@ -466,7 +583,7 @@ const Dashboard = () => {
               <DollarSign className="w-5 h-5 text-emerald-500" />
               Payment Status
             </h3>
-            {billLoading ? (
+            {isLoading && !USE_DEMO_DATA ? (
               <div className="h-[320px] flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
               </div>
@@ -484,9 +601,9 @@ const Dashboard = () => {
           <Card className="p-6 border-0 shadow-sm hover:shadow-md transition-shadow duration-300 bg-gradient-to-br from-white to-gray-50/30">
             <h3 className="text-base font-semibold mb-4 flex items-center gap-2 text-gray-700">
               <Users className="w-5 h-5 text-indigo-500" />
-              Patient Growth
+              Patient Growth (6 Months)
             </h3>
-            {patientLoading ? (
+            {isLoading && !USE_DEMO_DATA ? (
               <div className="h-[320px] flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
               </div>
@@ -507,9 +624,9 @@ const Dashboard = () => {
           <Card className="p-6 border-0 shadow-sm hover:shadow-md transition-shadow duration-300 bg-gradient-to-br from-white to-gray-50/30">
             <h3 className="text-base font-semibold mb-4 flex items-center gap-2 text-gray-700">
               <Activity className="w-5 h-5 text-emerald-500" />
-              Visit Status
+              Visit Status Overview
             </h3>
-            {visitLoading ? (
+            {isLoading && !USE_DEMO_DATA ? (
               <div className="h-[320px] flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
               </div>
@@ -529,7 +646,7 @@ const Dashboard = () => {
               <Users className="w-5 h-5 text-pink-500" />
               Gender Distribution
             </h3>
-            {patientLoading ? (
+            {isLoading && !USE_DEMO_DATA ? (
               <div className="h-[320px] flex items-center justify-center">
                 <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
               </div>
