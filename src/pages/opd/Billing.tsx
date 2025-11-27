@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useOpdVisit } from '@/hooks/useOpdVisit';
 import { useOPDBill } from '@/hooks/useOPDBill';
+import { useProcedureMaster } from '@/hooks/useProcedureMaster';
+import { useProcedurePackage } from '@/hooks/useProcedurePackage';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import {
   Table,
   TableBody,
@@ -38,6 +48,7 @@ import {
   Package,
   FileText,
   Search,
+  Plus,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { DataTable } from '@/components/DataTable';
@@ -240,9 +251,13 @@ export default function OPDBilling() {
 
   const { useOpdVisitById } = useOpdVisit();
   const { useOPDBills, createBill } = useOPDBill();
+  const { useActiveProcedureMasters } = useProcedureMaster();
+  const { useActiveProcedurePackages } = useProcedurePackage();
 
   const { data: visit, isLoading: visitLoading, error: visitError } = useOpdVisitById(visitId ? parseInt(visitId) : null);
   const { data: billsData, isLoading: billsLoading, mutate: mutateBills } = useOPDBills({ visit: visitId ? parseInt(visitId) : undefined });
+  const { data: proceduresData, isLoading: proceduresLoading } = useActiveProcedureMasters();
+  const { data: packagesData, isLoading: packagesLoading } = useActiveProcedurePackages();
 
   // Print/Export ref (ONLY this area prints/exports)
   const printAreaRef = useRef<HTMLDivElement>(null);
@@ -282,6 +297,10 @@ export default function OPDBilling() {
 
   // Procedure Search
   const [procedureSearch, setProcedureSearch] = useState('');
+
+  // Dialog states
+  const [isProcedureDialogOpen, setIsProcedureDialogOpen] = useState(false);
+  const [isPackageDialogOpen, setIsPackageDialogOpen] = useState(false);
 
   // Map visit data to form when visit loads
   useEffect(() => {
@@ -455,6 +474,42 @@ export default function OPDBilling() {
         return updated;
       }),
     }));
+  };
+
+  const addProcedureToList = (procedureId: number, procedureName: string, procedureCode: string, defaultCharge: string) => {
+    const newProcedure: ProcedureItem = {
+      id: `temp-${Date.now()}-${Math.random()}`,
+      procedure_id: procedureId,
+      procedure_name: procedureName,
+      procedure_code: procedureCode,
+      quantity: 1,
+      unit_price: defaultCharge,
+      total_price: defaultCharge,
+      notes: '',
+    };
+    setProcedureFormData((prev) => ({
+      ...prev,
+      procedures: [...prev.procedures, newProcedure],
+    }));
+    setIsProcedureDialogOpen(false);
+  };
+
+  const addPackageToList = (packageName: string, procedures: any[], discountedCharge: string) => {
+    const newProcedures: ProcedureItem[] = procedures.map((proc) => ({
+      id: `temp-${Date.now()}-${Math.random()}-${proc.id}`,
+      procedure_id: proc.id,
+      procedure_name: proc.name,
+      procedure_code: proc.code,
+      quantity: 1,
+      unit_price: proc.default_charge,
+      total_price: proc.default_charge,
+      notes: `Package: ${packageName}`,
+    }));
+    setProcedureFormData((prev) => ({
+      ...prev,
+      procedures: [...prev.procedures, ...newProcedures],
+    }));
+    setIsPackageDialogOpen(false);
   };
 
   const handleSaveBill = async () => {
@@ -857,6 +912,132 @@ export default function OPDBilling() {
                 <div>
                   <CardTitle>Procedure Billing</CardTitle>
                   <CardDescription className="mt-1">Add procedures & tests</CardDescription>
+                </div>
+                <div className="flex gap-2">
+                  <Dialog open={isProcedureDialogOpen} onOpenChange={setIsProcedureDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="default" size="sm">
+                        <Plus className="h-4 w-4 mr-1" />
+                        Add Procedure
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Select Procedure</DialogTitle>
+                        <DialogDescription>Choose a procedure to add to the bill</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            placeholder="Search procedures..."
+                            value={procedureSearch}
+                            onChange={(e) => setProcedureSearch(e.target.value)}
+                            className="pl-9"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          {proceduresLoading ? (
+                            <div className="text-center py-8 text-muted-foreground">Loading procedures...</div>
+                          ) : proceduresData?.results && proceduresData.results.length > 0 ? (
+                            proceduresData.results
+                              .filter((proc) =>
+                                procedureSearch
+                                  ? proc.name.toLowerCase().includes(procedureSearch.toLowerCase()) ||
+                                    proc.code.toLowerCase().includes(procedureSearch.toLowerCase())
+                                  : true
+                              )
+                              .map((procedure) => (
+                                <div
+                                  key={procedure.id}
+                                  className="flex items-center justify-between p-3 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                                  onClick={() => addProcedureToList(procedure.id, procedure.name, procedure.code, procedure.default_charge)}
+                                >
+                                  <div>
+                                    <div className="font-medium">{procedure.name}</div>
+                                    <div className="text-xs text-muted-foreground">
+                                      {procedure.code} • {procedure.category}
+                                    </div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="font-semibold">₹{parseFloat(procedure.default_charge).toFixed(2)}</div>
+                                    <Button size="sm" variant="ghost" className="h-6 mt-1">
+                                      Add
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))
+                          ) : (
+                            <div className="text-center py-8 text-muted-foreground">No procedures found</div>
+                          )}
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Dialog open={isPackageDialogOpen} onOpenChange={setIsPackageDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Package className="h-4 w-4 mr-1" />
+                        Add Package
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+                      <DialogHeader>
+                        <DialogTitle>Select Package</DialogTitle>
+                        <DialogDescription>Choose a package to add to the bill</DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          {packagesLoading ? (
+                            <div className="text-center py-8 text-muted-foreground">Loading packages...</div>
+                          ) : packagesData?.results && packagesData.results.length > 0 ? (
+                            packagesData.results.map((pkg) => (
+                              <div
+                                key={pkg.id}
+                                className="flex flex-col p-4 border rounded-lg hover:bg-muted/50 cursor-pointer"
+                                onClick={() => addPackageToList(pkg.name, pkg.procedures, pkg.discounted_charge)}
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <div>
+                                    <div className="font-medium text-lg">{pkg.name}</div>
+                                    <div className="text-xs text-muted-foreground">{pkg.code}</div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="text-sm text-muted-foreground line-through">
+                                      ₹{parseFloat(pkg.total_charge).toFixed(2)}
+                                    </div>
+                                    <div className="font-semibold text-lg text-green-600">
+                                      ₹{parseFloat(pkg.discounted_charge).toFixed(2)}
+                                    </div>
+                                    {pkg.discount_percent && (
+                                      <div className="text-xs text-green-600">{pkg.discount_percent}% off</div>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="text-sm text-muted-foreground">
+                                  Includes {pkg.procedures.length} procedures:
+                                  <div className="mt-1">
+                                    {pkg.procedures.map((proc, idx) => (
+                                      <span key={proc.id}>
+                                        {proc.name}
+                                        {idx < pkg.procedures.length - 1 ? ', ' : ''}
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                                <Button size="sm" className="mt-3 w-full">
+                                  Add Package
+                                </Button>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="text-center py-8 text-muted-foreground">No packages found</div>
+                          )}
+                        </div>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4">
