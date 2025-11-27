@@ -7,12 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { DataTable, DataTableColumn } from '@/components/DataTable';
 import OPDVisitFormDrawer from '@/components/OPDVisitFormDrawer';
 import {
@@ -22,15 +16,8 @@ import {
   Calendar,
   DollarSign,
   Clock,
-  Users,
   CheckCircle2,
-  AlertCircle,
-  FileText,
   Stethoscope,
-  Eye,
-  Pencil,
-  Trash2,
-  MoreVertical,
 } from 'lucide-react';
 import { OpdVisit, OpdVisitListParams } from '@/types/opdVisit.types';
 import { format } from 'date-fns';
@@ -147,7 +134,7 @@ export const OPDVisits: React.FC = () => {
     {
       header: 'Visit',
       key: 'visit_number',
-      className: 'w-[12%]',
+      className: 'w-[14%]',
       cell: (visit) => (
         <div className="flex flex-col">
           <span className="font-medium font-mono text-sm">{visit.visit_number}</span>
@@ -163,7 +150,7 @@ export const OPDVisits: React.FC = () => {
     {
       header: 'Patient',
       key: 'patient',
-      className: 'w-[18%]',
+      className: 'w-[20%]',
       cell: (visit) => (
         <div className="flex flex-col">
           <span className="font-medium">{visit.patient_details?.full_name || 'N/A'}</span>
@@ -174,7 +161,7 @@ export const OPDVisits: React.FC = () => {
     {
       header: 'Doctor',
       key: 'doctor',
-      className: 'w-[18%]',
+      className: 'w-[20%]',
       cell: (visit) => (
         <div className="flex flex-col">
           <span className="font-medium">{visit.doctor_details?.full_name || 'N/A'}</span>
@@ -187,7 +174,7 @@ export const OPDVisits: React.FC = () => {
     {
       header: 'Type',
       key: 'type',
-      className: 'w-[12%]',
+      className: 'w-[13%]',
       cell: (visit) => (
         <div className="flex flex-col gap-1">
           <Badge variant="secondary" className="text-xs w-fit">
@@ -205,7 +192,7 @@ export const OPDVisits: React.FC = () => {
     {
       header: 'Status',
       key: 'status',
-      className: 'w-[10%]',
+      className: 'w-[11%]',
       cell: (visit) => {
         const statusConfig = {
           waiting: { label: 'Waiting', className: 'bg-orange-600' },
@@ -235,81 +222,6 @@ export const OPDVisits: React.FC = () => {
           >
             {visit.payment_status ? visit.payment_status.replace('_', ' ').toUpperCase() : 'PENDING'}
           </Badge>
-        </div>
-      ),
-    },
-    {
-      header: 'Actions',
-      key: 'actions',
-      className: 'w-[18%]',
-      cell: (visit) => (
-        <div className="flex items-center justify-end gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleBilling(visit);
-            }}
-            className="h-8"
-          >
-            <DollarSign className="h-3.5 w-3.5 mr-1.5" />
-            Billing
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleConsultation(visit);
-            }}
-            className="h-8"
-          >
-            <Stethoscope className="h-3.5 w-3.5 mr-1.5" />
-            Consult
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                size="sm"
-                variant="ghost"
-                className="h-8 w-8 p-0"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreVertical className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleView(visit);
-                }}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                View Details
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEdit(visit);
-                }}
-              >
-                <Pencil className="h-4 w-4 mr-2" />
-                Edit Visit
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDelete(visit);
-                }}
-                className="text-destructive"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete Visit
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       ),
     },
@@ -586,6 +498,10 @@ export const OPDVisits: React.FC = () => {
                 getRowId={(visit) => visit.id}
                 getRowLabel={(visit) => visit.visit_number}
                 onView={handleView}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onConsultation={handleConsultation}
+                onBilling={handleBilling}
                 emptyTitle="No visits found"
                 emptySubtitle="Try adjusting your search or filters, or create a new visit"
               />
