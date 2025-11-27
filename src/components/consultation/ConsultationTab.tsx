@@ -25,7 +25,7 @@ interface ConsultationTabProps {
 }
 
 export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
-  const { useTemplateGroups, useTemplates, useTemplateFields } = useOPDTemplate();
+  const { useTemplateGroups, useTemplates, useTemplate } = useOPDTemplate();
   const [mode, setMode] = useState<'entry' | 'preview'>('entry');
   const [selectedTemplateGroup, setSelectedTemplateGroup] = useState<string>('');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
@@ -44,13 +44,14 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
     ordering: 'display_order',
   });
 
-  // Fetch fields for selected template
-  // Note: Backend should return options automatically via nested serializer
-  const { data: fieldsData, isLoading: isLoadingFields } = useTemplateFields({
-    template: selectedTemplate ? parseInt(selectedTemplate) : undefined,
-    is_active: true,
-    ordering: 'display_order',
-  });
+  // Fetch template details with fields (includes nested options)
+  const { data: templateData, isLoading: isLoadingTemplate } = useTemplate(
+    selectedTemplate ? parseInt(selectedTemplate) : null
+  );
+
+  // Extract fields from template data
+  const fieldsData = templateData?.fields || [];
+  const isLoadingFields = isLoadingTemplate;
 
   // Reset template selection when group changes
   useEffect(() => {
@@ -79,9 +80,9 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
   useEffect(() => {
     if (fieldsData) {
       console.log('Template Fields:', fieldsData);
-      console.log('First field with options check:', fieldsData.results?.[0]);
-      if (fieldsData.results && fieldsData.results.length > 0) {
-        fieldsData.results.forEach((field, idx) => {
+      console.log('First field with options check:', fieldsData[0]);
+      if (fieldsData.length > 0) {
+        fieldsData.forEach((field, idx) => {
           console.log(`Field ${idx} (${field.field_label}):`, {
             type: field.field_type,
             hasOptions: !!field.options,
@@ -102,7 +103,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
 
   const handleSave = () => {
     console.log('Form Data:', formData);
-    console.log('Fields:', fieldsData?.results);
+    console.log('Fields:', fieldsData);
     toast.success('Consultation saved successfully');
   };
 
@@ -432,14 +433,14 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
 
           {/* Form Fields Content */}
           <div className="p-8 min-h-[600px]">
-            {selectedTemplate && fieldsData?.results && fieldsData.results.length > 0 ? (
+            {selectedTemplate && fieldsData && fieldsData.length > 0 ? (
               <div className="space-y-6">
                 <h3 className="text-lg font-bold border-b-2 border-gray-300 pb-2 mb-4">
                   {templatesData?.results.find(t => t.id.toString() === selectedTemplate)?.name}
                 </h3>
 
                 <div className="grid grid-cols-2 gap-x-8 gap-y-4">
-                  {fieldsData.results
+                  {fieldsData
                     .sort((a, b) => a.display_order - b.display_order)
                     .map((field) => {
                       const value = formData[field.id];
@@ -474,7 +475,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                 </div>
 
                 {/* Check if no fields have values */}
-                {fieldsData.results.every(field => {
+                {fieldsData.every(field => {
                   const value = formData[field.id];
                   return !value || (Array.isArray(value) && value.length === 0) || value === false;
                 }) && (
@@ -632,7 +633,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                 <span>Loading template fields...</span>
               </CardContent>
             </Card>
-          ) : fieldsData?.results && fieldsData.results.length > 0 ? (
+          ) : fieldsData && fieldsData.length > 0 ? (
             <Card>
               <CardHeader>
                 <CardTitle>
@@ -640,7 +641,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {fieldsData.results
+                {fieldsData
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((field) => renderField(field))}
               </CardContent>
