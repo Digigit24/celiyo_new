@@ -37,7 +37,7 @@ export const CRMActivities: React.FC = () => {
   // Check access
   if (!hasCRMAccess) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="p-6 max-w-8xl mx-auto">
         <Card>
           <CardContent className="p-6">
             <div className="text-center">
@@ -248,7 +248,7 @@ export const CRMActivities: React.FC = () => {
     <div className="flex flex-col h-full">
       {/* Header */}
       <div className="flex-shrink-0 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 sm:px-6 py-4">
+        <div className="max-w-8xl mx-auto px-6 py-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold tracking-tight">CRM Activities</h1>
@@ -325,7 +325,7 @@ export const CRMActivities: React.FC = () => {
       {/* Pagination */}
       {activitiesData && activitiesData.count > 0 && (
         <div className="flex-shrink-0 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container mx-auto px-4 sm:px-6 py-3">
+          <div className="max-w-8xl mx-auto px-6 py-3">
             <div className="flex justify-center gap-2 items-center">
               <Button
                 variant="outline"

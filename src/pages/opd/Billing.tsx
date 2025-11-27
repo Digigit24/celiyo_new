@@ -651,7 +651,7 @@ export default function OPDBilling() {
   /* --------------------------------- Render -------------------------------- */
 
   return (
-    <div className="p-6 max-w-[1600px] mx-auto space-y-6">
+    <div className="p-6 max-w-8xl mx-auto space-y-6">
       <style>{`
         @page { size: A4; margin: 12mm; }
         @media print { .no-print { display: none !important; } }

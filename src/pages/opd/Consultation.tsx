@@ -32,7 +32,7 @@ export const OPDConsultation: React.FC = () => {
 
   if (error || !visit) {
     return (
-      <div className="container mx-auto p-6">
+      <div className="p-6 max-w-8xl mx-auto">
         <Card>
           <CardContent className="p-8 text-center">
             <p className="text-destructive">Failed to load visit details</p>
@@ -64,7 +64,7 @@ export const OPDConsultation: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 space-y-6">
+    <div className="p-6 max-w-8xl mx-auto space-y-6">
       {/* Back Button */}
       <div className="flex items-center gap-4">
         <Button

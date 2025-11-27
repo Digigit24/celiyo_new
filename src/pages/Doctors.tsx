@@ -267,7 +267,7 @@ export const Doctors: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4 sm:p-6 space-y-6">
+    <div className="p-6 max-w-8xl mx-auto space-y-6">
       {/* DEBUG: Confirm render */}
       <div style={{ padding: '10px', background: '#f0f0f0', border: '2px solid #ff0000' }}>
         <p style={{ margin: 0 }}>🚨 DEBUG: Doctors component is rendering!</p>
