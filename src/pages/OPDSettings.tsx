@@ -22,7 +22,7 @@ export const OPDSettings: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
+    <div className="p-6 max-w-8xl mx-auto">
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-2">
           <Settings2 className="h-6 w-6" />
