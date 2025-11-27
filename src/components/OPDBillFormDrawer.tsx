@@ -55,8 +55,6 @@ export const OPDBillFormDrawer: React.FC<OPDBillFormDrawerProps> = ({
   const [billItems, setBillItems] = useState<BillItem[]>([]);
   const [procedureOpen, setProcedureOpen] = useState(false);
   const [packageOpen, setPackageOpen] = useState(false);
-  const [selectedProcedure, setSelectedProcedure] = useState<number | null>(null);
-  const [selectedPackage, setSelectedPackage] = useState<number | null>(null);
 
   // Fetch procedures and packages
   const { useActiveProcedureMasters } = useProcedureMaster();
@@ -84,6 +82,13 @@ export const OPDBillFormDrawer: React.FC<OPDBillFormDrawerProps> = ({
     const procedure = procedures.find(p => p.id === procedureId);
     if (!procedure) return;
 
+    // Check if already added
+    const alreadyAdded = billItems.some(item => item.type === 'procedure' && item.itemId === procedureId);
+    if (alreadyAdded) {
+      toast.error('This procedure is already added to the bill');
+      return;
+    }
+
     const newItem: BillItem = {
       id: `proc-${Date.now()}`,
       type: 'procedure',
@@ -96,7 +101,6 @@ export const OPDBillFormDrawer: React.FC<OPDBillFormDrawerProps> = ({
     };
 
     setBillItems([...billItems, newItem]);
-    setSelectedProcedure(null);
     setProcedureOpen(false);
     toast.success(`Added ${procedure.name} to bill`);
   };
@@ -105,6 +109,13 @@ export const OPDBillFormDrawer: React.FC<OPDBillFormDrawerProps> = ({
   const handleAddPackage = (packageId: number) => {
     const pkg = packages.find(p => p.id === packageId);
     if (!pkg) return;
+
+    // Check if already added
+    const alreadyAdded = billItems.some(item => item.type === 'package' && item.itemId === packageId);
+    if (alreadyAdded) {
+      toast.error('This package is already added to the bill');
+      return;
+    }
 
     const newItem: BillItem = {
       id: `pkg-${Date.now()}`,
@@ -118,7 +129,6 @@ export const OPDBillFormDrawer: React.FC<OPDBillFormDrawerProps> = ({
     };
 
     setBillItems([...billItems, newItem]);
-    setSelectedPackage(null);
     setPackageOpen(false);
     toast.success(`Added ${pkg.name} package to bill`);
   };
@@ -180,132 +190,114 @@ export const OPDBillFormDrawer: React.FC<OPDBillFormDrawerProps> = ({
 
         {/* Procedures Tab */}
         <TabsContent value="procedures" className="space-y-4">
-          {/* Add Procedure Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Add Items to Bill</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Add Procedure */}
-              <div className="space-y-2">
-                <Label>Add Procedure</Label>
-                <Popover open={procedureOpen} onOpenChange={setProcedureOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={procedureOpen}
-                      className="w-full justify-between"
-                    >
-                      {selectedProcedure
-                        ? procedures.find((p) => p.id === selectedProcedure)?.name
-                        : "Search and select procedure..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandInput placeholder="Search procedures..." />
-                      <CommandList>
-                        <CommandEmpty>No procedure found.</CommandEmpty>
-                        <CommandGroup>
-                          {proceduresLoading ? (
-                            <CommandItem disabled>Loading procedures...</CommandItem>
-                          ) : (
-                            procedures.map((procedure) => (
-                              <CommandItem
-                                key={procedure.id}
-                                value={`${procedure.name} ${procedure.code}`}
-                                onSelect={() => {
-                                  setSelectedProcedure(procedure.id);
-                                  handleAddProcedure(procedure.id);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedProcedure === procedure.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                <div className="flex flex-col flex-1">
-                                  <span className="font-medium">{procedure.name}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {procedure.code} • {procedure.category} • ₹{procedure.default_charge}
-                                  </span>
-                                </div>
-                              </CommandItem>
-                            ))
-                          )}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
+          {/* Quick Actions - Prominent Add Buttons */}
+          <div className="grid grid-cols-2 gap-3">
+            <Popover open={procedureOpen} onOpenChange={setProcedureOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  size="lg"
+                  variant="default"
+                  className="w-full h-auto py-4 flex flex-col gap-2"
+                >
+                  <Plus className="h-5 w-5" />
+                  <span className="font-semibold">Add Procedure</span>
+                  <span className="text-xs opacity-80">Search from {procedures.length} procedures</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search procedures by name or code..." />
+                  <CommandList>
+                    <CommandEmpty>No procedure found.</CommandEmpty>
+                    <CommandGroup heading="Available Procedures">
+                      {proceduresLoading ? (
+                        <CommandItem disabled>Loading procedures...</CommandItem>
+                      ) : (
+                        procedures.map((procedure) => (
+                          <CommandItem
+                            key={procedure.id}
+                            value={`${procedure.name} ${procedure.code}`}
+                            onSelect={() => {
+                              handleAddProcedure(procedure.id);
+                            }}
+                            className="flex items-start gap-3 py-3"
+                          >
+                            <FileText className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                            <div className="flex flex-col flex-1 gap-1">
+                              <span className="font-medium">{procedure.name}</span>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Badge variant="outline" className="text-xs">
+                                  {procedure.code}
+                                </Badge>
+                                <span>{procedure.category}</span>
+                                <span className="font-semibold text-foreground">₹{procedure.default_charge}</span>
+                              </div>
+                            </div>
+                            <Plus className="h-4 w-4 text-muted-foreground" />
+                          </CommandItem>
+                        ))
+                      )}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
 
-              {/* Add Package */}
-              <div className="space-y-2">
-                <Label>Add Package</Label>
-                <Popover open={packageOpen} onOpenChange={setPackageOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={packageOpen}
-                      className="w-full justify-between"
-                    >
-                      {selectedPackage
-                        ? packages.find((p) => p.id === selectedPackage)?.name
-                        : "Search and select package..."}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-full p-0">
-                    <Command>
-                      <CommandInput placeholder="Search packages..." />
-                      <CommandList>
-                        <CommandEmpty>No package found.</CommandEmpty>
-                        <CommandGroup>
-                          {packagesLoading ? (
-                            <CommandItem disabled>Loading packages...</CommandItem>
-                          ) : (
-                            packages.map((pkg) => (
-                              <CommandItem
-                                key={pkg.id}
-                                value={`${pkg.name} ${pkg.code}`}
-                                onSelect={() => {
-                                  setSelectedPackage(pkg.id);
-                                  handleAddPackage(pkg.id);
-                                }}
-                              >
-                                <Check
-                                  className={cn(
-                                    "mr-2 h-4 w-4",
-                                    selectedPackage === pkg.id ? "opacity-100" : "opacity-0"
-                                  )}
-                                />
-                                <div className="flex flex-col flex-1">
-                                  <span className="font-medium">{pkg.name}</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    {pkg.code} • ₹{pkg.discounted_charge}
-                                    {pkg.discount_percent && (
-                                      <Badge variant="secondary" className="ml-2 text-xs">
-                                        {parseFloat(pkg.discount_percent).toFixed(0)}% off
-                                      </Badge>
-                                    )}
-                                  </span>
-                                </div>
-                              </CommandItem>
-                            ))
-                          )}
-                        </CommandGroup>
-                      </CommandList>
-                    </Command>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </CardContent>
-          </Card>
+            <Popover open={packageOpen} onOpenChange={setPackageOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full h-auto py-4 flex flex-col gap-2 border-2 border-dashed hover:border-solid hover:border-primary"
+                >
+                  <Package className="h-5 w-5" />
+                  <span className="font-semibold">Add Package</span>
+                  <span className="text-xs opacity-80">Search from {packages.length} packages</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[400px] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Search packages by name or code..." />
+                  <CommandList>
+                    <CommandEmpty>No package found.</CommandEmpty>
+                    <CommandGroup heading="Available Packages">
+                      {packagesLoading ? (
+                        <CommandItem disabled>Loading packages...</CommandItem>
+                      ) : (
+                        packages.map((pkg) => (
+                          <CommandItem
+                            key={pkg.id}
+                            value={`${pkg.name} ${pkg.code}`}
+                            onSelect={() => {
+                              handleAddPackage(pkg.id);
+                            }}
+                            className="flex items-start gap-3 py-3"
+                          >
+                            <Package className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                            <div className="flex flex-col flex-1 gap-1">
+                              <span className="font-medium">{pkg.name}</span>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <Badge variant="outline" className="text-xs">
+                                  {pkg.code}
+                                </Badge>
+                                <span className="font-semibold text-foreground">₹{pkg.discounted_charge}</span>
+                                {pkg.discount_percent && (
+                                  <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
+                                    {parseFloat(pkg.discount_percent).toFixed(0)}% OFF
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                            <Plus className="h-4 w-4 text-muted-foreground" />
+                          </CommandItem>
+                        ))
+                      )}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          </div>
 
           {/* Bill Items List */}
           <Card>
