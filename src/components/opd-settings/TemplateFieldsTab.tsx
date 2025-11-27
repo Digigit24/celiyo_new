@@ -279,10 +279,18 @@ export function TemplateFieldsTab() {
       }
 
       try {
+        // Optimistically update UI before API call
+        const updatedFields = localFields.filter((f) => f.id !== fieldId);
+        setLocalFields(updatedFields);
+
         await deleteTemplateField(fieldId);
         toast.success(`Field "${field.field_label}" deleted successfully`);
-        mutate(); // Refresh the list
+
+        // Revalidate to ensure sync with server
+        mutate(undefined, { revalidate: true });
       } catch (error: any) {
+        // Revert optimistic update on error
+        setLocalFields(localFields);
         toast.error(error.message || 'Failed to delete field');
       }
     },
@@ -291,7 +299,8 @@ export function TemplateFieldsTab() {
 
   // Handle field editor success
   const handleFieldEditorSuccess = useCallback(() => {
-    mutate(); // Refresh the list
+    // Use optimistic updates with revalidation
+    mutate(undefined, { revalidate: true });
     setFieldEditorOpen(false);
     setSelectedFieldId(null);
   }, [mutate]);

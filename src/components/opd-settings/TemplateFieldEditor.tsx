@@ -257,6 +257,7 @@ export function TemplateFieldEditor({
 
     try {
       let savedFieldId: number;
+      let fieldOperationSuccess = false;
 
       // Step 1: Create or update the field
       if (mode === 'create') {
@@ -277,7 +278,8 @@ export function TemplateFieldEditor({
         console.log('Creating field with payload:', createPayload);
         const createdField = await createTemplateField(createPayload);
         savedFieldId = createdField.id;
-        toast.success('Field created successfully');
+        fieldOperationSuccess = true;
+        // Don't show success toast yet - wait for options to complete
       } else if (mode === 'edit' && fieldId) {
         const updatePayload: UpdateTemplateFieldPayload = {
           field_type: formData.field_type,
@@ -299,13 +301,14 @@ export function TemplateFieldEditor({
         console.log('Updating field with payload:', updatePayload);
         await updateTemplateField(fieldId, updatePayload);
         savedFieldId = fieldId;
-        toast.success('Field updated successfully');
+        fieldOperationSuccess = true;
+        // Don't show success toast yet - wait for options to complete
       } else {
         throw new Error('Invalid mode or missing field ID');
       }
 
-      // Step 2: Handle options for select/radio/multiselect fields
-      if (FIELD_TYPES_WITH_OPTIONS.includes(formData.field_type)) {
+      // Step 2: Handle options for select/radio/multiselect fields (only in edit mode for separate option operations)
+      if (mode === 'edit' && FIELD_TYPES_WITH_OPTIONS.includes(formData.field_type)) {
         const optionPromises: Promise<any>[] = [];
 
         options.forEach((option, index) => {
@@ -338,6 +341,11 @@ export function TemplateFieldEditor({
         if (optionPromises.length > 0) {
           await Promise.all(optionPromises);
         }
+      }
+
+      // Show success toast only after all operations complete
+      if (fieldOperationSuccess) {
+        toast.success(mode === 'create' ? 'Field created successfully' : 'Field updated successfully');
       }
 
       onSuccess();
