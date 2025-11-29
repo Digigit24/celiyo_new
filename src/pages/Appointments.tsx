@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { DataTable, DataTableColumn } from '@/components/DataTable';
 import AppointmentFormDrawer from '@/components/AppointmentFormDrawer';
+import AppointmentCalendarView from '@/components/AppointmentCalendarView';
 import {
   Loader2,
   Plus,
@@ -18,6 +19,8 @@ import {
   Users,
   CheckCircle2,
   XCircle,
+  List,
+  CalendarDays,
 } from 'lucide-react';
 import { Appointment, AppointmentListParams } from '@/types/appointment.types';
 import { format } from 'date-fns';
@@ -35,6 +38,7 @@ export const Appointments: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
 
   // Debug logging
   console.log('Appointments component rendering...');
@@ -308,10 +312,34 @@ export const Appointments: React.FC = () => {
             Manage patient appointments
           </p>
         </div>
-        <Button onClick={handleCreate} size="default" className="w-full sm:w-auto">
-          <Plus className="h-4 w-4 mr-2" />
-          New Appointment
-        </Button>
+        <div className="flex gap-2 w-full sm:w-auto">
+          {/* View Toggle */}
+          <div className="flex border rounded-lg p-1">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className="gap-2"
+            >
+              <List className="h-4 w-4" />
+              <span className="hidden sm:inline">List</span>
+            </Button>
+            <Button
+              variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('calendar')}
+              className="gap-2"
+            >
+              <CalendarDays className="h-4 w-4" />
+              <span className="hidden sm:inline">Calendar</span>
+            </Button>
+          </div>
+          <Button onClick={handleCreate} size="default" className="flex-1 sm:flex-initial">
+            <Plus className="h-4 w-4 mr-2" />
+            <span className="hidden sm:inline">New Appointment</span>
+            <span className="sm:hidden">New</span>
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -439,65 +467,73 @@ export const Appointments: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Appointments Table */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Appointments List</CardTitle>
-            {appointmentsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          {appointmentsError ? (
-            <div className="p-8 text-center">
-              <p className="text-destructive">{appointmentsError.message}</p>
+      {/* Appointments View - List or Calendar */}
+      {viewMode === 'list' ? (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg">Appointments List</CardTitle>
+              {appointmentsLoading && <Loader2 className="h-4 w-4 animate-spin" />}
             </div>
-          ) : (
-            <>
-              <DataTable
-                rows={appointments}
-                isLoading={appointmentsLoading}
-                columns={columns}
-                renderMobileCard={renderMobileCard}
-                getRowId={(appointment) => appointment.id}
-                getRowLabel={(appointment) => appointment.appointment_number}
-                onView={handleView}
-                onEdit={handleEdit}
-                onDelete={handleDelete}
-                emptyTitle="No appointments found"
-                emptySubtitle="Try adjusting your search or filters, or create a new appointment"
-              />
+          </CardHeader>
+          <CardContent className="p-0">
+            {appointmentsError ? (
+              <div className="p-8 text-center">
+                <p className="text-destructive">{appointmentsError.message}</p>
+              </div>
+            ) : (
+              <>
+                <DataTable
+                  rows={appointments}
+                  isLoading={appointmentsLoading}
+                  columns={columns}
+                  renderMobileCard={renderMobileCard}
+                  getRowId={(appointment) => appointment.id}
+                  getRowLabel={(appointment) => appointment.appointment_number}
+                  onView={handleView}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  emptyTitle="No appointments found"
+                  emptySubtitle="Try adjusting your search or filters, or create a new appointment"
+                />
 
-              {/* Pagination */}
-              {!appointmentsLoading && appointments.length > 0 && (
-                <div className="flex items-center justify-between px-6 py-4 border-t">
-                  <p className="text-sm text-muted-foreground">
-                    Showing {appointments.length} of {totalCount} appointment(s)
-                  </p>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!hasPrevious}
-                      onClick={() => setCurrentPage((p) => p - 1)}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={!hasNext}
-                      onClick={() => setCurrentPage((p) => p + 1)}
-                    >
-                      Next
-                    </Button>
+                {/* Pagination */}
+                {!appointmentsLoading && appointments.length > 0 && (
+                  <div className="flex items-center justify-between px-6 py-4 border-t">
+                    <p className="text-sm text-muted-foreground">
+                      Showing {appointments.length} of {totalCount} appointment(s)
+                    </p>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!hasPrevious}
+                        onClick={() => setCurrentPage((p) => p - 1)}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!hasNext}
+                        onClick={() => setCurrentPage((p) => p + 1)}
+                      >
+                        Next
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <AppointmentCalendarView
+          appointments={appointments}
+          onAppointmentClick={handleView}
+          isLoading={appointmentsLoading}
+        />
+      )}
 
       {/* Drawer */}
       <AppointmentFormDrawer
