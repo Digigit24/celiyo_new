@@ -153,8 +153,11 @@ export const OPDVisits: React.FC = () => {
       className: 'w-[20%]',
       cell: (visit) => (
         <div className="flex flex-col">
-          <span className="font-medium">{visit.patient_details?.full_name || 'N/A'}</span>
-          <span className="text-xs text-muted-foreground">{visit.patient_details?.patient_id} • {visit.patient_details?.mobile_primary}</span>
+          <span className="font-medium">{visit.patient_details?.full_name || visit.patient_name || 'N/A'}</span>
+          <span className="text-xs text-muted-foreground">
+            {visit.patient_details?.patient_id || visit.patient_id || 'N/A'}
+            {visit.patient_details?.mobile_primary && ` • ${visit.patient_details.mobile_primary}`}
+          </span>
         </div>
       ),
     },
@@ -164,7 +167,7 @@ export const OPDVisits: React.FC = () => {
       className: 'w-[20%]',
       cell: (visit) => (
         <div className="flex flex-col">
-          <span className="font-medium">{visit.doctor_details?.full_name || 'N/A'}</span>
+          <span className="font-medium">{visit.doctor_details?.full_name || visit.doctor_name || 'N/A'}</span>
           <span className="text-xs text-muted-foreground">
             {visit.doctor_details?.specialties?.slice(0, 1).map(s => s.name).join(', ')}
           </span>
@@ -265,11 +268,11 @@ export const OPDVisits: React.FC = () => {
         <div className="space-y-1">
           <div className="text-sm">
             <span className="text-muted-foreground">Patient: </span>
-            <span className="font-medium">{visit.patient_details?.full_name || 'N/A'}</span>
+            <span className="font-medium">{visit.patient_details?.full_name || visit.patient_name || 'N/A'}</span>
           </div>
           <div className="text-sm">
             <span className="text-muted-foreground">Doctor: </span>
-            <span className="font-medium">{visit.doctor_details?.full_name || 'N/A'}</span>
+            <span className="font-medium">{visit.doctor_details?.full_name || visit.doctor_name || 'N/A'}</span>
           </div>
         </div>
 

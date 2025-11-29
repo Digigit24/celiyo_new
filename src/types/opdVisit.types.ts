@@ -41,6 +41,11 @@ export interface OpdVisit {
   patient_details?: PatientDetails;
   doctor_details?: DoctorDetails;
 
+  // Patient & Doctor (Flat fields - fallback when nested objects not provided)
+  patient_name?: string;
+  patient_id?: string;
+  doctor_name?: string;
+
   // Visit Details
   visit_date: string;
   visit_time: string;
