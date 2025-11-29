@@ -97,6 +97,13 @@ export const API_CONFIG = {
       COMPLETE: '/appointments/:id/complete/',
       RESCHEDULE: '/appointments/:id/reschedule/',
     },
+    APPOINTMENT_TYPES: {
+      LIST: '/appointment-types/',
+      DETAIL: '/appointment-types/:id/',
+      CREATE: '/appointment-types/',
+      UPDATE: '/appointment-types/:id/',
+      DELETE: '/appointment-types/:id/',
+    },
     OPD: {
       VISITS: {
         LIST: '/opd/visits/',

@@ -6,9 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DataTable, DataTableColumn } from '@/components/DataTable';
 import AppointmentFormDrawer from '@/components/AppointmentFormDrawer';
 import AppointmentCalendarView from '@/components/AppointmentCalendarView';
+import AppointmentTypes from '@/components/AppointmentTypes';
 import {
   Loader2,
   Plus,
@@ -21,6 +23,7 @@ import {
   XCircle,
   List,
   CalendarDays,
+  Tag,
 } from 'lucide-react';
 import { Appointment, AppointmentListParams } from '@/types/appointment.types';
 import { format } from 'date-fns';
@@ -39,6 +42,7 @@ export const Appointments: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'list' | 'calendar'>('list');
+  const [activeTab, setActiveTab] = useState<'appointments' | 'types'>('appointments');
 
   // Debug logging
   console.log('Appointments component rendering...');
@@ -309,38 +313,56 @@ export const Appointments: React.FC = () => {
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Appointments</h1>
           <p className="text-muted-foreground text-sm sm:text-base">
-            Manage patient appointments
+            Manage patient appointments and types
           </p>
         </div>
-        <div className="flex gap-2 w-full sm:w-auto">
-          {/* View Toggle */}
-          <div className="flex border rounded-lg p-1">
-            <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('list')}
-              className="gap-2"
-            >
-              <List className="h-4 w-4" />
-              <span className="hidden sm:inline">List</span>
-            </Button>
-            <Button
-              variant={viewMode === 'calendar' ? 'default' : 'ghost'}
-              size="sm"
-              onClick={() => setViewMode('calendar')}
-              className="gap-2"
-            >
-              <CalendarDays className="h-4 w-4" />
-              <span className="hidden sm:inline">Calendar</span>
+        {activeTab === 'appointments' && (
+          <div className="flex gap-2 w-full sm:w-auto">
+            {/* View Toggle */}
+            <div className="flex border rounded-lg p-1">
+              <Button
+                variant={viewMode === 'list' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('list')}
+                className="gap-2"
+              >
+                <List className="h-4 w-4" />
+                <span className="hidden sm:inline">List</span>
+              </Button>
+              <Button
+                variant={viewMode === 'calendar' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setViewMode('calendar')}
+                className="gap-2"
+              >
+                <CalendarDays className="h-4 w-4" />
+                <span className="hidden sm:inline">Calendar</span>
+              </Button>
+            </div>
+            <Button onClick={handleCreate} size="default" className="flex-1 sm:flex-initial">
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">New Appointment</span>
+              <span className="sm:hidden">New</span>
             </Button>
           </div>
-          <Button onClick={handleCreate} size="default" className="flex-1 sm:flex-initial">
-            <Plus className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">New Appointment</span>
-            <span className="sm:hidden">New</span>
-          </Button>
-        </div>
+        )}
       </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'appointments' | 'types')}>
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="appointments" className="gap-2">
+            <Calendar className="h-4 w-4" />
+            Appointments
+          </TabsTrigger>
+          <TabsTrigger value="types" className="gap-2">
+            <Tag className="h-4 w-4" />
+            Types
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Appointments Tab */}
+        <TabsContent value="appointments" className="space-y-6 mt-6">
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -534,6 +556,13 @@ export const Appointments: React.FC = () => {
           isLoading={appointmentsLoading}
         />
       )}
+        </TabsContent>
+
+        {/* Appointment Types Tab */}
+        <TabsContent value="types" className="mt-6">
+          <AppointmentTypes />
+        </TabsContent>
+      </Tabs>
 
       {/* Drawer */}
       <AppointmentFormDrawer

@@ -23,6 +23,7 @@ import type { Doctor } from '@/types/doctor.types';
 import type { Patient } from '@/types/patient.types';
 import { useDoctor } from '@/hooks/useDoctor';
 import { usePatient } from '@/hooks/usePatient';
+import { useAppointmentType } from '@/hooks/useAppointmentType';
 
 // Validation schemas
 const createAppointmentSchema = z.object({
@@ -74,14 +75,17 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
     const isReadOnly = mode === 'view';
     const isCreateMode = mode === 'create';
 
-    // Fetch doctors and patients for selects
+    // Fetch doctors, patients, and appointment types for selects
     const { useDoctors } = useDoctor();
     const { usePatients } = usePatient();
+    const { useAppointmentTypes } = useAppointmentType();
     const { data: doctorsData } = useDoctors({ page_size: 100 });
     const { data: patientsData } = usePatients({ page_size: 100 });
+    const { data: appointmentTypesData } = useAppointmentTypes({ is_active: true, page_size: 100 });
 
     const doctors = doctorsData?.results || [];
     const patients = patientsData?.results || [];
+    const appointmentTypes = appointmentTypesData?.results || [];
 
     const schema = isCreateMode ? createAppointmentSchema : updateAppointmentSchema;
 
@@ -357,10 +361,17 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
                     <SelectValue placeholder="Select appointment type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="consultation">Consultation</SelectItem>
-                    <SelectItem value="follow_up">Follow Up</SelectItem>
-                    <SelectItem value="emergency">Emergency</SelectItem>
-                    <SelectItem value="routine_checkup">Routine Checkup</SelectItem>
+                    {appointmentTypes.length > 0 ? (
+                      appointmentTypes.map((type) => (
+                        <SelectItem key={type.id} value={type.code}>
+                          {type.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="" disabled>
+                        No appointment types available
+                      </SelectItem>
+                    )}
                   </SelectContent>
                 </Select>
               )}
