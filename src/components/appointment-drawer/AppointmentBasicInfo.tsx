@@ -345,7 +345,7 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
               {isReadOnly ? (
                 <div className="pt-2">
                   <Badge variant="secondary">
-                    {watchedAppointmentType?.replace('_', ' ').toUpperCase()}
+                    {(typeof watchedAppointmentType === 'string' ? watchedAppointmentType.replace('_', ' ').toUpperCase() : 'N/A')}
                   </Badge>
                 </div>
               ) : (
@@ -372,7 +372,7 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
               {isReadOnly ? (
                 <div className="pt-2">
                   <Badge variant={watchedConsultationMode === 'online' ? 'default' : 'secondary'}>
-                    {watchedConsultationMode?.toUpperCase()}
+                    {(typeof watchedConsultationMode === 'string' ? watchedConsultationMode.toUpperCase() : 'N/A')}
                   </Badge>
                 </div>
               ) : (
@@ -506,7 +506,7 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
                         watchedStatus === 'confirmed' ? 'bg-purple-600' : ''
                       }
                     >
-                      {watchedStatus?.replace('_', ' ').toUpperCase()}
+                      {(typeof watchedStatus === 'string' ? watchedStatus.replace('_', ' ').toUpperCase() : 'N/A')}
                     </Badge>
                   </div>
                 ) : (
@@ -538,7 +538,7 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
                       variant={watchedPaymentStatus === 'paid' ? 'default' : 'secondary'}
                       className={watchedPaymentStatus === 'paid' ? 'bg-green-600' : ''}
                     >
-                      {watchedPaymentStatus?.replace('_', ' ').toUpperCase()}
+                      {(typeof watchedPaymentStatus === 'string' ? watchedPaymentStatus.replace('_', ' ').toUpperCase() : 'N/A')}
                     </Badge>
                   </div>
                 ) : (
