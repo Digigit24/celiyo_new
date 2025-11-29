@@ -368,9 +368,9 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
                         </SelectItem>
                       ))
                     ) : (
-                      <SelectItem value="" disabled>
+                      <div className="p-2 text-sm text-muted-foreground text-center">
                         No appointment types available
-                      </SelectItem>
+                      </div>
                     )}
                   </SelectContent>
                 </Select>
