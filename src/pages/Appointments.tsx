@@ -168,7 +168,7 @@ export const Appointments: React.FC = () => {
       key: 'type',
       cell: (appointment) => (
         <Badge variant="secondary" className="text-xs">
-          {appointment.appointment_type.replace('_', ' ').toUpperCase()}
+          {appointment.appointment_type?.replace('_', ' ').toUpperCase() || 'N/A'}
         </Badge>
       ),
     },
@@ -177,7 +177,7 @@ export const Appointments: React.FC = () => {
       key: 'mode',
       cell: (appointment) => (
         <Badge variant={appointment.consultation_mode === 'online' ? 'default' : 'outline'} className="text-xs">
-          {appointment.consultation_mode.toUpperCase()}
+          {appointment.consultation_mode?.toUpperCase() || 'N/A'}
         </Badge>
       ),
     },
@@ -206,12 +206,12 @@ export const Appointments: React.FC = () => {
       key: 'payment',
       cell: (appointment) => (
         <div className="flex flex-col text-sm">
-          <span className="font-medium">${appointment.fee_amount}</span>
+          <span className="font-medium">${appointment.fee_amount ?? 0}</span>
           <Badge
             variant={appointment.payment_status === 'paid' ? 'default' : 'secondary'}
             className={`text-xs ${appointment.payment_status === 'paid' ? 'bg-green-600' : ''}`}
           >
-            {appointment.payment_status.replace('_', ' ').toUpperCase()}
+            {appointment.payment_status?.replace('_', ' ').toUpperCase() || 'N/A'}
           </Badge>
         </div>
       ),
@@ -244,7 +244,7 @@ export const Appointments: React.FC = () => {
                 : 'bg-blue-600'
             }
           >
-            {appointment.status.replace('_', ' ').toUpperCase()}
+            {appointment.status?.replace('_', ' ').toUpperCase() || 'N/A'}
           </Badge>
         </div>
 
@@ -263,16 +263,16 @@ export const Appointments: React.FC = () => {
         {/* Details Row */}
         <div className="flex flex-wrap gap-2">
           <Badge variant="secondary" className="text-xs">
-            {appointment.appointment_type.replace('_', ' ').toUpperCase()}
+            {appointment.appointment_type?.replace('_', ' ').toUpperCase() || 'N/A'}
           </Badge>
           <Badge variant={appointment.consultation_mode === 'online' ? 'default' : 'outline'} className="text-xs">
-            {appointment.consultation_mode.toUpperCase()}
+            {appointment.consultation_mode?.toUpperCase() || 'N/A'}
           </Badge>
           <Badge
             variant={appointment.payment_status === 'paid' ? 'default' : 'secondary'}
             className={`text-xs ${appointment.payment_status === 'paid' ? 'bg-green-600' : ''}`}
           >
-            ${appointment.fee_amount} • {appointment.payment_status.replace('_', ' ').toUpperCase()}
+            ${appointment.fee_amount ?? 0} • {appointment.payment_status?.replace('_', ' ').toUpperCase() || 'N/A'}
           </Badge>
         </div>
 
