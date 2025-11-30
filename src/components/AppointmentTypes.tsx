@@ -4,39 +4,24 @@ import { useAppointmentType } from '@/hooks/useAppointmentType';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { DataTable, DataTableColumn } from '@/components/DataTable';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Switch } from '@/components/ui/switch';
 import { Loader2, Plus, Tag } from 'lucide-react';
 import { toast } from 'sonner';
-import type { AppointmentType, AppointmentTypeCreateData, AppointmentTypeUpdateData } from '@/types/appointmentType.types';
+import type { AppointmentType } from '@/types/appointmentType.types';
+import AppointmentTypeDetailsDrawer from '@/components/appointment-type-drawer/AppointmentTypeDetailsDrawer';
 
 export const AppointmentTypes: React.FC = () => {
   const {
     useAppointmentTypes,
-    createAppointmentType,
-    updateAppointmentType,
     deleteAppointmentType,
   } = useAppointmentType();
 
   // State
   const [searchTerm, setSearchTerm] = useState('');
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState<'create' | 'edit'>('create');
-  const [selectedType, setSelectedType] = useState<AppointmentType | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Form state
-  const [formData, setFormData] = useState({
-    name: '',
-    code: '',
-    description: '',
-    is_active: true,
-    color: '#3b82f6',
-  });
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<'view' | 'edit' | 'create'>('create');
+  const [selectedTypeId, setSelectedTypeId] = useState<number | null>(null);
 
   // Fetch appointment types
   const { data: typesData, isLoading, mutate } = useAppointmentTypes({
@@ -52,29 +37,21 @@ export const AppointmentTypes: React.FC = () => {
   };
 
   const handleCreate = () => {
-    setFormData({
-      name: '',
-      code: '',
-      description: '',
-      is_active: true,
-      color: '#3b82f6',
-    });
-    setSelectedType(null);
-    setDialogMode('create');
-    setDialogOpen(true);
+    setSelectedTypeId(null);
+    setDrawerMode('create');
+    setDrawerOpen(true);
+  };
+
+  const handleView = (type: AppointmentType) => {
+    setSelectedTypeId(type.id);
+    setDrawerMode('view');
+    setDrawerOpen(true);
   };
 
   const handleEdit = (type: AppointmentType) => {
-    setFormData({
-      name: type.name,
-      code: type.code,
-      description: type.description || '',
-      is_active: type.is_active,
-      color: type.color || '#3b82f6',
-    });
-    setSelectedType(type);
-    setDialogMode('edit');
-    setDialogOpen(true);
+    setSelectedTypeId(type.id);
+    setDrawerMode('edit');
+    setDrawerOpen(true);
   };
 
   const handleDelete = async (type: AppointmentType) => {
@@ -89,47 +66,12 @@ export const AppointmentTypes: React.FC = () => {
     }
   };
 
-  const handleSave = async () => {
-    // Validation
-    if (!formData.name.trim()) {
-      toast.error('Please enter a name');
-      return;
-    }
-    if (!formData.code.trim()) {
-      toast.error('Please enter a code');
-      return;
-    }
+  const handleDrawerSuccess = () => {
+    mutate(); // Refresh the list
+  };
 
-    setIsSaving(true);
-    try {
-      if (dialogMode === 'create') {
-        const payload: AppointmentTypeCreateData = {
-          name: formData.name.trim(),
-          code: formData.code.trim(),
-          description: formData.description.trim() || undefined,
-          is_active: formData.is_active,
-          color: formData.color,
-        };
-        await createAppointmentType(payload);
-        toast.success('Appointment type created successfully');
-      } else if (selectedType) {
-        const payload: AppointmentTypeUpdateData = {
-          name: formData.name.trim(),
-          code: formData.code.trim(),
-          description: formData.description.trim() || undefined,
-          is_active: formData.is_active,
-          color: formData.color,
-        };
-        await updateAppointmentType(selectedType.id, payload);
-        toast.success('Appointment type updated successfully');
-      }
-      mutate();
-      setDialogOpen(false);
-    } catch (error: any) {
-      toast.error(error?.message || 'Failed to save appointment type');
-    } finally {
-      setIsSaving(false);
-    }
+  const handleDrawerDelete = (id: number) => {
+    mutate(); // Refresh the list after deletion
   };
 
   // DataTable columns
@@ -263,6 +205,7 @@ export const AppointmentTypes: React.FC = () => {
             renderMobileCard={renderMobileCard}
             getRowId={(type) => type.id}
             getRowLabel={(type) => type.name}
+            onRowClick={handleView}
             onEdit={handleEdit}
             onDelete={handleDelete}
             emptyTitle="No appointment types found"
@@ -271,97 +214,16 @@ export const AppointmentTypes: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Create/Edit Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>
-              {dialogMode === 'create' ? 'Create Appointment Type' : 'Edit Appointment Type'}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Consultation"
-              />
-            </div>
-
-            {/* Code */}
-            <div className="space-y-2">
-              <Label htmlFor="code">Code *</Label>
-              <Input
-                id="code"
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value.toLowerCase().replace(/\s+/g, '_') })}
-                placeholder="e.g., consultation"
-                className="font-mono"
-              />
-              <p className="text-xs text-muted-foreground">
-                Unique identifier (lowercase, use underscores)
-              </p>
-            </div>
-
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder="Describe this appointment type..."
-                rows={3}
-              />
-            </div>
-
-            {/* Color */}
-            <div className="space-y-2">
-              <Label htmlFor="color">Color</Label>
-              <div className="flex gap-2 items-center">
-                <Input
-                  id="color"
-                  type="color"
-                  value={formData.color}
-                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  className="w-20 h-10 cursor-pointer"
-                />
-                <Input
-                  type="text"
-                  value={formData.color}
-                  onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                  className="font-mono flex-1"
-                  placeholder="#3b82f6"
-                />
-              </div>
-            </div>
-
-            {/* Active Status */}
-            <div className="flex items-center justify-between space-x-2">
-              <Label htmlFor="is_active" className="cursor-pointer">Active Status</Label>
-              <Switch
-                id="is_active"
-                checked={formData.is_active}
-                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)} disabled={isSaving}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {dialogMode === 'create' ? 'Create' : 'Save Changes'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Appointment Type Details Drawer */}
+      <AppointmentTypeDetailsDrawer
+        open={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        appointmentTypeId={selectedTypeId}
+        mode={drawerMode}
+        onSuccess={handleDrawerSuccess}
+        onDelete={handleDrawerDelete}
+        onModeChange={setDrawerMode}
+      />
     </div>
   );
 };

@@ -1,5 +1,7 @@
 // src/types/appointment.types.ts
 
+import type { AppointmentType } from './appointmentType.types';
+
 export interface Doctor {
   id: number;
   full_name: string;
@@ -22,27 +24,35 @@ export interface Patient {
 
 export interface Appointment {
   id: number;
-  appointment_number: string;
+  appointment_id: string;
+  appointment_number: string; // Alias for appointment_id for backward compatibility
   doctor: Doctor;
   patient: Patient;
   appointment_date: string;
   appointment_time: string;
+  end_time?: string;
   duration_minutes: number;
-  appointment_type: 'consultation' | 'follow_up' | 'emergency' | 'routine_checkup';
-  status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
-  consultation_mode: 'online' | 'offline';
-  reason_for_visit?: string;
+  appointment_type?: AppointmentType;
+  status: 'scheduled' | 'confirmed' | 'checked_in' | 'in_progress' | 'completed' | 'cancelled' | 'no_show' | 'rescheduled';
+  priority: 'low' | 'normal' | 'high' | 'urgent';
+  chief_complaint?: string;
   symptoms?: string;
-  diagnosis?: string;
-  prescription?: string;
   notes?: string;
-  fee_amount: string;
-  payment_status: 'pending' | 'paid' | 'partially_paid' | 'refunded';
-  cancellation_reason?: string;
-  cancelled_by?: string;
-  cancelled_at?: string;
   is_follow_up: boolean;
-  parent_appointment_id?: number;
+  original_appointment?: number;
+  consultation_fee: string;
+  visit?: number;
+  check_in_time?: string;
+  checked_in_at?: string;
+  actual_start_time?: string;
+  actual_end_time?: string;
+  waiting_time_minutes?: number;
+  cancelled_at?: string;
+  cancelled_by_id?: string;
+  cancellation_reason?: string;
+  approved_by_id?: string;
+  approved_at?: string;
+  created_by_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -50,11 +60,12 @@ export interface Appointment {
 export interface AppointmentListParams {
   doctor_id?: number;
   patient_id?: number;
+  date_from?: string;
+  date_to?: string;
   appointment_date?: string;
-  appointment_type?: 'consultation' | 'follow_up' | 'emergency' | 'routine_checkup';
-  status?: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
-  consultation_mode?: 'online' | 'offline';
-  payment_status?: 'pending' | 'paid' | 'partially_paid' | 'refunded';
+  appointment_type_id?: number;
+  status?: string; // Comma-separated status values
+  priority?: string; // Comma-separated priority values
   search?: string;
   ordering?: string;
   page?: number;
@@ -67,31 +78,34 @@ export interface AppointmentCreateData {
   patient_id: number;
   appointment_date: string;
   appointment_time: string;
+  end_time?: string;
   duration_minutes?: number;
-  appointment_type: 'consultation' | 'follow_up' | 'emergency' | 'routine_checkup';
-  consultation_mode: 'online' | 'offline';
-  reason_for_visit?: string;
+  appointment_type_id?: number;
+  status?: 'scheduled' | 'confirmed' | 'checked_in' | 'in_progress' | 'completed' | 'cancelled' | 'no_show' | 'rescheduled';
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  chief_complaint?: string;
   symptoms?: string;
   notes?: string;
-  fee_amount?: number;
   is_follow_up?: boolean;
-  parent_appointment_id?: number;
+  original_appointment_id?: number;
+  consultation_fee?: number | string;
 }
 
 export interface AppointmentUpdateData {
   appointment_date?: string;
   appointment_time?: string;
+  end_time?: string;
   duration_minutes?: number;
-  appointment_type?: 'consultation' | 'follow_up' | 'emergency' | 'routine_checkup';
-  status?: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
-  consultation_mode?: 'online' | 'offline';
-  reason_for_visit?: string;
+  appointment_type_id?: number;
+  status?: 'scheduled' | 'confirmed' | 'checked_in' | 'in_progress' | 'completed' | 'cancelled' | 'no_show' | 'rescheduled';
+  priority?: 'low' | 'normal' | 'high' | 'urgent';
+  chief_complaint?: string;
   symptoms?: string;
-  diagnosis?: string;
-  prescription?: string;
   notes?: string;
-  fee_amount?: number;
-  payment_status?: 'pending' | 'paid' | 'partially_paid' | 'refunded';
+  is_follow_up?: boolean;
+  original_appointment_id?: number;
+  consultation_fee?: number | string;
+  cancellation_reason?: string;
 }
 
 export interface AppointmentCancelData {
