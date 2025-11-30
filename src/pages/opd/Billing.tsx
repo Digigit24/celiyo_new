@@ -90,6 +90,7 @@ type BillingDetailsPanelProps = {
   onChange: (field: string, value: string) => void;
   onFormatReceived: () => void;
   onSave: () => void;
+  isEditMode?: boolean;
 };
 
 const BillingDetailsPanel = memo(function BillingDetailsPanel({
@@ -97,6 +98,7 @@ const BillingDetailsPanel = memo(function BillingDetailsPanel({
   onChange,
   onFormatReceived,
   onSave,
+  isEditMode = false,
 }: BillingDetailsPanelProps) {
   return (
     <Card className="sticky top-6">
@@ -233,7 +235,7 @@ const BillingDetailsPanel = memo(function BillingDetailsPanel({
         <div className="flex flex-col gap-2">
           <Button variant="default" className="w-full" size="lg" onClick={onSave}>
             <Receipt className="mr-2 h-4 w-4" />
-            Save Bill
+            {isEditMode ? 'Update Bill' : 'Save Bill'}
           </Button>
           <Button variant="outline" className="w-full">
             Cancel
@@ -251,7 +253,7 @@ export default function OPDBilling() {
   const navigate = useNavigate();
 
   const { useOpdVisitById } = useOpdVisit();
-  const { useOPDBills, createBill } = useOPDBill();
+  const { useOPDBills, createBill, updateBill } = useOPDBill();
   const { useActiveProcedureMasters } = useProcedureMaster();
   const { useActiveProcedurePackages, useProcedurePackageById } = useProcedurePackage();
 
@@ -259,6 +261,10 @@ export default function OPDBilling() {
   const { data: billsData, isLoading: billsLoading, mutate: mutateBills } = useOPDBills({ visit: visitId ? parseInt(visitId) : undefined });
   const { data: proceduresData, isLoading: proceduresLoading } = useActiveProcedureMasters();
   const { data: packagesData, isLoading: packagesLoading } = useActiveProcedurePackages();
+
+  // Get existing bill if any
+  const existingBill = billsData?.results?.[0] || null;
+  const isEditMode = !!existingBill;
 
   // Print/Export ref (ONLY this area prints/exports)
   const printAreaRef = useRef<HTMLDivElement>(null);
@@ -348,6 +354,60 @@ export default function OPDBilling() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visit]);
+
+  // Load existing bill data if available
+  useEffect(() => {
+    if (existingBill && !billsLoading) {
+      // Load OPD form data from existing bill
+      const consultationItem = existingBill.items?.find(item => item.particular === 'consultation');
+      if (consultationItem) {
+        setOpdFormData((prev) => ({
+          ...prev,
+          receiptNo: existingBill.bill_number || prev.receiptNo,
+          billDate: existingBill.bill_date || prev.billDate,
+          doctor: existingBill.doctor?.toString() || prev.doctor,
+          opdAmount: consultationItem.unit_charge || '0.00',
+          remarks: existingBill.notes || '',
+        }));
+      }
+
+      // Load procedure items from existing bill
+      const procedureItems = existingBill.items
+        ?.filter(item => item.particular === 'procedure')
+        .map((item, idx) => ({
+          id: `existing-${item.id || idx}`,
+          procedure_id: 0, // We don't have the procedure ID in the bill items
+          procedure_name: item.particular_name || '',
+          procedure_code: '',
+          quantity: item.quantity || 1,
+          unit_price: item.unit_charge || '0.00',
+          total_price: item.total_amount || '0.00',
+          notes: item.note || '',
+        })) || [];
+
+      setProcedureFormData((prev) => ({
+        ...prev,
+        procedures: procedureItems,
+      }));
+
+      // Load billing data
+      setBillingData({
+        opdTotal: consultationItem?.total_amount || '0.00',
+        procedureTotal: existingBill.items
+          ?.filter(item => item.particular === 'procedure')
+          .reduce((sum, item) => sum + parseFloat(item.total_amount || '0'), 0)
+          .toFixed(2) || '0.00',
+        subtotal: existingBill.subtotal_amount || '0.00',
+        discount: existingBill.discount_amount || '0.00',
+        discountPercent: existingBill.discount_percent || '0',
+        totalAmount: existingBill.total_amount || '0.00',
+        paymentMode: (existingBill.payment_mode as any) || 'cash',
+        receivedAmount: existingBill.received_amount || '0.00',
+        balanceAmount: existingBill.balance_amount || '0.00',
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingBill, billsLoading]);
 
   // Recalculate billing totals
   const recalculateBilling = (
@@ -575,9 +635,17 @@ export default function OPDBilling() {
         notes: opdFormData.remarks,
       };
 
-      await createBill(billData as any);
-      mutateBills();
-      alert('Bill created successfully!');
+      if (isEditMode && existingBill) {
+        // Update existing bill
+        await updateBill(existingBill.id, billData as any);
+        mutateBills();
+        alert('Bill updated successfully!');
+      } else {
+        // Create new bill
+        await createBill(billData as any);
+        mutateBills();
+        alert('Bill created successfully!');
+      }
     } catch (error) {
       console.error('Failed to save bill:', error);
       alert('Failed to save bill. Please try again.');
@@ -690,7 +758,14 @@ export default function OPDBilling() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Billing</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold">Billing</h1>
+              {isEditMode && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
+                  Editing Existing Bill
+                </Badge>
+              )}
+            </div>
             <div className="flex items-center gap-3 mt-1">
               <p className="text-muted-foreground">Visit #{visit.visit_number}</p>
               <Badge variant="outline" className="capitalize">
@@ -921,6 +996,7 @@ export default function OPDBilling() {
                 if (!isNaN(num)) setBillingData((prev) => ({ ...prev, receivedAmount: num.toFixed(2) }));
               }}
               onSave={handleSaveBill}
+              isEditMode={isEditMode}
             />
           </div>
         </TabsContent>
@@ -1153,6 +1229,7 @@ export default function OPDBilling() {
                 if (!isNaN(num)) setBillingData((prev) => ({ ...prev, receivedAmount: num.toFixed(2) }));
               }}
               onSave={handleSaveBill}
+              isEditMode={isEditMode}
             />
           </div>
         </TabsContent>
@@ -1338,6 +1415,7 @@ export default function OPDBilling() {
                 if (!isNaN(num)) setBillingData((prev) => ({ ...prev, receivedAmount: num.toFixed(2) }));
               }}
               onSave={handleSaveBill}
+              isEditMode={isEditMode}
             />
           </div>
 
