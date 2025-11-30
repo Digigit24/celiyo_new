@@ -65,19 +65,26 @@ export const ProcedurePackages: React.FC = () => {
     {
       header: 'Procedures',
       key: 'procedures',
-      cell: (pkg) => (
-        <div className="flex flex-col text-xs">
-          <span className="font-medium">{pkg.procedures.length} procedures</span>
-          {pkg.procedures.slice(0, 2).map((proc, idx) => (
-            <span key={idx} className="text-muted-foreground truncate max-w-xs">
-              • {proc.name}
-            </span>
-          ))}
-          {pkg.procedures.length > 2 && (
-            <span className="text-muted-foreground">+{pkg.procedures.length - 2} more</span>
-          )}
-        </div>
-      ),
+      cell: (pkg) => {
+        const count = pkg.procedures?.length ?? pkg.procedure_count ?? 0;
+        return (
+          <div className="flex flex-col text-xs">
+            <span className="font-medium">{count} procedure{count !== 1 ? 's' : ''}</span>
+            {pkg.procedures && pkg.procedures.length > 0 && (
+              <>
+                {pkg.procedures.slice(0, 2).map((proc, idx) => (
+                  <span key={idx} className="text-muted-foreground truncate max-w-xs">
+                    • {proc.name}
+                  </span>
+                ))}
+                {pkg.procedures.length > 2 && (
+                  <span className="text-muted-foreground">+{pkg.procedures.length - 2} more</span>
+                )}
+              </>
+            )}
+          </div>
+        );
+      },
     },
     {
       header: 'Pricing',
@@ -97,11 +104,14 @@ export const ProcedurePackages: React.FC = () => {
     {
       header: 'Savings',
       key: 'savings_amount',
-      cell: (pkg) => (
-        <span className="font-medium text-green-600">
-          {pkg.savings_amount ? `₹${pkg.savings_amount}` : 'N/A'}
-        </span>
-      ),
+      cell: (pkg) => {
+        const savings = pkg.savings_amount || pkg.savings;
+        return (
+          <span className="font-medium text-green-600">
+            {savings ? `₹${savings}` : 'N/A'}
+          </span>
+        );
+      },
     },
     {
       header: 'Status',
@@ -187,7 +197,7 @@ export const ProcedurePackages: React.FC = () => {
               <div>
                 <p className="text-xs sm:text-sm text-muted-foreground">Total Savings</p>
                 <p className="text-xl sm:text-2xl font-bold">
-                  ₹{packages.reduce((sum, p) => sum + parseFloat(p.savings_amount || '0'), 0).toFixed(0)}
+                  ₹{packages.reduce((sum, p) => sum + parseFloat(p.savings_amount || p.savings || '0'), 0).toFixed(0)}
                 </p>
               </div>
             </div>
