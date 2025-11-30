@@ -31,31 +31,34 @@ const createAppointmentSchema = z.object({
   patient_id: z.coerce.number().min(1, 'Patient is required'),
   appointment_date: z.string().min(1, 'Appointment date is required'),
   appointment_time: z.string().min(1, 'Appointment time is required'),
+  end_time: z.string().optional(),
   duration_minutes: z.coerce.number().min(5, 'Duration must be at least 5 minutes').default(30),
-  appointment_type: z.enum(['consultation', 'follow_up', 'emergency', 'routine_checkup']),
-  consultation_mode: z.enum(['online', 'offline']),
-  reason_for_visit: z.string().optional(),
+  appointment_type_id: z.coerce.number().optional(),
+  status: z.enum(['scheduled', 'confirmed', 'checked_in', 'in_progress', 'completed', 'cancelled', 'no_show', 'rescheduled']).optional(),
+  priority: z.enum(['low', 'normal', 'high', 'urgent']).optional(),
+  chief_complaint: z.string().optional(),
   symptoms: z.string().optional(),
   notes: z.string().optional(),
-  fee_amount: z.coerce.number().min(0, 'Fee cannot be negative').optional(),
+  consultation_fee: z.coerce.number().min(0, 'Fee cannot be negative').optional(),
   is_follow_up: z.boolean().optional(),
-  parent_appointment_id: z.coerce.number().optional(),
+  original_appointment_id: z.coerce.number().optional(),
 });
 
 const updateAppointmentSchema = z.object({
   appointment_date: z.string().optional(),
   appointment_time: z.string().optional(),
+  end_time: z.string().optional(),
   duration_minutes: z.coerce.number().min(5).optional(),
-  appointment_type: z.enum(['consultation', 'follow_up', 'emergency', 'routine_checkup']).optional(),
-  status: z.enum(['scheduled', 'confirmed', 'in_progress', 'completed', 'cancelled', 'no_show']).optional(),
-  consultation_mode: z.enum(['online', 'offline']).optional(),
-  reason_for_visit: z.string().optional(),
+  appointment_type_id: z.coerce.number().optional(),
+  status: z.enum(['scheduled', 'confirmed', 'checked_in', 'in_progress', 'completed', 'cancelled', 'no_show', 'rescheduled']).optional(),
+  priority: z.enum(['low', 'normal', 'high', 'urgent']).optional(),
+  chief_complaint: z.string().optional(),
   symptoms: z.string().optional(),
-  diagnosis: z.string().optional(),
-  prescription: z.string().optional(),
   notes: z.string().optional(),
-  fee_amount: z.coerce.number().min(0).optional(),
-  payment_status: z.enum(['pending', 'paid', 'partially_paid', 'refunded']).optional(),
+  consultation_fee: z.coerce.number().min(0).optional(),
+  is_follow_up: z.boolean().optional(),
+  original_appointment_id: z.coerce.number().optional(),
+  cancellation_reason: z.string().optional(),
 });
 
 type AppointmentFormData = z.infer<typeof createAppointmentSchema> | z.infer<typeof updateAppointmentSchema>;
@@ -95,29 +98,31 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
           patient_id: 0,
           appointment_date: '',
           appointment_time: '',
+          end_time: '',
           duration_minutes: 30,
-          appointment_type: 'consultation' as const,
-          consultation_mode: 'offline' as const,
-          reason_for_visit: '',
+          appointment_type_id: 0,
+          status: 'scheduled' as const,
+          priority: 'normal' as const,
+          chief_complaint: '',
           symptoms: '',
           notes: '',
-          fee_amount: 0,
+          consultation_fee: 0,
           is_follow_up: false,
         }
       : {
           appointment_date: appointment?.appointment_date || '',
           appointment_time: appointment?.appointment_time || '',
+          end_time: appointment?.end_time || '',
           duration_minutes: appointment?.duration_minutes || 30,
-          appointment_type: appointment?.appointment_type || 'consultation',
+          appointment_type_id: appointment?.appointment_type?.id || 0,
           status: appointment?.status || 'scheduled',
-          consultation_mode: appointment?.consultation_mode || 'offline',
-          reason_for_visit: appointment?.reason_for_visit || '',
+          priority: appointment?.priority || 'normal',
+          chief_complaint: appointment?.chief_complaint || '',
           symptoms: appointment?.symptoms || '',
-          diagnosis: appointment?.diagnosis || '',
-          prescription: appointment?.prescription || '',
           notes: appointment?.notes || '',
-          fee_amount: parseFloat(appointment?.fee_amount || '0'),
-          payment_status: appointment?.payment_status || 'pending',
+          consultation_fee: parseFloat(appointment?.consultation_fee || '0'),
+          is_follow_up: appointment?.is_follow_up || false,
+          original_appointment_id: appointment?.original_appointment || undefined,
         };
 
     const {
@@ -132,23 +137,25 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
     });
 
     const watchedDoctorId = watch('doctor_id');
-    const watchedAppointmentType = watch('appointment_type');
-    const watchedConsultationMode = watch('consultation_mode');
+    const watchedAppointmentTypeId = watch('appointment_type_id');
     const watchedStatus = watch('status');
-    const watchedPaymentStatus = watch('payment_status');
+    const watchedPriority = watch('priority');
 
-    // Auto-set fee based on selected doctor
+    // Auto-set fee based on selected doctor and appointment type
     useEffect(() => {
       if (isCreateMode && watchedDoctorId) {
         const selectedDoctor = doctors.find(d => d.id === Number(watchedDoctorId));
+        const selectedAppointmentType = appointmentTypes.find(t => t.id === Number(watchedAppointmentTypeId));
+
         if (selectedDoctor) {
-          const fee = watchedAppointmentType === 'follow_up'
-            ? parseFloat(selectedDoctor.follow_up_fee || '0')
+          // Prefer appointment type's base fee if available, otherwise use doctor's consultation fee
+          const fee = selectedAppointmentType
+            ? parseFloat(selectedAppointmentType.base_consultation_fee || '0')
             : parseFloat(selectedDoctor.consultation_fee || '0');
-          setValue('fee_amount', fee);
+          setValue('consultation_fee', fee);
         }
       }
-    }, [watchedDoctorId, watchedAppointmentType, doctors, isCreateMode, setValue]);
+    }, [watchedDoctorId, watchedAppointmentTypeId, doctors, appointmentTypes, isCreateMode, setValue]);
 
     // Expose form validation and data collection to parent
     useImperativeHandle(ref, () => ({
@@ -162,32 +169,35 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
                   patient_id: Number(data.patient_id),
                   appointment_date: data.appointment_date,
                   appointment_time: data.appointment_time,
+                  end_time: data.end_time,
                   duration_minutes: Number(data.duration_minutes),
-                  appointment_type: data.appointment_type,
-                  consultation_mode: data.consultation_mode,
-                  reason_for_visit: data.reason_for_visit,
+                  appointment_type_id: data.appointment_type_id ? Number(data.appointment_type_id) : undefined,
+                  status: data.status,
+                  priority: data.priority,
+                  chief_complaint: data.chief_complaint,
                   symptoms: data.symptoms,
                   notes: data.notes,
-                  fee_amount: Number(data.fee_amount),
+                  consultation_fee: Number(data.consultation_fee),
                   is_follow_up: data.is_follow_up,
-                  parent_appointment_id: data.parent_appointment_id,
+                  original_appointment_id: data.original_appointment_id,
                 };
                 resolve(payload);
               } else {
                 const payload: AppointmentUpdateData = {
                   appointment_date: data.appointment_date,
                   appointment_time: data.appointment_time,
+                  end_time: data.end_time,
                   duration_minutes: Number(data.duration_minutes),
-                  appointment_type: data.appointment_type,
+                  appointment_type_id: data.appointment_type_id ? Number(data.appointment_type_id) : undefined,
                   status: data.status,
-                  consultation_mode: data.consultation_mode,
-                  reason_for_visit: data.reason_for_visit,
+                  priority: data.priority,
+                  chief_complaint: data.chief_complaint,
                   symptoms: data.symptoms,
-                  diagnosis: data.diagnosis,
-                  prescription: data.prescription,
                   notes: data.notes,
-                  fee_amount: Number(data.fee_amount),
-                  payment_status: data.payment_status,
+                  consultation_fee: Number(data.consultation_fee),
+                  is_follow_up: data.is_follow_up,
+                  original_appointment_id: data.original_appointment_id,
+                  cancellation_reason: data.cancellation_reason,
                 };
                 resolve(payload);
               }
@@ -345,77 +355,96 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
 
             {/* Appointment Type */}
             <div className="space-y-2">
-              <Label htmlFor="appointment_type">Appointment Type *</Label>
+              <Label htmlFor="appointment_type_id">Appointment Type</Label>
               {isReadOnly ? (
                 <div className="pt-2">
-                  <Badge variant="secondary">
-                    {(typeof watchedAppointmentType === 'string' ? watchedAppointmentType.replace('_', ' ').toUpperCase() : 'N/A')}
-                  </Badge>
+                  {appointment?.appointment_type ? (
+                    <Badge variant="secondary" style={{ backgroundColor: appointment.appointment_type.color }}>
+                      {appointment.appointment_type.name}
+                    </Badge>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">Not specified</span>
+                  )}
                 </div>
               ) : (
                 <Select
-                  value={watchedAppointmentType}
-                  onValueChange={(value) => setValue('appointment_type', value)}
+                  value={String(watchedAppointmentTypeId || '')}
+                  onValueChange={(value) => setValue('appointment_type_id', value ? Number(value) : 0)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select appointment type" />
+                    <SelectValue placeholder="Select appointment type (optional)" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="0">None</SelectItem>
                     {appointmentTypes.length > 0 ? (
                       appointmentTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.code}>
-                          {type.name}
+                        <SelectItem key={type.id} value={String(type.id)}>
+                          <div className="flex items-center gap-2">
+                            <div
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: type.color || '#3b82f6' }}
+                            />
+                            {type.name}
+                          </div>
                         </SelectItem>
                       ))
                     ) : (
-                      <div className="p-2 text-sm text-muted-foreground text-center">
+                      <SelectItem value="-1" disabled>
                         No appointment types available
-                      </div>
+                      </SelectItem>
                     )}
                   </SelectContent>
                 </Select>
               )}
             </div>
 
-            {/* Consultation Mode */}
+            {/* Priority */}
             <div className="space-y-2">
-              <Label htmlFor="consultation_mode">Consultation Mode *</Label>
+              <Label htmlFor="priority">Priority</Label>
               {isReadOnly ? (
                 <div className="pt-2">
-                  <Badge variant={watchedConsultationMode === 'online' ? 'default' : 'secondary'}>
-                    {(typeof watchedConsultationMode === 'string' ? watchedConsultationMode.toUpperCase() : 'N/A')}
+                  <Badge
+                    variant={
+                      watchedPriority === 'urgent' ? 'destructive' :
+                      watchedPriority === 'high' ? 'default' :
+                      'secondary'
+                    }
+                  >
+                    {(typeof watchedPriority === 'string' ? watchedPriority.toUpperCase() : 'NORMAL')}
                   </Badge>
                 </div>
               ) : (
                 <Select
-                  value={watchedConsultationMode}
-                  onValueChange={(value) => setValue('consultation_mode', value)}
+                  value={watchedPriority || 'normal'}
+                  onValueChange={(value) => setValue('priority', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select consultation mode" />
+                    <SelectValue placeholder="Select priority" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="online">Online</SelectItem>
-                    <SelectItem value="offline">Offline</SelectItem>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                    <SelectItem value="urgent">Urgent</SelectItem>
                   </SelectContent>
                 </Select>
               )}
             </div>
 
-            {/* Fee Amount */}
+            {/* Consultation Fee */}
             <div className="space-y-2">
-              <Label htmlFor="fee_amount">Fee Amount</Label>
+              <Label htmlFor="consultation_fee">Consultation Fee</Label>
               <Input
-                id="fee_amount"
+                id="consultation_fee"
                 type="number"
                 min="0"
                 step="0.01"
-                {...register('fee_amount')}
+                {...register('consultation_fee')}
                 disabled={isReadOnly}
-                className={errors.fee_amount ? 'border-destructive' : ''}
+                className={errors.consultation_fee ? 'border-destructive' : ''}
               />
-              {errors.fee_amount && (
-                <p className="text-sm text-destructive">{errors.fee_amount.message as string}</p>
+              {errors.consultation_fee && (
+                <p className="text-sm text-destructive">{errors.consultation_fee.message as string}</p>
               )}
             </div>
           </CardContent>
@@ -427,13 +456,13 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
             <CardTitle className="text-lg">Medical Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Reason for Visit */}
+            {/* Chief Complaint */}
             <div className="space-y-2">
-              <Label htmlFor="reason_for_visit">Reason for Visit</Label>
+              <Label htmlFor="chief_complaint">Chief Complaint</Label>
               <Textarea
-                id="reason_for_visit"
-                {...register('reason_for_visit')}
-                placeholder="Brief description of the visit reason..."
+                id="chief_complaint"
+                {...register('chief_complaint')}
+                placeholder="Primary reason for the appointment..."
                 disabled={isReadOnly}
                 rows={2}
               />
@@ -451,34 +480,6 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
               />
             </div>
 
-            {/* Diagnosis (Edit Mode Only) */}
-            {!isCreateMode && (
-              <div className="space-y-2">
-                <Label htmlFor="diagnosis">Diagnosis</Label>
-                <Textarea
-                  id="diagnosis"
-                  {...register('diagnosis')}
-                  placeholder="Doctor's diagnosis..."
-                  disabled={isReadOnly}
-                  rows={3}
-                />
-              </div>
-            )}
-
-            {/* Prescription (Edit Mode Only) */}
-            {!isCreateMode && (
-              <div className="space-y-2">
-                <Label htmlFor="prescription">Prescription</Label>
-                <Textarea
-                  id="prescription"
-                  {...register('prescription')}
-                  placeholder="Prescribed medications and treatment..."
-                  disabled={isReadOnly}
-                  rows={3}
-                />
-              </div>
-            )}
-
             {/* Notes */}
             <div className="space-y-2">
               <Label htmlFor="notes">Additional Notes</Label>
@@ -493,16 +494,16 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
           </CardContent>
         </Card>
 
-        {/* Status & Payment (Edit/View Mode Only) */}
+        {/* Status (Edit/View Mode Only) */}
         {!isCreateMode && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Status & Payment</CardTitle>
+              <CardTitle className="text-lg">Appointment Status</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Status */}
               <div className="space-y-2">
-                <Label htmlFor="status">Appointment Status</Label>
+                <Label htmlFor="status">Status</Label>
                 {isReadOnly ? (
                   <div className="pt-2">
                     <Badge
@@ -514,7 +515,8 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
                       className={
                         watchedStatus === 'completed' ? 'bg-green-600' :
                         watchedStatus === 'in_progress' ? 'bg-blue-600' :
-                        watchedStatus === 'confirmed' ? 'bg-purple-600' : ''
+                        watchedStatus === 'confirmed' ? 'bg-purple-600' :
+                        watchedStatus === 'checked_in' ? 'bg-yellow-600' : ''
                       }
                     >
                       {(typeof watchedStatus === 'string' ? watchedStatus.replace('_', ' ').toUpperCase() : 'N/A')}
@@ -531,40 +533,12 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
                     <SelectContent>
                       <SelectItem value="scheduled">Scheduled</SelectItem>
                       <SelectItem value="confirmed">Confirmed</SelectItem>
+                      <SelectItem value="checked_in">Checked In</SelectItem>
                       <SelectItem value="in_progress">In Progress</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="cancelled">Cancelled</SelectItem>
                       <SelectItem value="no_show">No Show</SelectItem>
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-
-              {/* Payment Status */}
-              <div className="space-y-2">
-                <Label htmlFor="payment_status">Payment Status</Label>
-                {isReadOnly ? (
-                  <div className="pt-2">
-                    <Badge
-                      variant={watchedPaymentStatus === 'paid' ? 'default' : 'secondary'}
-                      className={watchedPaymentStatus === 'paid' ? 'bg-green-600' : ''}
-                    >
-                      {(typeof watchedPaymentStatus === 'string' ? watchedPaymentStatus.replace('_', ' ').toUpperCase() : 'N/A')}
-                    </Badge>
-                  </div>
-                ) : (
-                  <Select
-                    value={watchedPaymentStatus}
-                    onValueChange={(value) => setValue('payment_status', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select payment status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="paid">Paid</SelectItem>
-                      <SelectItem value="partially_paid">Partially Paid</SelectItem>
-                      <SelectItem value="refunded">Refunded</SelectItem>
+                      <SelectItem value="rescheduled">Rescheduled</SelectItem>
                     </SelectContent>
                   </Select>
                 )}

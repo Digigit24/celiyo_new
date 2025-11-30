@@ -98,11 +98,11 @@ export const API_CONFIG = {
       RESCHEDULE: '/appointments/:id/reschedule/',
     },
     APPOINTMENT_TYPES: {
-      LIST: '/appointment-types/',
-      DETAIL: '/appointment-types/:id/',
-      CREATE: '/appointment-types/',
-      UPDATE: '/appointment-types/:id/',
-      DELETE: '/appointment-types/:id/',
+      LIST: '/appointments/types/',
+      DETAIL: '/appointments/types/:id/',
+      CREATE: '/appointments/types/',
+      UPDATE: '/appointments/types/:id/',
+      DELETE: '/appointments/types/:id/',
     },
     OPD: {
       VISITS: {

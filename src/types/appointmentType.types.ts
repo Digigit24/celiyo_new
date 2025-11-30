@@ -2,9 +2,12 @@
 
 export interface AppointmentType {
   id: number;
+  tenant_id: string;
   name: string;
   code: string;
   description?: string;
+  duration_default: number;
+  base_consultation_fee: string;
   is_active: boolean;
   color?: string;
   created_at: string;
@@ -24,6 +27,8 @@ export interface AppointmentTypeCreateData {
   name: string;
   code: string;
   description?: string;
+  duration_default?: number;
+  base_consultation_fee?: string | number;
   is_active?: boolean;
   color?: string;
 }
@@ -32,6 +37,8 @@ export interface AppointmentTypeUpdateData {
   name?: string;
   code?: string;
   description?: string;
+  duration_default?: number;
+  base_consultation_fee?: string | number;
   is_active?: boolean;
   color?: string;
 }

@@ -34,6 +34,8 @@ export const AppointmentTypes: React.FC = () => {
     name: '',
     code: '',
     description: '',
+    duration_default: 30,
+    base_consultation_fee: '0.00',
     is_active: true,
     color: '#3b82f6',
   });
@@ -56,6 +58,8 @@ export const AppointmentTypes: React.FC = () => {
       name: '',
       code: '',
       description: '',
+      duration_default: 30,
+      base_consultation_fee: '0.00',
       is_active: true,
       color: '#3b82f6',
     });
@@ -69,6 +73,8 @@ export const AppointmentTypes: React.FC = () => {
       name: type.name,
       code: type.code,
       description: type.description || '',
+      duration_default: type.duration_default || 30,
+      base_consultation_fee: type.base_consultation_fee || '0.00',
       is_active: type.is_active,
       color: type.color || '#3b82f6',
     });
@@ -99,6 +105,10 @@ export const AppointmentTypes: React.FC = () => {
       toast.error('Please enter a code');
       return;
     }
+    if (formData.duration_default < 5) {
+      toast.error('Duration must be at least 5 minutes');
+      return;
+    }
 
     setIsSaving(true);
     try {
@@ -107,6 +117,8 @@ export const AppointmentTypes: React.FC = () => {
           name: formData.name.trim(),
           code: formData.code.trim(),
           description: formData.description.trim() || undefined,
+          duration_default: formData.duration_default,
+          base_consultation_fee: formData.base_consultation_fee,
           is_active: formData.is_active,
           color: formData.color,
         };
@@ -117,6 +129,8 @@ export const AppointmentTypes: React.FC = () => {
           name: formData.name.trim(),
           code: formData.code.trim(),
           description: formData.description.trim() || undefined,
+          duration_default: formData.duration_default,
+          base_consultation_fee: formData.base_consultation_fee,
           is_active: formData.is_active,
           color: formData.color,
         };
@@ -317,6 +331,40 @@ export const AppointmentTypes: React.FC = () => {
                 placeholder="Describe this appointment type..."
                 rows={3}
               />
+            </div>
+
+            {/* Duration Default */}
+            <div className="space-y-2">
+              <Label htmlFor="duration_default">Default Duration (minutes) *</Label>
+              <Input
+                id="duration_default"
+                type="number"
+                min="5"
+                step="5"
+                value={formData.duration_default}
+                onChange={(e) => setFormData({ ...formData, duration_default: parseInt(e.target.value) || 30 })}
+                placeholder="30"
+              />
+              <p className="text-xs text-muted-foreground">
+                Default appointment duration in minutes
+              </p>
+            </div>
+
+            {/* Base Consultation Fee */}
+            <div className="space-y-2">
+              <Label htmlFor="base_consultation_fee">Base Consultation Fee</Label>
+              <Input
+                id="base_consultation_fee"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.base_consultation_fee}
+                onChange={(e) => setFormData({ ...formData, base_consultation_fee: e.target.value })}
+                placeholder="0.00"
+              />
+              <p className="text-xs text-muted-foreground">
+                Default fee for this appointment type
+              </p>
             </div>
 
             {/* Color */}
