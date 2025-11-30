@@ -98,7 +98,6 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
           patient_id: 0,
           appointment_date: '',
           appointment_time: '',
-          end_time: '',
           duration_minutes: 30,
           appointment_type_id: 0,
           status: 'scheduled' as const,
@@ -169,35 +168,35 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
                   patient_id: Number(data.patient_id),
                   appointment_date: data.appointment_date,
                   appointment_time: data.appointment_time,
-                  end_time: data.end_time,
+                  end_time: data.end_time || undefined, // Don't send empty string
                   duration_minutes: Number(data.duration_minutes),
                   appointment_type_id: data.appointment_type_id ? Number(data.appointment_type_id) : undefined,
                   status: data.status,
                   priority: data.priority,
-                  chief_complaint: data.chief_complaint,
-                  symptoms: data.symptoms,
-                  notes: data.notes,
+                  chief_complaint: data.chief_complaint || undefined,
+                  symptoms: data.symptoms || undefined,
+                  notes: data.notes || undefined,
                   consultation_fee: Number(data.consultation_fee),
                   is_follow_up: data.is_follow_up,
-                  original_appointment_id: data.original_appointment_id,
+                  original_appointment_id: data.original_appointment_id || undefined,
                 };
                 resolve(payload);
               } else {
                 const payload: AppointmentUpdateData = {
                   appointment_date: data.appointment_date,
                   appointment_time: data.appointment_time,
-                  end_time: data.end_time,
+                  end_time: data.end_time || undefined, // Don't send empty string
                   duration_minutes: Number(data.duration_minutes),
                   appointment_type_id: data.appointment_type_id ? Number(data.appointment_type_id) : undefined,
                   status: data.status,
                   priority: data.priority,
-                  chief_complaint: data.chief_complaint,
-                  symptoms: data.symptoms,
-                  notes: data.notes,
+                  chief_complaint: data.chief_complaint || undefined,
+                  symptoms: data.symptoms || undefined,
+                  notes: data.notes || undefined,
                   consultation_fee: Number(data.consultation_fee),
                   is_follow_up: data.is_follow_up,
-                  original_appointment_id: data.original_appointment_id,
-                  cancellation_reason: data.cancellation_reason,
+                  original_appointment_id: data.original_appointment_id || undefined,
+                  cancellation_reason: data.cancellation_reason || undefined,
                 };
                 resolve(payload);
               }
