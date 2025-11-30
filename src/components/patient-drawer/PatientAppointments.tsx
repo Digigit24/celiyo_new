@@ -61,7 +61,9 @@ export default function PatientAppointments({ patientId, onViewAppointment }: Pa
 
         return (
           <div className="flex flex-col">
-            <span className="font-medium font-mono text-sm">{appointment.appointment_number}</span>
+            <span className="font-medium font-mono text-sm">
+              {(appointment as any).appointment_id || appointment.appointment_number}
+            </span>
             <span className="text-xs text-muted-foreground">
               {format(new Date(appointmentDateTime), dateFormat)}
             </span>
@@ -149,7 +151,9 @@ export default function PatientAppointments({ patientId, onViewAppointment }: Pa
         {/* Header Row */}
         <div className="flex items-start justify-between">
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-base font-mono">{appointment.appointment_number}</h3>
+            <h3 className="font-semibold text-base font-mono">
+              {(appointment as any).appointment_id || appointment.appointment_number}
+            </h3>
             <p className="text-sm text-muted-foreground">
               {format(new Date(appointmentDateTime), dateFormat)}
             </p>
@@ -285,7 +289,7 @@ export default function PatientAppointments({ patientId, onViewAppointment }: Pa
                 columns={columns}
                 renderMobileCard={renderMobileCard}
                 getRowId={(appointment) => appointment.id}
-                getRowLabel={(appointment) => appointment.appointment_number}
+                getRowLabel={(appointment) => (appointment as any).appointment_id || appointment.appointment_number}
                 onView={handleView}
                 emptyTitle="No appointments found"
                 emptySubtitle="This patient has no appointment history"

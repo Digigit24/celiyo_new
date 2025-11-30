@@ -65,9 +65,11 @@ class AppointmentService {
   // Get appointments by patient ID
   async getAppointmentsByPatient(patientId: number, params?: AppointmentListParams): Promise<PaginatedResponse<Appointment>> {
     try {
-      const queryString = buildQueryString(params);
+      // Use the generic appointments list endpoint with patient_id as query parameter
+      const queryParams = { ...params, patient_id: patientId };
+      const queryString = buildQueryString(queryParams);
       const response = await hmsClient.get<PaginatedResponse<Appointment>>(
-        `${API_CONFIG.HMS.APPOINTMENTS.BY_PATIENT.replace(':patient_id', patientId.toString())}${queryString}`
+        `${API_CONFIG.HMS.APPOINTMENTS.LIST}${queryString}`
       );
       return response.data;
     } catch (error: any) {
