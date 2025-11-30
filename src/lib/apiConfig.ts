@@ -173,6 +173,33 @@ export const API_CONFIG = {
         UPDATE: '/opd/visit-attachments/:id/',
         DELETE: '/opd/visit-attachments/:id/',
       }
+    },
+    PAYMENTS: {
+      CATEGORIES: {
+        LIST: '/payments/categories/',
+        DETAIL: '/payments/categories/:id/',
+        CREATE: '/payments/categories/',
+        UPDATE: '/payments/categories/:id/',
+        DELETE: '/payments/categories/:id/',
+      },
+      TRANSACTIONS: {
+        LIST: '/payments/transactions/',
+        DETAIL: '/payments/transactions/:id/',
+        CREATE: '/payments/transactions/',
+        UPDATE: '/payments/transactions/:id/',
+        DELETE: '/payments/transactions/:id/',
+        STATISTICS: '/payments/transactions/statistics/',
+        RECONCILE: '/payments/transactions/:id/reconcile/',
+      },
+      ACCOUNTING_PERIODS: {
+        LIST: '/payments/accounting-periods/',
+        DETAIL: '/payments/accounting-periods/:id/',
+        CREATE: '/payments/accounting-periods/',
+        UPDATE: '/payments/accounting-periods/:id/',
+        DELETE: '/payments/accounting-periods/:id/',
+        RECALCULATE: '/payments/accounting-periods/:id/recalculate/',
+        CLOSE: '/payments/accounting-periods/:id/close/',
+      },
     }
   },
 
