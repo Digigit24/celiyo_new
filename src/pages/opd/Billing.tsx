@@ -6,6 +6,7 @@ import { useOpdVisit } from '@/hooks/useOpdVisit';
 import { useOPDBill } from '@/hooks/useOPDBill';
 import { useProcedureMaster } from '@/hooks/useProcedureMaster';
 import { useProcedurePackage } from '@/hooks/useProcedurePackage';
+import { procedurePackageService } from '@/services/procedurePackage.service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -499,29 +500,15 @@ export default function OPDBilling() {
     try {
       setLoadingPackageId(packageId);
 
-      // Fetch full package details with procedures
-      const response = await fetch(
-        `${import.meta.env.VITE_HMS_API_URL || 'https://hms.celiyo.com/api'}/opd/procedure-packages/${packageId}/`,
-        {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch package details');
-      }
-
-      const packageData = await response.json();
+      // Fetch full package details with procedures using the service
+      const packageData = await procedurePackageService.getProcedurePackageById(packageId);
 
       if (!packageData.procedures || packageData.procedures.length === 0) {
         alert('This package has no procedures associated with it.');
         return;
       }
 
-      const newProcedures: ProcedureItem[] = packageData.procedures.map((proc: any) => ({
+      const newProcedures: ProcedureItem[] = packageData.procedures.map((proc) => ({
         id: `temp-${Date.now()}-${Math.random()}-${proc.id}`,
         procedure_id: proc.id,
         procedure_name: proc.name,
