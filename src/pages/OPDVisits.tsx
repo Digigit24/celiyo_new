@@ -34,7 +34,7 @@ export const OPDVisits: React.FC = () => {
 
   // State for search and filters
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'waiting' | 'in_progress' | 'completed' | 'cancelled' | ''>('');
+  const [statusFilter, setStatusFilter] = useState<'waiting' | 'in_consultation' | 'in_progress' | 'completed' | 'cancelled' | ''>('');
   const [currentPage, setCurrentPage] = useState(1);
 
   // Drawer state
@@ -71,7 +71,7 @@ export const OPDVisits: React.FC = () => {
     setCurrentPage(1);
   };
 
-  const handleStatusFilter = (status: 'waiting' | 'in_progress' | 'completed' | 'cancelled' | '') => {
+  const handleStatusFilter = (status: 'waiting' | 'in_consultation' | 'in_progress' | 'completed' | 'cancelled' | '') => {
     setStatusFilter(status);
     setCurrentPage(1);
   };
@@ -153,8 +153,11 @@ export const OPDVisits: React.FC = () => {
       className: 'w-[20%]',
       cell: (visit) => (
         <div className="flex flex-col">
-          <span className="font-medium">{visit.patient_details?.full_name || 'N/A'}</span>
-          <span className="text-xs text-muted-foreground">{visit.patient_details?.patient_id} • {visit.patient_details?.mobile_primary}</span>
+          <span className="font-medium">{visit.patient_details?.full_name || visit.patient_name || 'N/A'}</span>
+          <span className="text-xs text-muted-foreground">
+            {visit.patient_details?.patient_id || visit.patient_id || 'N/A'}
+            {visit.patient_details?.mobile_primary && ` • ${visit.patient_details.mobile_primary}`}
+          </span>
         </div>
       ),
     },
@@ -164,7 +167,7 @@ export const OPDVisits: React.FC = () => {
       className: 'w-[20%]',
       cell: (visit) => (
         <div className="flex flex-col">
-          <span className="font-medium">{visit.doctor_details?.full_name || 'N/A'}</span>
+          <span className="font-medium">{visit.doctor_details?.full_name || visit.doctor_name || 'N/A'}</span>
           <span className="text-xs text-muted-foreground">
             {visit.doctor_details?.specialties?.slice(0, 1).map(s => s.name).join(', ')}
           </span>
@@ -196,6 +199,7 @@ export const OPDVisits: React.FC = () => {
       cell: (visit) => {
         const statusConfig = {
           waiting: { label: 'Waiting', className: 'bg-orange-600' },
+          in_consultation: { label: 'In Consultation', className: 'bg-blue-600' },
           in_progress: { label: 'In Progress', className: 'bg-blue-600' },
           completed: { label: 'Completed', className: 'bg-green-600' },
           cancelled: { label: 'Cancelled', className: 'bg-red-600' },
@@ -247,7 +251,7 @@ export const OPDVisits: React.FC = () => {
             className={
               visit.status === 'completed'
                 ? 'bg-green-600'
-                : visit.status === 'in_progress'
+                : visit.status === 'in_consultation' || visit.status === 'in_progress'
                 ? 'bg-blue-600'
                 : visit.status === 'waiting'
                 ? 'bg-orange-600'
@@ -264,11 +268,11 @@ export const OPDVisits: React.FC = () => {
         <div className="space-y-1">
           <div className="text-sm">
             <span className="text-muted-foreground">Patient: </span>
-            <span className="font-medium">{visit.patient_details?.full_name || 'N/A'}</span>
+            <span className="font-medium">{visit.patient_details?.full_name || visit.patient_name || 'N/A'}</span>
           </div>
           <div className="text-sm">
             <span className="text-muted-foreground">Doctor: </span>
-            <span className="font-medium">{visit.doctor_details?.full_name || 'N/A'}</span>
+            <span className="font-medium">{visit.doctor_details?.full_name || visit.doctor_name || 'N/A'}</span>
           </div>
         </div>
 
@@ -455,6 +459,13 @@ export const OPDVisits: React.FC = () => {
                 onClick={() => handleStatusFilter('waiting')}
               >
                 Waiting
+              </Button>
+              <Button
+                variant={statusFilter === 'in_consultation' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => handleStatusFilter('in_consultation')}
+              >
+                In Consultation
               </Button>
               <Button
                 variant={statusFilter === 'in_progress' ? 'default' : 'outline'}

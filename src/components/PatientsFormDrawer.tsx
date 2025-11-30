@@ -1,13 +1,17 @@
 // src/components/PatientsFormDrawer.tsx
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Pencil, Trash2, Phone, Mail, FileText } from 'lucide-react';
+import { Pencil, Trash2, Phone, Mail, FileText, Calendar, DollarSign, ClipboardList } from 'lucide-react';
 import { toast } from 'sonner';
 
 import type { Patient, PatientCreateData, PatientUpdateData } from '@/types/patient.types';
 import { usePatient } from '@/hooks/usePatient';
 
 import PatientBasicInfo from './patient-drawer/PatientBasicInfo';
+import PatientVisitHistory from './patient-drawer/PatientVisitHistory';
+import PatientBillingHistory from './patient-drawer/PatientBillingHistory';
+import PatientAppointments from './patient-drawer/PatientAppointments';
+import OPDVisitFormDrawer from './OPDVisitFormDrawer';
 import { SideDrawer, type DrawerActionButton, type DrawerHeaderAction } from '@/components/SideDrawer';
 
 // Form handle interface for collecting form values
@@ -37,6 +41,10 @@ export default function PatientsFormDrawer({
   const [activeTab, setActiveTab] = useState('basic');
   const [currentMode, setCurrentMode] = useState(mode);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Visit drawer state
+  const [visitDrawerOpen, setVisitDrawerOpen] = useState(false);
+  const [selectedVisitId, setSelectedVisitId] = useState<number | null>(null);
 
   // Hooks
   const {
@@ -103,6 +111,17 @@ export default function PatientsFormDrawer({
       }
     }
   }, [patientId, patient, deletePatient, onDelete, handleClose]);
+
+  const handleViewVisit = useCallback((visitId: number) => {
+    setSelectedVisitId(visitId);
+    setVisitDrawerOpen(true);
+  }, []);
+
+  const handleViewAppointment = useCallback((appointmentId: number) => {
+    // You can implement appointment drawer navigation here if needed
+    console.log('View appointment:', appointmentId);
+    toast.info('Appointment details coming soon');
+  }, []);
 
   const handleSave = useCallback(async () => {
     setIsSaving(true);
@@ -258,8 +277,27 @@ export default function PatientsFormDrawer({
   const drawerContent = (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-1">
-          <TabsTrigger value="basic">Patient Information</TabsTrigger>
+        <TabsList className={`grid w-full ${currentMode === 'view' && patient ? 'grid-cols-4' : 'grid-cols-1'}`}>
+          <TabsTrigger value="basic">
+            <FileText className="h-4 w-4 mr-2" />
+            Information
+          </TabsTrigger>
+          {currentMode === 'view' && patient && (
+            <>
+              <TabsTrigger value="visits">
+                <ClipboardList className="h-4 w-4 mr-2" />
+                Visits
+              </TabsTrigger>
+              <TabsTrigger value="billing">
+                <DollarSign className="h-4 w-4 mr-2" />
+                Billing
+              </TabsTrigger>
+              <TabsTrigger value="appointments">
+                <Calendar className="h-4 w-4 mr-2" />
+                Appointments
+              </TabsTrigger>
+            </>
+          )}
         </TabsList>
 
         <TabsContent value="basic" className="mt-6 space-y-6">
@@ -270,29 +308,61 @@ export default function PatientsFormDrawer({
             onSuccess={handleSuccess}
           />
         </TabsContent>
+
+        {currentMode === 'view' && patient && (
+          <>
+            <TabsContent value="visits" className="mt-6">
+              <PatientVisitHistory patientId={patient.id} onViewVisit={handleViewVisit} />
+            </TabsContent>
+
+            <TabsContent value="billing" className="mt-6">
+              <PatientBillingHistory patientId={patient.id} />
+            </TabsContent>
+
+            <TabsContent value="appointments" className="mt-6">
+              <PatientAppointments patientId={patient.id} onViewAppointment={handleViewAppointment} />
+            </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   );
 
   return (
-    <SideDrawer
-      open={open}
-      onOpenChange={onOpenChange}
-      title={drawerTitle}
-      description={drawerDescription}
-      mode={currentMode}
-      headerActions={headerActions}
-      isLoading={isLoading}
-      loadingText="Loading patient data..."
-      size="lg"
-      footerButtons={footerButtons}
-      footerAlignment="right"
-      showBackButton={true}
-      resizable={true}
-      storageKey="patient-drawer-width"
-      onClose={handleClose}
-    >
-      {drawerContent}
-    </SideDrawer>
+    <>
+      <SideDrawer
+        open={open}
+        onOpenChange={onOpenChange}
+        title={drawerTitle}
+        description={drawerDescription}
+        mode={currentMode}
+        headerActions={headerActions}
+        isLoading={isLoading}
+        loadingText="Loading patient data..."
+        size="lg"
+        footerButtons={footerButtons}
+        footerAlignment="right"
+        showBackButton={true}
+        resizable={true}
+        storageKey="patient-drawer-width"
+        onClose={handleClose}
+      >
+        {drawerContent}
+      </SideDrawer>
+
+      {/* Visit Details Drawer */}
+      {patient && (
+        <OPDVisitFormDrawer
+          open={visitDrawerOpen}
+          onOpenChange={setVisitDrawerOpen}
+          visitId={selectedVisitId}
+          mode="view"
+          onSuccess={() => {
+            // Refresh visit history when visit is updated
+            setVisitDrawerOpen(false);
+          }}
+        />
+      )}
+    </>
   );
 }

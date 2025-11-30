@@ -6,6 +6,7 @@ import { useOpdVisit } from '@/hooks/useOpdVisit';
 import { useOPDBill } from '@/hooks/useOPDBill';
 import { useProcedureMaster } from '@/hooks/useProcedureMaster';
 import { useProcedurePackage } from '@/hooks/useProcedurePackage';
+import { procedurePackageService } from '@/services/procedurePackage.service';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -89,6 +90,7 @@ type BillingDetailsPanelProps = {
   onChange: (field: string, value: string) => void;
   onFormatReceived: () => void;
   onSave: () => void;
+  isEditMode?: boolean;
 };
 
 const BillingDetailsPanel = memo(function BillingDetailsPanel({
@@ -96,6 +98,7 @@ const BillingDetailsPanel = memo(function BillingDetailsPanel({
   onChange,
   onFormatReceived,
   onSave,
+  isEditMode = false,
 }: BillingDetailsPanelProps) {
   return (
     <Card className="sticky top-6">
@@ -232,7 +235,7 @@ const BillingDetailsPanel = memo(function BillingDetailsPanel({
         <div className="flex flex-col gap-2">
           <Button variant="default" className="w-full" size="lg" onClick={onSave}>
             <Receipt className="mr-2 h-4 w-4" />
-            Save Bill
+            {isEditMode ? 'Update Bill' : 'Save Bill'}
           </Button>
           <Button variant="outline" className="w-full">
             Cancel
@@ -250,14 +253,36 @@ export default function OPDBilling() {
   const navigate = useNavigate();
 
   const { useOpdVisitById } = useOpdVisit();
-  const { useOPDBills, createBill } = useOPDBill();
+  const { useOPDBills, createBill, updateBill } = useOPDBill();
   const { useActiveProcedureMasters } = useProcedureMaster();
-  const { useActiveProcedurePackages } = useProcedurePackage();
+  const { useActiveProcedurePackages, useProcedurePackageById } = useProcedurePackage();
 
   const { data: visit, isLoading: visitLoading, error: visitError } = useOpdVisitById(visitId ? parseInt(visitId) : null);
-  const { data: billsData, isLoading: billsLoading, mutate: mutateBills } = useOPDBills({ visit: visitId ? parseInt(visitId) : undefined });
+
+  // Fetch bills for current visit (to check if bill exists)
+  const { data: visitBillsData, isLoading: visitBillsLoading, mutate: mutateVisitBills } = useOPDBills({ visit: visitId ? parseInt(visitId) : undefined });
+
+  // Fetch all bills for the patient (for bill history)
+  const { data: patientBillsData, isLoading: patientBillsLoading } = useOPDBills({
+    patient: visit?.patient,
+    ordering: '-bill_date',  // Order by latest first
+  });
+
   const { data: proceduresData, isLoading: proceduresLoading } = useActiveProcedureMasters();
   const { data: packagesData, isLoading: packagesLoading } = useActiveProcedurePackages();
+
+  // Get existing bill for current visit if any
+  const existingBill = visitBillsData?.results?.[0] || null;
+  const isEditMode = !!existingBill;
+
+  // Get all bills for patient history
+  const patientBills = patientBillsData?.results || [];
+  const billsLoading = visitBillsLoading || patientBillsLoading;
+
+  // Function to refresh all bills
+  const mutateBills = () => {
+    mutateVisitBills();
+  };
 
   // Print/Export ref (ONLY this area prints/exports)
   const printAreaRef = useRef<HTMLDivElement>(null);
@@ -301,6 +326,7 @@ export default function OPDBilling() {
   // Dialog states
   const [isProcedureDialogOpen, setIsProcedureDialogOpen] = useState(false);
   const [isPackageDialogOpen, setIsPackageDialogOpen] = useState(false);
+  const [loadingPackageId, setLoadingPackageId] = useState<number | null>(null);
 
   // Map visit data to form when visit loads
   useEffect(() => {
@@ -346,6 +372,60 @@ export default function OPDBilling() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [visit]);
+
+  // Load existing bill data if available
+  useEffect(() => {
+    if (existingBill && !billsLoading) {
+      // Load OPD form data from existing bill
+      const consultationItem = existingBill.items?.find(item => item.particular === 'consultation');
+      if (consultationItem) {
+        setOpdFormData((prev) => ({
+          ...prev,
+          receiptNo: existingBill.bill_number || prev.receiptNo,
+          billDate: existingBill.bill_date || prev.billDate,
+          doctor: existingBill.doctor?.toString() || prev.doctor,
+          opdAmount: consultationItem.unit_charge || '0.00',
+          remarks: existingBill.notes || '',
+        }));
+      }
+
+      // Load procedure items from existing bill
+      const procedureItems = existingBill.items
+        ?.filter(item => item.particular === 'procedure')
+        .map((item, idx) => ({
+          id: `existing-${item.id || idx}`,
+          procedure_id: 0, // We don't have the procedure ID in the bill items
+          procedure_name: item.particular_name || '',
+          procedure_code: '',
+          quantity: item.quantity || 1,
+          unit_price: item.unit_charge || '0.00',
+          total_price: item.total_amount || '0.00',
+          notes: item.note || '',
+        })) || [];
+
+      setProcedureFormData((prev) => ({
+        ...prev,
+        procedures: procedureItems,
+      }));
+
+      // Load billing data
+      setBillingData({
+        opdTotal: consultationItem?.total_amount || '0.00',
+        procedureTotal: existingBill.items
+          ?.filter(item => item.particular === 'procedure')
+          .reduce((sum, item) => sum + parseFloat(item.total_amount || '0'), 0)
+          .toFixed(2) || '0.00',
+        subtotal: existingBill.subtotal_amount || '0.00',
+        discount: existingBill.discount_amount || '0.00',
+        discountPercent: existingBill.discount_percent || '0',
+        totalAmount: existingBill.total_amount || '0.00',
+        paymentMode: (existingBill.payment_mode as any) || 'cash',
+        receivedAmount: existingBill.received_amount || '0.00',
+        balanceAmount: existingBill.balance_amount || '0.00',
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [existingBill, billsLoading]);
 
   // Recalculate billing totals
   const recalculateBilling = (
@@ -494,22 +574,41 @@ export default function OPDBilling() {
     setIsProcedureDialogOpen(false);
   };
 
-  const addPackageToList = (packageName: string, procedures: any[], discountedCharge: string) => {
-    const newProcedures: ProcedureItem[] = procedures.map((proc) => ({
-      id: `temp-${Date.now()}-${Math.random()}-${proc.id}`,
-      procedure_id: proc.id,
-      procedure_name: proc.name,
-      procedure_code: proc.code,
-      quantity: 1,
-      unit_price: proc.default_charge,
-      total_price: proc.default_charge,
-      notes: `Package: ${packageName}`,
-    }));
-    setProcedureFormData((prev) => ({
-      ...prev,
-      procedures: [...prev.procedures, ...newProcedures],
-    }));
-    setIsPackageDialogOpen(false);
+  const addPackageToList = async (packageId: number, packageName: string) => {
+    try {
+      setLoadingPackageId(packageId);
+
+      // Fetch full package details with procedures using the service
+      const packageData = await procedurePackageService.getProcedurePackageById(packageId);
+
+      if (!packageData.procedures || packageData.procedures.length === 0) {
+        alert('This package has no procedures associated with it.');
+        return;
+      }
+
+      const newProcedures: ProcedureItem[] = packageData.procedures.map((proc) => ({
+        id: `temp-${Date.now()}-${Math.random()}-${proc.id}`,
+        procedure_id: proc.id,
+        procedure_name: proc.name,
+        procedure_code: proc.code,
+        quantity: 1,
+        unit_price: proc.default_charge,
+        total_price: proc.default_charge,
+        notes: `Package: ${packageName}`,
+      }));
+
+      setProcedureFormData((prev) => ({
+        ...prev,
+        procedures: [...prev.procedures, ...newProcedures],
+      }));
+
+      setIsPackageDialogOpen(false);
+    } catch (error) {
+      console.error('Error loading package:', error);
+      alert('Failed to load package details. Please try again.');
+    } finally {
+      setLoadingPackageId(null);
+    }
   };
 
   const handleSaveBill = async () => {
@@ -554,16 +653,24 @@ export default function OPDBilling() {
         notes: opdFormData.remarks,
       };
 
-      await createBill(billData as any);
-      mutateBills();
-      alert('Bill created successfully!');
+      if (isEditMode && existingBill) {
+        // Update existing bill
+        await updateBill(existingBill.id, billData as any);
+        mutateBills();
+        alert('Bill updated successfully!');
+      } else {
+        // Create new bill
+        await createBill(billData as any);
+        mutateBills();
+        alert('Bill created successfully!');
+      }
     } catch (error) {
       console.error('Failed to save bill:', error);
       alert('Failed to save bill. Please try again.');
     }
   };
 
-  const isLoading = visitLoading || billsLoading;
+  const isLoading = visitLoading || visitBillsLoading;
 
   /* ------------------------------- Printing ------------------------------- */
 
@@ -646,8 +753,6 @@ export default function OPDBilling() {
     );
   }
 
-  const opdBills = billsData?.results || [];
-
   /* --------------------------------- Render -------------------------------- */
 
   return (
@@ -669,7 +774,14 @@ export default function OPDBilling() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
-            <h1 className="text-3xl font-bold">Billing</h1>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold">Billing</h1>
+              {isEditMode && (
+                <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
+                  Editing Existing Bill
+                </Badge>
+              )}
+            </div>
             <div className="flex items-center gap-3 mt-1">
               <p className="text-muted-foreground">Visit #{visit.visit_number}</p>
               <Badge variant="outline" className="capitalize">
@@ -900,6 +1012,7 @@ export default function OPDBilling() {
                 if (!isNaN(num)) setBillingData((prev) => ({ ...prev, receivedAmount: num.toFixed(2) }));
               }}
               onSave={handleSaveBill}
+              isEditMode={isEditMode}
             />
           </div>
         </TabsContent>
@@ -992,45 +1105,46 @@ export default function OPDBilling() {
                           {packagesLoading ? (
                             <div className="text-center py-8 text-muted-foreground">Loading packages...</div>
                           ) : packagesData?.results && packagesData.results.length > 0 ? (
-                            packagesData.results.map((pkg) => (
-                              <div
-                                key={pkg.id}
-                                className="flex flex-col p-4 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                                onClick={() => addPackageToList(pkg.name, pkg.procedures, pkg.discounted_charge)}
-                              >
-                                <div className="flex items-start justify-between mb-2">
-                                  <div>
-                                    <div className="font-medium text-lg">{pkg.name}</div>
-                                    <div className="text-xs text-muted-foreground">{pkg.code}</div>
-                                  </div>
-                                  <div className="text-right">
-                                    <div className="text-sm text-muted-foreground line-through">
-                                      ₹{parseFloat(pkg.total_charge).toFixed(2)}
+                            packagesData.results.map((pkg) => {
+                              const procedureCount = pkg.procedures?.length ?? pkg.procedure_count ?? 0;
+                              const isLoading = loadingPackageId === pkg.id;
+
+                              return (
+                                <div
+                                  key={pkg.id}
+                                  className={`flex flex-col p-4 border rounded-lg ${isLoading ? 'opacity-50' : 'hover:bg-muted/50 cursor-pointer'}`}
+                                  onClick={() => !isLoading && addPackageToList(pkg.id, pkg.name)}
+                                >
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div>
+                                      <div className="font-medium text-lg">{pkg.name}</div>
+                                      <div className="text-xs text-muted-foreground">{pkg.code}</div>
                                     </div>
-                                    <div className="font-semibold text-lg text-green-600">
-                                      ₹{parseFloat(pkg.discounted_charge).toFixed(2)}
+                                    <div className="text-right">
+                                      <div className="text-sm text-muted-foreground line-through">
+                                        ₹{parseFloat(pkg.total_charge).toFixed(2)}
+                                      </div>
+                                      <div className="font-semibold text-lg text-green-600">
+                                        ₹{parseFloat(pkg.discounted_charge).toFixed(2)}
+                                      </div>
+                                      {pkg.discount_percent && (
+                                        <div className="text-xs text-green-600">{pkg.discount_percent}% off</div>
+                                      )}
                                     </div>
-                                    {pkg.discount_percent && (
-                                      <div className="text-xs text-green-600">{pkg.discount_percent}% off</div>
-                                    )}
                                   </div>
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                  Includes {pkg.procedures.length} procedures:
-                                  <div className="mt-1">
-                                    {pkg.procedures.map((proc, idx) => (
-                                      <span key={proc.id}>
-                                        {proc.name}
-                                        {idx < pkg.procedures.length - 1 ? ', ' : ''}
-                                      </span>
-                                    ))}
+                                  <div className="text-sm text-muted-foreground">
+                                    Includes {procedureCount} procedure{procedureCount !== 1 ? 's' : ''}
                                   </div>
+                                  <Button
+                                    size="sm"
+                                    className="mt-3 w-full"
+                                    disabled={isLoading}
+                                  >
+                                    {isLoading ? 'Loading...' : 'Add Package'}
+                                  </Button>
                                 </div>
-                                <Button size="sm" className="mt-3 w-full">
-                                  Add Package
-                                </Button>
-                              </div>
-                            ))
+                              );
+                            })
                           ) : (
                             <div className="text-center py-8 text-muted-foreground">No packages found</div>
                           )}
@@ -1131,6 +1245,7 @@ export default function OPDBilling() {
                 if (!isNaN(num)) setBillingData((prev) => ({ ...prev, receivedAmount: num.toFixed(2) }));
               }}
               onSave={handleSaveBill}
+              isEditMode={isEditMode}
             />
           </div>
         </TabsContent>
@@ -1316,6 +1431,7 @@ export default function OPDBilling() {
                 if (!isNaN(num)) setBillingData((prev) => ({ ...prev, receivedAmount: num.toFixed(2) }));
               }}
               onSave={handleSaveBill}
+              isEditMode={isEditMode}
             />
           </div>
 
@@ -1341,24 +1457,36 @@ export default function OPDBilling() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Bill History</CardTitle>
-                  <CardDescription className="mt-1">View all bills for this visit</CardDescription>
+                  <CardDescription className="mt-1">View all bills for this patient across all visits</CardDescription>
                 </div>
-                {opdBills && opdBills.length > 0 && (
+                {patientBills && patientBills.length > 0 && (
                   <Badge variant="outline" className="text-base px-3 py-1">
-                    {opdBills.length} {opdBills.length === 1 ? 'Bill' : 'Bills'}
+                    {patientBills.length} {patientBills.length === 1 ? 'Bill' : 'Bills'}
                   </Badge>
                 )}
               </div>
             </CardHeader>
             <CardContent>
               <DataTable
-                rows={opdBills || []}
+                rows={patientBills || []}
                 isLoading={billsLoading}
                 columns={[
                   {
                     header: 'Bill Number',
                     key: 'bill_number',
                     cell: (bill: OPDBill) => <div className="font-mono text-sm font-medium">{bill.bill_number}</div>,
+                  },
+                  {
+                    header: 'Visit',
+                    key: 'visit',
+                    cell: (bill: OPDBill) => (
+                      <div className="text-sm">
+                        <div className="font-mono font-medium">{bill.visit_number || `#${bill.visit}`}</div>
+                        {bill.visit === visit?.id && (
+                          <Badge variant="secondary" className="text-xs mt-1">Current</Badge>
+                        )}
+                      </div>
+                    ),
                   },
                   {
                     header: 'Bill Date',

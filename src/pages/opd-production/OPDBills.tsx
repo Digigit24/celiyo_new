@@ -1,5 +1,6 @@
 // src/pages/opd-production/OPDBills.tsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOPDBill } from '@/hooks/useOPDBill';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { toast } from 'sonner';
 import { OPDBillFormDrawer } from '@/components/OPDBillFormDrawer';
 
 export const OPDBills: React.FC = () => {
+  const navigate = useNavigate();
   const { useOPDBills, deleteBill, useOPDBillStatistics, printBill, recordBillPayment } = useOPDBill();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,7 +31,7 @@ export const OPDBills: React.FC = () => {
   };
 
   const { data: billsData, error, isLoading, mutate } = useOPDBills(queryParams);
-  const { data: statistics } = useOPDBillStatistics();
+  const { data: statistics, error: statsError } = useOPDBillStatistics();
 
   const bills = billsData?.results || [];
   const totalCount = billsData?.count || 0;
@@ -77,6 +79,16 @@ export const OPDBills: React.FC = () => {
       ),
     },
     {
+      header: 'Visit',
+      key: 'visit',
+      cell: (bill) => (
+        <div className="flex flex-col">
+          <span className="font-medium font-mono text-sm">{bill.visit_number || `#${bill.visit}`}</span>
+          <span className="text-xs text-muted-foreground">Visit ID: {bill.visit}</span>
+        </div>
+      ),
+    },
+    {
       header: 'Patient',
       key: 'patient',
       cell: (bill) => (
@@ -91,7 +103,7 @@ export const OPDBills: React.FC = () => {
       key: 'bill_type',
       cell: (bill) => (
         <Badge variant="secondary" className="text-xs">
-          {bill.bill_type.toUpperCase()}
+          {bill.bill_type ? bill.bill_type.toUpperCase() : 'N/A'}
         </Badge>
       ),
     },
@@ -116,7 +128,14 @@ export const OPDBills: React.FC = () => {
           partial: { label: 'Partial', className: 'bg-orange-600' },
           unpaid: { label: 'Unpaid', className: 'bg-red-600' },
         };
-        const config = statusConfig[bill.payment_status];
+        const config = bill.payment_status ? statusConfig[bill.payment_status] : null;
+        if (!config) {
+          return (
+            <Badge variant="secondary" className="bg-gray-600">
+              Unknown
+            </Badge>
+          );
+        }
         return (
           <Badge variant="default" className={config.className}>
             {config.label}
@@ -141,6 +160,17 @@ export const OPDBills: React.FC = () => {
         </Button>
       </div>
 
+      {statsError && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-orange-800">
+              <AlertCircle className="h-4 w-4" />
+              <p className="text-sm">Unable to load statistics. The bill list below is still available.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 sm:p-6">
@@ -150,7 +180,7 @@ export const OPDBills: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs sm:text-sm text-muted-foreground">Total Bills</p>
-                <p className="text-xl sm:text-2xl font-bold">{statistics?.total_bills || 0}</p>
+                <p className="text-xl sm:text-2xl font-bold">{statistics?.total_bills ?? '-'}</p>
               </div>
             </div>
           </CardContent>
@@ -164,7 +194,7 @@ export const OPDBills: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs sm:text-sm text-muted-foreground">Collected</p>
-                <p className="text-xl sm:text-2xl font-bold">₹{statistics?.received_amount || '0'}</p>
+                <p className="text-xl sm:text-2xl font-bold">₹{statistics?.received_amount ?? '-'}</p>
               </div>
             </div>
           </CardContent>
@@ -178,7 +208,7 @@ export const OPDBills: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs sm:text-sm text-muted-foreground">Pending</p>
-                <p className="text-xl sm:text-2xl font-bold">₹{statistics?.balance_amount || '0'}</p>
+                <p className="text-xl sm:text-2xl font-bold">₹{statistics?.balance_amount ?? '-'}</p>
               </div>
             </div>
           </CardContent>
@@ -192,7 +222,7 @@ export const OPDBills: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs sm:text-sm text-muted-foreground">Unpaid</p>
-                <p className="text-xl sm:text-2xl font-bold">{statistics?.unpaid_bills || 0}</p>
+                <p className="text-xl sm:text-2xl font-bold">{statistics?.unpaid_bills ?? '-'}</p>
               </div>
             </div>
           </CardContent>
@@ -253,7 +283,7 @@ export const OPDBills: React.FC = () => {
                 columns={columns}
                 getRowId={(bill) => bill.id}
                 getRowLabel={(bill) => bill.bill_number}
-                onView={(bill) => handlePrint(bill)}
+                onView={(bill) => navigate(`/opd/billing/${bill.visit}`)}
                 onEdit={(bill) => { setDrawerMode('edit'); setSelectedBillId(bill.id); setDrawerOpen(true); }}
                 onDelete={handleDelete}
                 emptyTitle="No bills found"

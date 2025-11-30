@@ -28,7 +28,8 @@ export interface ProcedurePackage {
   code: string; // CharField(50), unique
 
   // Procedures (ManyToMany relationship)
-  procedures: ProcedureMasterInfo[]; // From serializer
+  procedures?: ProcedureMasterInfo[]; // From detail serializer - full array
+  procedure_count?: number; // From list serializer - just the count
 
   // Pricing
   total_charge: string; // DecimalField(10, 2) - Sum of individual procedure charges
@@ -36,7 +37,8 @@ export interface ProcedurePackage {
 
   // Computed Fields (from model @property)
   discount_percent?: string; // Calculated: (total - discounted) / total * 100
-  savings_amount?: string; // Calculated: total - discounted
+  savings_amount?: string; // Calculated: total - discounted (detail view)
+  savings?: string; // Calculated: total - discounted (list view - API inconsistency)
 
   // Status
   is_active: boolean;

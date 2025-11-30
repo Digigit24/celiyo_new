@@ -34,6 +34,24 @@ class ProcedurePackageService {
     }
   }
 
+  // Get procedure packages with full procedure details (expand parameter)
+  async getProcedurePackagesExpanded(params?: ProcedurePackageListParams): Promise<PaginatedResponse<ProcedurePackage>> {
+    try {
+      const expandedParams = { ...params, expand: 'procedures' };
+      const queryString = buildQueryString(expandedParams);
+      const response = await hmsClient.get<PaginatedResponse<ProcedurePackage>>(
+        `${API_CONFIG.HMS.OPD.PROCEDURE_PACKAGES.LIST}${queryString}`
+      );
+      return response.data;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to fetch procedure packages with details';
+      throw new Error(message);
+    }
+  }
+
   // Get single procedure package by ID
   async getProcedurePackageById(id: number): Promise<ProcedurePackage> {
     try {

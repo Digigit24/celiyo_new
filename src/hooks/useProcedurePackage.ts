@@ -103,6 +103,32 @@ export const useProcedurePackage = () => {
     );
   };
 
+  /**
+   * Fetch active procedure packages with full procedure details.
+   *
+   * @example
+   * const { data, error, isLoading } = useActiveProcedurePackagesExpanded();
+   */
+  const useActiveProcedurePackagesExpanded = () => {
+    const params: ProcedurePackageListParams = { is_active: true };
+    const key = ['procedure-packages', 'active', 'expanded'];
+
+    return useSWR<PaginatedResponse<ProcedurePackage>>(
+      key,
+      () => procedurePackageService.getProcedurePackagesExpanded(params),
+      {
+        revalidateOnFocus: false,
+        revalidateOnReconnect: true,
+        shouldRetryOnError: false,
+        keepPreviousData: true,
+        onError: (err) => {
+          console.error('Failed to fetch active procedure packages with details:', err);
+          setError(err.message || 'Failed to fetch active procedure packages with details');
+        },
+      }
+    );
+  };
+
   // ==================== MUTATION CALLBACKS ====================
 
   /**
@@ -184,6 +210,7 @@ export const useProcedurePackage = () => {
     useProcedurePackages,
     useProcedurePackageById,
     useActiveProcedurePackages,
+    useActiveProcedurePackagesExpanded,
 
     // Mutation callbacks
     createPackage,
