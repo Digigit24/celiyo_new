@@ -54,14 +54,21 @@ export default function PatientVisitHistory({ patientId, onViewVisit }: PatientV
     {
       header: 'Visit',
       key: 'visit_number',
-      cell: (visit) => (
-        <div className="flex flex-col">
-          <span className="font-medium font-mono text-sm">{visit.visit_number}</span>
-          <span className="text-xs text-muted-foreground">
-            {format(new Date(`${visit.visit_date}T${visit.visit_time}`), 'MMM dd, yyyy h:mm a')}
-          </span>
-        </div>
-      ),
+      cell: (visit) => {
+        const visitDateTime = visit.visit_time
+          ? `${visit.visit_date}T${visit.visit_time}`
+          : visit.visit_date;
+        const dateFormat = visit.visit_time ? 'MMM dd, yyyy h:mm a' : 'MMM dd, yyyy';
+
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium font-mono text-sm">{visit.visit_number}</span>
+            <span className="text-xs text-muted-foreground">
+              {format(new Date(visitDateTime), dateFormat)}
+            </span>
+          </div>
+        );
+      },
     },
     {
       header: 'Doctor',
@@ -123,6 +130,11 @@ export default function PatientVisitHistory({ patientId, onViewVisit }: PatientV
     const statusConf = statusConfig[visit.status];
     const typeConf = visitTypeConfig[visit.visit_type];
 
+    const visitDateTime = visit.visit_time
+      ? `${visit.visit_date}T${visit.visit_time}`
+      : visit.visit_date;
+    const dateFormat = visit.visit_time ? 'MMM dd, yyyy h:mm a' : 'MMM dd, yyyy';
+
     return (
       <>
         {/* Header Row */}
@@ -130,7 +142,7 @@ export default function PatientVisitHistory({ patientId, onViewVisit }: PatientV
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-base font-mono">{visit.visit_number}</h3>
             <p className="text-sm text-muted-foreground">
-              {format(new Date(`${visit.visit_date}T${visit.visit_time}`), 'MMM dd, yyyy h:mm a')}
+              {format(new Date(visitDateTime), dateFormat)}
             </p>
           </div>
           <Badge variant="default" className={statusConf.className}>
@@ -221,7 +233,7 @@ export default function PatientVisitHistory({ patientId, onViewVisit }: PatientV
           <CardContent className="p-4">
             <div className="text-sm text-muted-foreground">Last Visit</div>
             <div className="text-sm font-medium">
-              {visits.length > 0 ? format(new Date(`${visits[0].visit_date}T${visits[0].visit_time}`), 'MMM dd, yyyy') : 'N/A'}
+              {visits.length > 0 ? format(new Date(visits[0].visit_date), 'MMM dd, yyyy') : 'N/A'}
             </div>
           </CardContent>
         </Card>

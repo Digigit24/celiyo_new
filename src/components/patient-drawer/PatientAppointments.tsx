@@ -53,14 +53,21 @@ export default function PatientAppointments({ patientId, onViewAppointment }: Pa
     {
       header: 'Appointment',
       key: 'appointment_number',
-      cell: (appointment) => (
-        <div className="flex flex-col">
-          <span className="font-medium font-mono text-sm">{appointment.appointment_number}</span>
-          <span className="text-xs text-muted-foreground">
-            {format(new Date(`${appointment.appointment_date}T${appointment.appointment_time}`), 'MMM dd, yyyy h:mm a')}
-          </span>
-        </div>
-      ),
+      cell: (appointment) => {
+        const appointmentDateTime = appointment.appointment_time
+          ? `${appointment.appointment_date}T${appointment.appointment_time}`
+          : appointment.appointment_date;
+        const dateFormat = appointment.appointment_time ? 'MMM dd, yyyy h:mm a' : 'MMM dd, yyyy';
+
+        return (
+          <div className="flex flex-col">
+            <span className="font-medium font-mono text-sm">{appointment.appointment_number}</span>
+            <span className="text-xs text-muted-foreground">
+              {format(new Date(appointmentDateTime), dateFormat)}
+            </span>
+          </div>
+        );
+      },
     },
     {
       header: 'Doctor',
@@ -132,6 +139,11 @@ export default function PatientAppointments({ patientId, onViewAppointment }: Pa
     const statusConf = statusConfig[appointment.status];
     const typeConf = appointmentTypeConfig[appointment.appointment_type];
 
+    const appointmentDateTime = appointment.appointment_time
+      ? `${appointment.appointment_date}T${appointment.appointment_time}`
+      : appointment.appointment_date;
+    const dateFormat = appointment.appointment_time ? 'MMM dd, yyyy h:mm a' : 'MMM dd, yyyy';
+
     return (
       <>
         {/* Header Row */}
@@ -139,7 +151,7 @@ export default function PatientAppointments({ patientId, onViewAppointment }: Pa
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-base font-mono">{appointment.appointment_number}</h3>
             <p className="text-sm text-muted-foreground">
-              {format(new Date(`${appointment.appointment_date}T${appointment.appointment_time}`), 'MMM dd, yyyy h:mm a')}
+              {format(new Date(appointmentDateTime), dateFormat)}
             </p>
           </div>
           <Badge variant="default" className={statusConf.className}>
