@@ -32,6 +32,9 @@ import {
   UserCog,
   ShieldCheck,
   Bug,
+  DollarSign,
+  CreditCard,
+  TrendingUp,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -236,6 +239,31 @@ const menuItems: MenuItem[] = [
         label: "Settings",
         icon: Settings2,
         path: "/opd/settings",
+      },
+    ],
+  },
+  {
+    id: "payments",
+    label: "Payments",
+    icon: DollarSign,
+    children: [
+      {
+        id: "payment-transactions",
+        label: "Transactions",
+        icon: CreditCard,
+        path: "/payments/transactions",
+      },
+      {
+        id: "payment-categories",
+        label: "Categories",
+        icon: Package,
+        path: "/payments/categories",
+      },
+      {
+        id: "accounting-periods",
+        label: "Accounting Periods",
+        icon: TrendingUp,
+        path: "/payments/periods",
       },
     ],
   },

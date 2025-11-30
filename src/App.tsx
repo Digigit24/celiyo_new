@@ -46,6 +46,9 @@ import { OPDSettings } from "./pages/OPDSettings";
 import { Users } from "./pages/Users";
 import { Roles } from "./pages/Roles";
 import { Debug } from "./pages/Debug";
+import { Transactions } from "./pages/Transactions";
+import { PaymentCategories } from "./pages/PaymentCategories";
+import { AccountingPeriods } from "./pages/AccountingPeriods";
 
 const queryClient = new QueryClient();
 
@@ -114,6 +117,11 @@ const AppLayout = () => {
             <Route path="/opd/procedure-bills" element={<ProcedureBills />} />
             <Route path="/opd/settings" element={<Navigate to="/opd/settings/general" replace />} />
             <Route path="/opd/settings/:tab" element={<OPDSettings />} />
+
+            {/* Payments Routes */}
+            <Route path="/payments/transactions" element={<Transactions />} />
+            <Route path="/payments/categories" element={<PaymentCategories />} />
+            <Route path="/payments/periods" element={<AccountingPeriods />} />
 
             {/* WhatsApp Routes */}
             <Route path="/whatsapp/contacts" element={<Contacts />} />
