@@ -252,12 +252,12 @@ export default function OPDBilling() {
   const { useOpdVisitById } = useOpdVisit();
   const { useOPDBills, createBill } = useOPDBill();
   const { useActiveProcedureMasters } = useProcedureMaster();
-  const { useActiveProcedurePackagesExpanded } = useProcedurePackage();
+  const { useActiveProcedurePackages, useProcedurePackageById } = useProcedurePackage();
 
   const { data: visit, isLoading: visitLoading, error: visitError } = useOpdVisitById(visitId ? parseInt(visitId) : null);
   const { data: billsData, isLoading: billsLoading, mutate: mutateBills } = useOPDBills({ visit: visitId ? parseInt(visitId) : undefined });
   const { data: proceduresData, isLoading: proceduresLoading } = useActiveProcedureMasters();
-  const { data: packagesData, isLoading: packagesLoading } = useActiveProcedurePackagesExpanded();
+  const { data: packagesData, isLoading: packagesLoading } = useActiveProcedurePackages();
 
   // Print/Export ref (ONLY this area prints/exports)
   const printAreaRef = useRef<HTMLDivElement>(null);
@@ -301,6 +301,7 @@ export default function OPDBilling() {
   // Dialog states
   const [isProcedureDialogOpen, setIsProcedureDialogOpen] = useState(false);
   const [isPackageDialogOpen, setIsPackageDialogOpen] = useState(false);
+  const [loadingPackageId, setLoadingPackageId] = useState<number | null>(null);
 
   // Map visit data to form when visit loads
   useEffect(() => {
@@ -494,26 +495,55 @@ export default function OPDBilling() {
     setIsProcedureDialogOpen(false);
   };
 
-  const addPackageToList = (packageName: string, procedures: any[] | undefined, discountedCharge: string) => {
-    if (!procedures || procedures.length === 0) {
-      alert('Package details not available. Please select individual procedures instead.');
-      return;
+  const addPackageToList = async (packageId: number, packageName: string) => {
+    try {
+      setLoadingPackageId(packageId);
+
+      // Fetch full package details with procedures
+      const response = await fetch(
+        `${import.meta.env.VITE_HMS_API_URL || 'https://hms.celiyo.com/api'}/opd/procedure-packages/${packageId}/`,
+        {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch package details');
+      }
+
+      const packageData = await response.json();
+
+      if (!packageData.procedures || packageData.procedures.length === 0) {
+        alert('This package has no procedures associated with it.');
+        return;
+      }
+
+      const newProcedures: ProcedureItem[] = packageData.procedures.map((proc: any) => ({
+        id: `temp-${Date.now()}-${Math.random()}-${proc.id}`,
+        procedure_id: proc.id,
+        procedure_name: proc.name,
+        procedure_code: proc.code,
+        quantity: 1,
+        unit_price: proc.default_charge,
+        total_price: proc.default_charge,
+        notes: `Package: ${packageName}`,
+      }));
+
+      setProcedureFormData((prev) => ({
+        ...prev,
+        procedures: [...prev.procedures, ...newProcedures],
+      }));
+
+      setIsPackageDialogOpen(false);
+    } catch (error) {
+      console.error('Error loading package:', error);
+      alert('Failed to load package details. Please try again.');
+    } finally {
+      setLoadingPackageId(null);
     }
-    const newProcedures: ProcedureItem[] = procedures.map((proc) => ({
-      id: `temp-${Date.now()}-${Math.random()}-${proc.id}`,
-      procedure_id: proc.id,
-      procedure_name: proc.name,
-      procedure_code: proc.code,
-      quantity: 1,
-      unit_price: proc.default_charge,
-      total_price: proc.default_charge,
-      notes: `Package: ${packageName}`,
-    }));
-    setProcedureFormData((prev) => ({
-      ...prev,
-      procedures: [...prev.procedures, ...newProcedures],
-    }));
-    setIsPackageDialogOpen(false);
   };
 
   const handleSaveBill = async () => {
@@ -997,14 +1027,14 @@ export default function OPDBilling() {
                             <div className="text-center py-8 text-muted-foreground">Loading packages...</div>
                           ) : packagesData?.results && packagesData.results.length > 0 ? (
                             packagesData.results.map((pkg) => {
-                              const hasProcedures = pkg.procedures && pkg.procedures.length > 0;
                               const procedureCount = pkg.procedures?.length ?? pkg.procedure_count ?? 0;
+                              const isLoading = loadingPackageId === pkg.id;
 
                               return (
                                 <div
                                   key={pkg.id}
-                                  className={`flex flex-col p-4 border rounded-lg ${hasProcedures ? 'hover:bg-muted/50 cursor-pointer' : 'opacity-60 cursor-not-allowed'}`}
-                                  onClick={() => hasProcedures && addPackageToList(pkg.name, pkg.procedures, pkg.discounted_charge)}
+                                  className={`flex flex-col p-4 border rounded-lg ${isLoading ? 'opacity-50' : 'hover:bg-muted/50 cursor-pointer'}`}
+                                  onClick={() => !isLoading && addPackageToList(pkg.id, pkg.name)}
                                 >
                                   <div className="flex items-start justify-between mb-2">
                                     <div>
@@ -1024,30 +1054,14 @@ export default function OPDBilling() {
                                     </div>
                                   </div>
                                   <div className="text-sm text-muted-foreground">
-                                    {hasProcedures ? (
-                                      <>
-                                        Includes {procedureCount} procedure{procedureCount !== 1 ? 's' : ''}:
-                                        <div className="mt-1">
-                                          {pkg.procedures!.map((proc, idx) => (
-                                            <span key={proc.id}>
-                                              {proc.name}
-                                              {idx < pkg.procedures!.length - 1 ? ', ' : ''}
-                                            </span>
-                                          ))}
-                                        </div>
-                                      </>
-                                    ) : (
-                                      <div className="text-orange-600">
-                                        Includes {procedureCount} procedure{procedureCount !== 1 ? 's' : ''} (details not loaded)
-                                      </div>
-                                    )}
+                                    Includes {procedureCount} procedure{procedureCount !== 1 ? 's' : ''}
                                   </div>
                                   <Button
                                     size="sm"
                                     className="mt-3 w-full"
-                                    disabled={!hasProcedures}
+                                    disabled={isLoading}
                                   >
-                                    {hasProcedures ? 'Add Package' : 'Package Details Not Available'}
+                                    {isLoading ? 'Loading...' : 'Add Package'}
                                   </Button>
                                 </div>
                               );
