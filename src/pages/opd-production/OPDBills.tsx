@@ -29,7 +29,7 @@ export const OPDBills: React.FC = () => {
   };
 
   const { data: billsData, error, isLoading, mutate } = useOPDBills(queryParams);
-  const { data: statistics } = useOPDBillStatistics();
+  const { data: statistics, error: statsError } = useOPDBillStatistics();
 
   const bills = billsData?.results || [];
   const totalCount = billsData?.count || 0;
@@ -91,7 +91,7 @@ export const OPDBills: React.FC = () => {
       key: 'bill_type',
       cell: (bill) => (
         <Badge variant="secondary" className="text-xs">
-          {bill.bill_type.toUpperCase()}
+          {bill.bill_type ? bill.bill_type.toUpperCase() : 'N/A'}
         </Badge>
       ),
     },
@@ -116,7 +116,14 @@ export const OPDBills: React.FC = () => {
           partial: { label: 'Partial', className: 'bg-orange-600' },
           unpaid: { label: 'Unpaid', className: 'bg-red-600' },
         };
-        const config = statusConfig[bill.payment_status];
+        const config = bill.payment_status ? statusConfig[bill.payment_status] : null;
+        if (!config) {
+          return (
+            <Badge variant="secondary" className="bg-gray-600">
+              Unknown
+            </Badge>
+          );
+        }
         return (
           <Badge variant="default" className={config.className}>
             {config.label}
@@ -141,6 +148,17 @@ export const OPDBills: React.FC = () => {
         </Button>
       </div>
 
+      {statsError && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-orange-800">
+              <AlertCircle className="h-4 w-4" />
+              <p className="text-sm">Unable to load statistics. The bill list below is still available.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 sm:p-6">
@@ -150,7 +168,7 @@ export const OPDBills: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs sm:text-sm text-muted-foreground">Total Bills</p>
-                <p className="text-xl sm:text-2xl font-bold">{statistics?.total_bills || 0}</p>
+                <p className="text-xl sm:text-2xl font-bold">{statistics?.total_bills ?? '-'}</p>
               </div>
             </div>
           </CardContent>
@@ -164,7 +182,7 @@ export const OPDBills: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs sm:text-sm text-muted-foreground">Collected</p>
-                <p className="text-xl sm:text-2xl font-bold">₹{statistics?.received_amount || '0'}</p>
+                <p className="text-xl sm:text-2xl font-bold">₹{statistics?.received_amount ?? '-'}</p>
               </div>
             </div>
           </CardContent>
@@ -178,7 +196,7 @@ export const OPDBills: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs sm:text-sm text-muted-foreground">Pending</p>
-                <p className="text-xl sm:text-2xl font-bold">₹{statistics?.balance_amount || '0'}</p>
+                <p className="text-xl sm:text-2xl font-bold">₹{statistics?.balance_amount ?? '-'}</p>
               </div>
             </div>
           </CardContent>
@@ -192,7 +210,7 @@ export const OPDBills: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs sm:text-sm text-muted-foreground">Unpaid</p>
-                <p className="text-xl sm:text-2xl font-bold">{statistics?.unpaid_bills || 0}</p>
+                <p className="text-xl sm:text-2xl font-bold">{statistics?.unpaid_bills ?? '-'}</p>
               </div>
             </div>
           </CardContent>
