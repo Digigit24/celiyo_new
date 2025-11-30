@@ -1,5 +1,6 @@
 // src/pages/opd-production/OPDBills.tsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useOPDBill } from '@/hooks/useOPDBill';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { toast } from 'sonner';
 import { OPDBillFormDrawer } from '@/components/OPDBillFormDrawer';
 
 export const OPDBills: React.FC = () => {
+  const navigate = useNavigate();
   const { useOPDBills, deleteBill, useOPDBillStatistics, printBill, recordBillPayment } = useOPDBill();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -73,6 +75,16 @@ export const OPDBills: React.FC = () => {
           <span className="text-xs text-muted-foreground">
             {format(new Date(bill.bill_date), 'MMM dd, yyyy')}
           </span>
+        </div>
+      ),
+    },
+    {
+      header: 'Visit',
+      key: 'visit',
+      cell: (bill) => (
+        <div className="flex flex-col">
+          <span className="font-medium font-mono text-sm">{bill.visit_number || `#${bill.visit}`}</span>
+          <span className="text-xs text-muted-foreground">Visit ID: {bill.visit}</span>
         </div>
       ),
     },
@@ -271,7 +283,7 @@ export const OPDBills: React.FC = () => {
                 columns={columns}
                 getRowId={(bill) => bill.id}
                 getRowLabel={(bill) => bill.bill_number}
-                onView={(bill) => handlePrint(bill)}
+                onView={(bill) => navigate(`/opd/billing/${bill.visit}`)}
                 onEdit={(bill) => { setDrawerMode('edit'); setSelectedBillId(bill.id); setDrawerOpen(true); }}
                 onDelete={handleDelete}
                 emptyTitle="No bills found"

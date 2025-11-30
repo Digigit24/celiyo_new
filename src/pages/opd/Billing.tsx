@@ -258,13 +258,31 @@ export default function OPDBilling() {
   const { useActiveProcedurePackages, useProcedurePackageById } = useProcedurePackage();
 
   const { data: visit, isLoading: visitLoading, error: visitError } = useOpdVisitById(visitId ? parseInt(visitId) : null);
-  const { data: billsData, isLoading: billsLoading, mutate: mutateBills } = useOPDBills({ visit: visitId ? parseInt(visitId) : undefined });
+
+  // Fetch bills for current visit (to check if bill exists)
+  const { data: visitBillsData, isLoading: visitBillsLoading, mutate: mutateVisitBills } = useOPDBills({ visit: visitId ? parseInt(visitId) : undefined });
+
+  // Fetch all bills for the patient (for bill history)
+  const { data: patientBillsData, isLoading: patientBillsLoading } = useOPDBills({
+    patient: visit?.patient,
+    ordering: '-bill_date',  // Order by latest first
+  });
+
   const { data: proceduresData, isLoading: proceduresLoading } = useActiveProcedureMasters();
   const { data: packagesData, isLoading: packagesLoading } = useActiveProcedurePackages();
 
-  // Get existing bill if any
-  const existingBill = billsData?.results?.[0] || null;
+  // Get existing bill for current visit if any
+  const existingBill = visitBillsData?.results?.[0] || null;
   const isEditMode = !!existingBill;
+
+  // Get all bills for patient history
+  const patientBills = patientBillsData?.results || [];
+  const billsLoading = visitBillsLoading || patientBillsLoading;
+
+  // Function to refresh all bills
+  const mutateBills = () => {
+    mutateVisitBills();
+  };
 
   // Print/Export ref (ONLY this area prints/exports)
   const printAreaRef = useRef<HTMLDivElement>(null);
@@ -652,7 +670,7 @@ export default function OPDBilling() {
     }
   };
 
-  const isLoading = visitLoading || billsLoading;
+  const isLoading = visitLoading || visitBillsLoading;
 
   /* ------------------------------- Printing ------------------------------- */
 
@@ -734,8 +752,6 @@ export default function OPDBilling() {
       </div>
     );
   }
-
-  const opdBills = billsData?.results || [];
 
   /* --------------------------------- Render -------------------------------- */
 
@@ -1441,24 +1457,36 @@ export default function OPDBilling() {
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle>Bill History</CardTitle>
-                  <CardDescription className="mt-1">View all bills for this visit</CardDescription>
+                  <CardDescription className="mt-1">View all bills for this patient across all visits</CardDescription>
                 </div>
-                {opdBills && opdBills.length > 0 && (
+                {patientBills && patientBills.length > 0 && (
                   <Badge variant="outline" className="text-base px-3 py-1">
-                    {opdBills.length} {opdBills.length === 1 ? 'Bill' : 'Bills'}
+                    {patientBills.length} {patientBills.length === 1 ? 'Bill' : 'Bills'}
                   </Badge>
                 )}
               </div>
             </CardHeader>
             <CardContent>
               <DataTable
-                rows={opdBills || []}
+                rows={patientBills || []}
                 isLoading={billsLoading}
                 columns={[
                   {
                     header: 'Bill Number',
                     key: 'bill_number',
                     cell: (bill: OPDBill) => <div className="font-mono text-sm font-medium">{bill.bill_number}</div>,
+                  },
+                  {
+                    header: 'Visit',
+                    key: 'visit',
+                    cell: (bill: OPDBill) => (
+                      <div className="text-sm">
+                        <div className="font-mono font-medium">{bill.visit_number || `#${bill.visit}`}</div>
+                        {bill.visit === visit?.id && (
+                          <Badge variant="secondary" className="text-xs mt-1">Current</Badge>
+                        )}
+                      </div>
+                    ),
                   },
                   {
                     header: 'Bill Date',
