@@ -31,9 +31,9 @@ const createAppointmentSchema = z.object({
   patient_id: z.coerce.number().min(1, 'Patient is required'),
   appointment_date: z.string().min(1, 'Appointment date is required'),
   appointment_time: z.string().min(1, 'Appointment time is required'),
-  end_time: z.string().optional(),
+  appointment_type_id: z.coerce.number().min(1, 'Appointment type is required'),
   duration_minutes: z.coerce.number().min(5, 'Duration must be at least 5 minutes').default(30),
-  appointment_type_id: z.coerce.number().optional(),
+  end_time: z.string().optional(),
   status: z.enum(['scheduled', 'confirmed', 'checked_in', 'in_progress', 'completed', 'cancelled', 'no_show', 'rescheduled']).optional(),
   priority: z.enum(['low', 'normal', 'high', 'urgent']).optional(),
   chief_complaint: z.string().optional(),
@@ -130,9 +130,11 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
       formState: { errors },
       watch,
       setValue,
+      trigger,
     } = useForm<any>({
       resolver: zodResolver(schema),
       defaultValues,
+      mode: 'onBlur', // Validate on blur for immediate feedback
     });
 
     const watchedDoctorId = watch('doctor_id');
@@ -163,6 +165,7 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
           handleSubmit(
             (data) => {
               if (isCreateMode) {
+                const appointmentTypeId = Number(data.appointment_type_id);
                 const payload: AppointmentCreateData = {
                   doctor_id: Number(data.doctor_id),
                   patient_id: Number(data.patient_id),
@@ -170,7 +173,7 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
                   appointment_time: data.appointment_time,
                   end_time: data.end_time || undefined, // Don't send empty string
                   duration_minutes: Number(data.duration_minutes),
-                  appointment_type_id: data.appointment_type_id ? Number(data.appointment_type_id) : undefined,
+                  appointment_type_id: appointmentTypeId > 0 ? appointmentTypeId : undefined,
                   status: data.status,
                   priority: data.priority,
                   chief_complaint: data.chief_complaint || undefined,
@@ -354,7 +357,9 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
 
             {/* Appointment Type */}
             <div className="space-y-2">
-              <Label htmlFor="appointment_type_id">Appointment Type</Label>
+              <Label htmlFor="appointment_type_id">
+                Appointment Type *
+              </Label>
               {isReadOnly ? (
                 <div className="pt-2">
                   {appointment?.appointment_type ? (
@@ -366,36 +371,51 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
                   )}
                 </div>
               ) : (
-                <Select
-                  value={String(watchedAppointmentTypeId || '')}
-                  onValueChange={(value) => setValue('appointment_type_id', value ? Number(value) : 0)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select appointment type (optional)" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="0">None</SelectItem>
-                    {appointmentTypes.length > 0 ? (
-                      appointmentTypes.map((type) => (
-                        <SelectItem key={type.id} value={String(type.id)}>
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: type.color || '#3b82f6' }}
-                            />
-                            {type.name}
-                          </div>
+                <>
+                  <Select
+                    value={String(watchedAppointmentTypeId || '0')}
+                    onValueChange={async (value) => {
+                      const numValue = Number(value);
+                      setValue('appointment_type_id', numValue);
+                      await trigger('appointment_type_id'); // Trigger validation
+                    }}
+                  >
+                    <SelectTrigger className={errors.appointment_type_id ? 'border-destructive' : ''}>
+                      <SelectValue placeholder="Select appointment type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {appointmentTypes.length > 0 ? (
+                        appointmentTypes.map((type) => (
+                          <SelectItem key={type.id} value={String(type.id)}>
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="w-3 h-3 rounded-full"
+                                style={{ backgroundColor: type.color || '#3b82f6' }}
+                              />
+                              {type.name}
+                            </div>
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="0" disabled>
+                          No appointment types available
                         </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="-1" disabled>
-                        No appointment types available
-                      </SelectItem>
-                    )}
-                  </SelectContent>
-                </Select>
+                      )}
+                    </SelectContent>
+                  </Select>
+                  {errors.appointment_type_id && (
+                    <p className="text-sm text-destructive">{errors.appointment_type_id.message as string}</p>
+                  )}
+                </>
               )}
             </div>
+
+            {/* Divider */}
+            {!isReadOnly && (
+              <div className="border-t pt-4">
+                <p className="text-xs text-muted-foreground mb-4">Optional Fields</p>
+              </div>
+            )}
 
             {/* Priority */}
             <div className="space-y-2">
