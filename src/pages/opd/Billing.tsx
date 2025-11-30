@@ -252,12 +252,12 @@ export default function OPDBilling() {
   const { useOpdVisitById } = useOpdVisit();
   const { useOPDBills, createBill } = useOPDBill();
   const { useActiveProcedureMasters } = useProcedureMaster();
-  const { useActiveProcedurePackages } = useProcedurePackage();
+  const { useActiveProcedurePackagesExpanded } = useProcedurePackage();
 
   const { data: visit, isLoading: visitLoading, error: visitError } = useOpdVisitById(visitId ? parseInt(visitId) : null);
   const { data: billsData, isLoading: billsLoading, mutate: mutateBills } = useOPDBills({ visit: visitId ? parseInt(visitId) : undefined });
   const { data: proceduresData, isLoading: proceduresLoading } = useActiveProcedureMasters();
-  const { data: packagesData, isLoading: packagesLoading } = useActiveProcedurePackages();
+  const { data: packagesData, isLoading: packagesLoading } = useActiveProcedurePackagesExpanded();
 
   // Print/Export ref (ONLY this area prints/exports)
   const printAreaRef = useRef<HTMLDivElement>(null);
@@ -494,7 +494,11 @@ export default function OPDBilling() {
     setIsProcedureDialogOpen(false);
   };
 
-  const addPackageToList = (packageName: string, procedures: any[], discountedCharge: string) => {
+  const addPackageToList = (packageName: string, procedures: any[] | undefined, discountedCharge: string) => {
+    if (!procedures || procedures.length === 0) {
+      alert('Package details not available. Please select individual procedures instead.');
+      return;
+    }
     const newProcedures: ProcedureItem[] = procedures.map((proc) => ({
       id: `temp-${Date.now()}-${Math.random()}-${proc.id}`,
       procedure_id: proc.id,
@@ -992,45 +996,62 @@ export default function OPDBilling() {
                           {packagesLoading ? (
                             <div className="text-center py-8 text-muted-foreground">Loading packages...</div>
                           ) : packagesData?.results && packagesData.results.length > 0 ? (
-                            packagesData.results.map((pkg) => (
-                              <div
-                                key={pkg.id}
-                                className="flex flex-col p-4 border rounded-lg hover:bg-muted/50 cursor-pointer"
-                                onClick={() => addPackageToList(pkg.name, pkg.procedures, pkg.discounted_charge)}
-                              >
-                                <div className="flex items-start justify-between mb-2">
-                                  <div>
-                                    <div className="font-medium text-lg">{pkg.name}</div>
-                                    <div className="text-xs text-muted-foreground">{pkg.code}</div>
+                            packagesData.results.map((pkg) => {
+                              const hasProcedures = pkg.procedures && pkg.procedures.length > 0;
+                              const procedureCount = pkg.procedures?.length ?? pkg.procedure_count ?? 0;
+
+                              return (
+                                <div
+                                  key={pkg.id}
+                                  className={`flex flex-col p-4 border rounded-lg ${hasProcedures ? 'hover:bg-muted/50 cursor-pointer' : 'opacity-60 cursor-not-allowed'}`}
+                                  onClick={() => hasProcedures && addPackageToList(pkg.name, pkg.procedures, pkg.discounted_charge)}
+                                >
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div>
+                                      <div className="font-medium text-lg">{pkg.name}</div>
+                                      <div className="text-xs text-muted-foreground">{pkg.code}</div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="text-sm text-muted-foreground line-through">
+                                        ₹{parseFloat(pkg.total_charge).toFixed(2)}
+                                      </div>
+                                      <div className="font-semibold text-lg text-green-600">
+                                        ₹{parseFloat(pkg.discounted_charge).toFixed(2)}
+                                      </div>
+                                      {pkg.discount_percent && (
+                                        <div className="text-xs text-green-600">{pkg.discount_percent}% off</div>
+                                      )}
+                                    </div>
                                   </div>
-                                  <div className="text-right">
-                                    <div className="text-sm text-muted-foreground line-through">
-                                      ₹{parseFloat(pkg.total_charge).toFixed(2)}
-                                    </div>
-                                    <div className="font-semibold text-lg text-green-600">
-                                      ₹{parseFloat(pkg.discounted_charge).toFixed(2)}
-                                    </div>
-                                    {pkg.discount_percent && (
-                                      <div className="text-xs text-green-600">{pkg.discount_percent}% off</div>
+                                  <div className="text-sm text-muted-foreground">
+                                    {hasProcedures ? (
+                                      <>
+                                        Includes {procedureCount} procedure{procedureCount !== 1 ? 's' : ''}:
+                                        <div className="mt-1">
+                                          {pkg.procedures!.map((proc, idx) => (
+                                            <span key={proc.id}>
+                                              {proc.name}
+                                              {idx < pkg.procedures!.length - 1 ? ', ' : ''}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      </>
+                                    ) : (
+                                      <div className="text-orange-600">
+                                        Includes {procedureCount} procedure{procedureCount !== 1 ? 's' : ''} (details not loaded)
+                                      </div>
                                     )}
                                   </div>
+                                  <Button
+                                    size="sm"
+                                    className="mt-3 w-full"
+                                    disabled={!hasProcedures}
+                                  >
+                                    {hasProcedures ? 'Add Package' : 'Package Details Not Available'}
+                                  </Button>
                                 </div>
-                                <div className="text-sm text-muted-foreground">
-                                  Includes {pkg.procedures.length} procedures:
-                                  <div className="mt-1">
-                                    {pkg.procedures.map((proc, idx) => (
-                                      <span key={proc.id}>
-                                        {proc.name}
-                                        {idx < pkg.procedures.length - 1 ? ', ' : ''}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                                <Button size="sm" className="mt-3 w-full">
-                                  Add Package
-                                </Button>
-                              </div>
-                            ))
+                              );
+                            })
                           ) : (
                             <div className="text-center py-8 text-muted-foreground">No packages found</div>
                           )}
