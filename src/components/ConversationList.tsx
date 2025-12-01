@@ -55,12 +55,12 @@ export const ConversationList = ({ conversations, selectedId, onSelect, isMobile
   }
 
   return (
-    <aside className={`flex flex-col ${isMobile ? "w-full" : "w-72"} border-r border-border bg-card min-h-screen`}>
-      <div className="flex items-center justify-between h-16 border-b border-border px-4">
+    <aside className={`flex flex-col ${isMobile ? "w-full" : "w-72"} border-r border-border bg-card h-screen`}>
+      <div className="flex items-center justify-between h-16 border-b border-border px-4 shrink-0">
         <span className="font-semibold text-lg">Conversations</span>
         <span className="text-xs text-muted-foreground">{conversations.length}</span>
       </div>
-      <div className="flex flex-col gap-2 p-2">
+      <div className="flex flex-col gap-2 p-2 shrink-0">
         <Input
           placeholder="Search for messages"
           className="bg-muted border-0"

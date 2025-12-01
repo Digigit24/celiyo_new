@@ -51,6 +51,40 @@ export interface SendTextMessageResponse {
   timestamp: string;
 }
 
+export interface SendMediaMessagePayload {
+  to: string;
+  media_type: 'image' | 'video' | 'audio' | 'document';
+  media_url: string;
+  caption?: string;
+  filename?: string;
+}
+
+export interface SendMediaMessageResponse {
+  message_id: string;
+  status: 'sent' | 'pending';
+  to: string;
+  media_type: string;
+  media_url: string;
+  timestamp: string;
+}
+
+export interface SendLocationMessagePayload {
+  to: string;
+  latitude: number;
+  longitude: number;
+  name?: string;
+  address?: string;
+}
+
+export interface SendLocationMessageResponse {
+  message_id: string;
+  status: 'sent' | 'pending';
+  to: string;
+  latitude: number;
+  longitude: number;
+  timestamp: string;
+}
+
 export interface RecentMessagesQuery {
   limit?: number;
   offset?: number;

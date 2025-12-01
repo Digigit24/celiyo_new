@@ -4,6 +4,10 @@ import { API_CONFIG, buildUrl, buildQueryString } from '@/lib/apiConfig';
 import {
   SendTextMessagePayload,
   SendTextMessageResponse,
+  SendMediaMessagePayload,
+  SendMediaMessageResponse,
+  SendLocationMessagePayload,
+  SendLocationMessageResponse,
   Conversation,
   ConversationDetail,
   RecentMessagesQuery,
@@ -19,26 +23,88 @@ class MessagesService {
   async sendTextMessage(payload: SendTextMessagePayload): Promise<SendTextMessageResponse> {
     try {
       console.log('📤 Sending text message to:', payload.to);
-      
+
       const response = await whatsappClient.post<SendTextMessageResponse>(
         API_CONFIG.WHATSAPP.SEND_TEXT,
         payload
       );
-      
+
       console.log('✅ Message sent:', {
         message_id: response.data.message_id,
         status: response.data.status
       });
-      
+
       return response.data;
     } catch (error: any) {
       console.error('❌ Failed to send message:', error);
-      
+
       if (error.response?.status === 403) {
         throw new Error('WhatsApp module not enabled');
       }
-      
+
       const message = error.response?.data?.detail || 'Failed to send message';
+      throw new Error(message);
+    }
+  }
+
+  /**
+   * Send a media message (image, video, audio, document)
+   */
+  async sendMediaMessage(payload: SendMediaMessagePayload): Promise<SendMediaMessageResponse> {
+    try {
+      console.log('📤 Sending media message to:', payload.to, 'type:', payload.media_type);
+
+      const response = await whatsappClient.post<SendMediaMessageResponse>(
+        API_CONFIG.WHATSAPP.SEND_MEDIA,
+        payload
+      );
+
+      console.log('✅ Media message sent:', {
+        message_id: response.data.message_id,
+        status: response.data.status,
+        media_type: response.data.media_type
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Failed to send media message:', error);
+
+      if (error.response?.status === 403) {
+        throw new Error('WhatsApp module not enabled');
+      }
+
+      const message = error.response?.data?.detail || 'Failed to send media message';
+      throw new Error(message);
+    }
+  }
+
+  /**
+   * Send a location message
+   */
+  async sendLocationMessage(payload: SendLocationMessagePayload): Promise<SendLocationMessageResponse> {
+    try {
+      console.log('📤 Sending location message to:', payload.to);
+
+      const response = await whatsappClient.post<SendLocationMessageResponse>(
+        API_CONFIG.WHATSAPP.SEND_LOCATION,
+        payload
+      );
+
+      console.log('✅ Location message sent:', {
+        message_id: response.data.message_id,
+        status: response.data.status,
+        coordinates: `${response.data.latitude}, ${response.data.longitude}`
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Failed to send location message:', error);
+
+      if (error.response?.status === 403) {
+        throw new Error('WhatsApp module not enabled');
+      }
+
+      const message = error.response?.data?.detail || 'Failed to send location message';
       throw new Error(message);
     }
   }

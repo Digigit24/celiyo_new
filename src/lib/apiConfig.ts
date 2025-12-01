@@ -278,6 +278,8 @@ export const API_CONFIG = {
   WHATSAPP: {
     // Chat & Messages endpoints
     SEND_TEXT: '/messages/send',
+    SEND_MEDIA: '/messages/send/media',
+    SEND_LOCATION: '/messages/send/location',
     CONVERSATIONS: '/messages/conversations/',
     CONVERSATION_DETAIL: '/messages/conversations/:phone',
     DELETE_CONVERSATION: '/messages/conversations/:phone',
