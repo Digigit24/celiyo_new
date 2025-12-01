@@ -407,7 +407,7 @@ export default function Campaigns() {
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> Template variables like {'{'}{'{'}}1{'}'}{'}'}, {'{'}{'{'}}2{'}'}{'}'}  will be replaced with actual values when sending.
+                  <strong>Note:</strong> Template variables like {'{{1}}, {{2}}'} will be replaced with actual values when sending.
                   Campaign will be sent in background immediately after creation.
                 </p>
               </div>
