@@ -1,19 +1,55 @@
 // src/types/tenant.types.ts
 
+export interface TenantSettings {
+  [key: string]: any;
+}
+
 export interface Tenant {
   id: string;
   name: string;
   slug: string;
-  domain: string;
-  database_name: string;
-  database_url: string;
-  enabled_modules: string;
-  settings: string;
+  domain: string | null;
+  database_name: string | null;
+  database_url: string | null;
+  enabled_modules: string[];
+  settings: TenantSettings;
   is_active: boolean;
-  trial_ends_at: string;
-  user_count: string;
+  trial_ends_at: string | null;
+  user_count?: number;
   created_at: string;
   updated_at: string;
+  gallery_images?: TenantImage[];
+}
+
+export interface TenantImage {
+  id: string;
+  tenant: string;
+  image: string;
+  label: string;
+  description: string | null;
+  order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TenantUpdateData {
+  name?: string;
+  slug?: string;
+  domain?: string | null;
+  database_name?: string | null;
+  database_url?: string | null;
+  enabled_modules?: string[];
+  settings?: TenantSettings;
+  is_active?: boolean;
+  trial_ends_at?: string | null;
+}
+
+export interface TenantImageUpload {
+  image: File;
+  label: string;
+  description?: string;
+  order?: number;
 }
 
 export interface TenantListParams {

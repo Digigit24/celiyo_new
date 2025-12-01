@@ -60,6 +60,13 @@ export const API_CONFIG = {
       CREATE: '/tenants/',
       UPDATE: '/tenant/:id/',
       DELETE: '/tenant/:id/',
+      IMAGES: {
+        LIST: '/tenant/:tenant_id/images/',
+        DETAIL: '/tenant/:tenant_id/images/:id/',
+        CREATE: '/tenant/:tenant_id/images/',
+        UPDATE: '/tenant/:tenant_id/images/:id/',
+        DELETE: '/tenant/:tenant_id/images/:id/',
+      },
     },
   },
 
