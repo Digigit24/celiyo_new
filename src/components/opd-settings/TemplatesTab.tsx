@@ -30,6 +30,7 @@ export function TemplatesTab() {
 
   // State for selected group
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false);
 
   // Template Group Drawer state
   const [groupDrawerOpen, setGroupDrawerOpen] = useState(false);
@@ -69,9 +70,17 @@ export function TemplatesTab() {
 
   React.useEffect(() => {
     if (selectedGroupId) {
+      setIsLoadingTemplates(true);
       setTemplatesQueryParams((prev) => ({ ...prev, group: selectedGroupId }));
     }
   }, [selectedGroupId]);
+
+  // Clear loading state when templates data is ready
+  React.useEffect(() => {
+    if (!templatesLoading && selectedGroupId) {
+      setIsLoadingTemplates(false);
+    }
+  }, [templatesLoading, selectedGroupId]);
 
   const {
     data: templatesData,
@@ -509,8 +518,8 @@ export function TemplatesTab() {
               </div>
             ) : (
               <DataTable
-                rows={templatesData?.results || []}
-                isLoading={templatesLoading}
+                rows={isLoadingTemplates ? [] : (templatesData?.results || [])}
+                isLoading={isLoadingTemplates || templatesLoading}
                 columns={templateColumns}
                 renderMobileCard={renderTemplateMobileCard}
                 getRowId={(template) => template.id}
