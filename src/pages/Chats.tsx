@@ -189,14 +189,15 @@ export default function Chats() {
     }
 
     return (
-      <div className="flex h-screen bg-background">
-        
-        <ConversationList
-          conversations={transformedConversations}
-          selectedId={selectedConversationId}
-          onSelect={handleConversationSelect}
-          isMobile={true}
-        />
+      <div className="flex h-screen bg-background overflow-hidden">
+        <div className="flex-1 h-full">
+          <ConversationList
+            conversations={transformedConversations}
+            selectedId={selectedConversationId}
+            onSelect={handleConversationSelect}
+            isMobile={true}
+          />
+        </div>
       </div>
     );
   }
@@ -204,12 +205,13 @@ export default function Chats() {
   // Desktop view: show all components
   return (
     <div className="flex h-screen bg-background overflow-hidden">
-
-      <ConversationList
-        conversations={transformedConversations}
-        selectedId={selectedConversationId}
-        onSelect={handleConversationSelect}
-      />
+      <div className="flex-shrink-0 h-full">
+        <ConversationList
+          conversations={transformedConversations}
+          selectedId={selectedConversationId}
+          onSelect={handleConversationSelect}
+        />
+      </div>
       {selectedConversationId ? (
         <div className="flex-1 h-full overflow-hidden">
           <ChatWindow

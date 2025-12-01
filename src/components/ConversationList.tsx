@@ -55,7 +55,7 @@ export const ConversationList = ({ conversations, selectedId, onSelect, isMobile
   }
 
   return (
-    <aside className={`flex flex-col ${isMobile ? "w-full h-full" : "w-72 h-full"} border-r border-border bg-card`}>
+    <aside className={`flex flex-col ${isMobile ? "w-full" : "w-72"} border-r border-border bg-card overflow-hidden`}>
       <div className="flex items-center justify-between h-16 border-b border-border px-4 shrink-0">
         <span className="font-semibold text-lg">Conversations</span>
         <span className="text-xs text-muted-foreground">{conversations.length}</span>
@@ -93,7 +93,8 @@ export const ConversationList = ({ conversations, selectedId, onSelect, isMobile
           </TabsList>
         </Tabs>
       </div>
-      <ScrollArea className="flex-1">
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full">
         <ul className="px-2 pb-4">
           {filtered.length === 0 && (
             <li className="text-center text-xs text-muted-foreground py-8">No conversations found.</li>
@@ -124,7 +125,8 @@ export const ConversationList = ({ conversations, selectedId, onSelect, isMobile
             </li>
           ))}
         </ul>
-      </ScrollArea>
+        </ScrollArea>
+      </div>
     </aside>
   );
 };
