@@ -138,6 +138,9 @@ export const ChatWindow = ({ conversationId, selectedConversation, isMobile, onB
   // File preview state
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [filePreviewUrl, setFilePreviewUrl] = useState<string | null>(null);
+  const [selectedFileType, setSelectedFileType] = useState<AttachmentType | null>(null);
+  const [isFilePreviewOpen, setIsFilePreviewOpen] = useState(false);
+  const [fileCaption, setFileCaption] = useState("");
 
   const handleEmojiSelect = (emoji: any) => {
     setInput((prevInput) => prevInput + emoji.native);
@@ -221,33 +224,62 @@ export const ChatWindow = ({ conversationId, selectedConversation, isMobile, onB
     if (files && files.length > 0) {
       const fileArray = Array.from(files);
       setSelectedFiles(fileArray);
-      
-      // Create preview for images
-      if (type === 'image' || type === 'camera') {
+      setSelectedFileType(type);
+
+      // Create preview for images and videos
+      if (type === 'image' || type === 'camera' || type === 'video') {
         const reader = new FileReader();
         reader.onloadend = () => {
           setFilePreviewUrl(reader.result as string);
         };
         reader.readAsDataURL(fileArray[0]);
-      }
-      
-      // Here you would typically upload the file to your server
-      console.log(`Selected ${type}:`, fileArray);
-      
-      // Example: Send file info as message (you'd replace this with actual file upload)
-      const fileNames = fileArray.map(f => f.name).join(', ');
-      const fileMessage = `📎 ${type === 'image' ? '🖼️' : type === 'video' ? '🎥' : type === 'document' ? '📄' : '🎵'} ${fileNames}`;
-      
-      try {
-        await sendMessage(fileMessage);
-        setSelectedFiles([]);
+      } else {
         setFilePreviewUrl(null);
-      } catch (error) {
-        console.error('Failed to send file:', error);
       }
+
+      // Open preview dialog
+      setIsFilePreviewOpen(true);
     }
     // Reset input value to allow selecting the same file again
     e.target.value = '';
+  };
+
+  const handleSendFile = async () => {
+    if (selectedFiles.length === 0) return;
+
+    try {
+      const file = selectedFiles[0];
+
+      // In a real implementation, you would:
+      // 1. Upload the file to your server/storage (S3, etc.)
+      // 2. Get the URL back
+      // 3. Send that URL via messagesService.sendMediaMessage()
+
+      // For now, we'll send a placeholder message
+      // You'll need to implement actual file upload endpoint
+      const fileMessage = `📎 ${selectedFileType === 'image' ? '🖼️' : selectedFileType === 'video' ? '🎥' : selectedFileType === 'document' ? '📄' : '🎵'} ${file.name}${fileCaption ? `\n${fileCaption}` : ''}`;
+
+      await sendMessage(fileMessage);
+
+      // TODO: Implement actual media message sending:
+      // const mediaType = selectedFileType === 'camera' ? 'image' : selectedFileType;
+      // await messagesService.sendMediaMessage({
+      //   to: selectedConversation?.phone || conversationId,
+      //   media_type: mediaType as 'image' | 'video' | 'audio' | 'document',
+      //   media_url: uploadedFileUrl,
+      //   caption: fileCaption || undefined,
+      //   filename: file.name
+      // });
+
+      // Reset state
+      setSelectedFiles([]);
+      setFilePreviewUrl(null);
+      setSelectedFileType(null);
+      setFileCaption("");
+      setIsFilePreviewOpen(false);
+    } catch (error) {
+      console.error('Failed to send file:', error);
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -640,6 +672,100 @@ export const ChatWindow = ({ conversationId, selectedConversation, isMobile, onB
               className="bg-gradient-to-br from-green-600 to-emerald-700 hover:from-green-700 hover:to-emerald-800"
             >
               Send Contact
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* File Preview Dialog */}
+      <Dialog open={isFilePreviewOpen} onOpenChange={setIsFilePreviewOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {selectedFileType === 'image' || selectedFileType === 'camera' ? (
+                <ImageIcon className="h-5 w-5 text-blue-500" />
+              ) : selectedFileType === 'video' ? (
+                <Video className="h-5 w-5 text-purple-500" />
+              ) : selectedFileType === 'document' ? (
+                <FileText className="h-5 w-5 text-orange-500" />
+              ) : (
+                <Music className="h-5 w-5 text-green-500" />
+              )}
+              Send {selectedFileType === 'camera' ? 'Image' : selectedFileType}
+            </DialogTitle>
+            <DialogDescription>
+              {selectedFiles.length > 0 && `Selected: ${selectedFiles[0].name}`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            {/* File Preview */}
+            {filePreviewUrl && (selectedFileType === 'image' || selectedFileType === 'camera') && (
+              <div className="rounded-lg overflow-hidden border border-border bg-muted">
+                <img
+                  src={filePreviewUrl}
+                  alt="Preview"
+                  className="w-full h-auto max-h-96 object-contain"
+                />
+              </div>
+            )}
+            {filePreviewUrl && selectedFileType === 'video' && (
+              <div className="rounded-lg overflow-hidden border border-border bg-muted">
+                <video
+                  src={filePreviewUrl}
+                  controls
+                  className="w-full h-auto max-h-96"
+                />
+              </div>
+            )}
+            {!filePreviewUrl && (selectedFileType === 'document' || selectedFileType === 'audio') && (
+              <div className="rounded-lg border border-border bg-muted p-8 text-center">
+                <div className="mx-auto w-20 h-20 rounded-full bg-background flex items-center justify-center mb-4">
+                  {selectedFileType === 'document' ? (
+                    <FileText className="h-10 w-10 text-muted-foreground" />
+                  ) : (
+                    <Music className="h-10 w-10 text-muted-foreground" />
+                  )}
+                </div>
+                <p className="text-sm font-medium text-foreground">{selectedFiles[0]?.name}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {selectedFiles[0] && (selectedFiles[0].size / 1024).toFixed(2)} KB
+                </p>
+              </div>
+            )}
+
+            {/* Caption Input */}
+            <div>
+              <label className="text-sm text-foreground mb-2 block">
+                Caption (optional)
+              </label>
+              <Input
+                placeholder="Add a caption..."
+                value={fileCaption}
+                onChange={(e) => setFileCaption(e.target.value)}
+                className="w-full"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsFilePreviewOpen(false);
+                setSelectedFiles([]);
+                setFilePreviewUrl(null);
+                setSelectedFileType(null);
+                setFileCaption("");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSendFile}
+              disabled={selectedFiles.length === 0}
+              className="bg-primary hover:bg-primary/90"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Send
             </Button>
           </DialogFooter>
         </DialogContent>

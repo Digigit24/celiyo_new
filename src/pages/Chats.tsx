@@ -177,7 +177,7 @@ export default function Chats() {
   if (isMobile) {
     if (selectedConversationId) {
       return (
-        <div className="flex h-screen bg-background">
+        <div className="flex flex-col h-screen bg-background overflow-hidden">
           <ChatWindow
             conversationId={selectedConversationId}
             selectedConversation={conversations?.find(c => c.phone === selectedConversationId)}
@@ -211,10 +211,12 @@ export default function Chats() {
         onSelect={handleConversationSelect}
       />
       {selectedConversationId ? (
-        <ChatWindow
-          conversationId={selectedConversationId}
-          selectedConversation={conversations?.find(c => c.phone === selectedConversationId)}
-        />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <ChatWindow
+            conversationId={selectedConversationId}
+            selectedConversation={conversations?.find(c => c.phone === selectedConversationId)}
+          />
+        </div>
       ) : (
         <div className="flex-1 flex items-center justify-center bg-muted/20">
           <div className="text-center">
