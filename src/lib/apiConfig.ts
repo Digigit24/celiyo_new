@@ -53,6 +53,14 @@ export const API_CONFIG = {
       MEMBERS: '/roles/:id/members/',
       PERMISSIONS_SCHEMA: '/roles/permissions_schema/',
     },
+    // Tenant Management endpoints
+    TENANTS: {
+      LIST: '/tenants/',
+      DETAIL: '/tenants/:id/',
+      CREATE: '/tenants/',
+      UPDATE: '/tenants/:id/',
+      DELETE: '/tenants/:id/',
+    },
   },
 
   // ==================== HMS ====================

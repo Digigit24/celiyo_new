@@ -285,6 +285,12 @@ const menuItems: MenuItem[] = [
         path: "/admin/roles",
       },
       {
+        id: "admin-settings",
+        label: "Settings",
+        icon: Settings2,
+        path: "/admin/settings",
+      },
+      {
         id: "admin-debug",
         label: "Debug",
         icon: Bug,

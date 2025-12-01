@@ -46,6 +46,7 @@ import { OPDSettings } from "./pages/OPDSettings";
 import { Users } from "./pages/Users";
 import { Roles } from "./pages/Roles";
 import { Debug } from "./pages/Debug";
+import { AdminSettings } from "./pages/AdminSettings";
 import { Transactions } from "./pages/Transactions";
 import { PaymentCategories } from "./pages/PaymentCategories";
 import { AccountingPeriods } from "./pages/AccountingPeriods";
@@ -135,6 +136,7 @@ const AppLayout = () => {
             <Route path="/users" element={<Users />} />
             <Route path="/admin/roles" element={<Roles />} />
             <Route path="/roles" element={<Roles />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
             <Route path="/admin/debug" element={<Debug />} />
             <Route path="/debug" element={<Debug />} />
 
