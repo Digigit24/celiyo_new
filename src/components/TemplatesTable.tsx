@@ -11,6 +11,7 @@ import { templatesService } from '@/services/whatsapp/templatesService';
 interface TemplatesTableProps {
   templates: Template[];
   isLoading?: boolean;
+  onView?: (template: Template) => void;
   onEdit?: (template: Template) => void;
   onDelete?: (template: Template) => Promise<void>;
   onSync?: (template: Template) => void;
@@ -21,6 +22,7 @@ interface TemplatesTableProps {
 export function TemplatesTable({
   templates,
   isLoading = false,
+  onView,
   onEdit,
   onDelete,
   onSync,
@@ -244,6 +246,7 @@ export function TemplatesTable({
       renderMobileCard={renderMobileCard}
       getRowId={(template) => template.id}
       getRowLabel={(template) => template.name}
+      onRowClick={onView}
       onEdit={onEdit}
       onDelete={onDelete}
       extraActions={getExtraActions}

@@ -21,21 +21,32 @@ import {
 } from '@/types/whatsappTypes';
 import { useTemplate } from '@/hooks/whatsapp/useTemplates';
 import { templatesService } from '@/services/whatsapp/templatesService';
-import { 
-  Eye, 
-  Pencil, 
-  Trash2, 
-  Smartphone, 
-  Plus, 
-  MinusCircle, 
+import {
+  Eye,
+  Pencil,
+  Trash2,
+  Smartphone,
+  Plus,
+  MinusCircle,
   Image as ImageIcon,
   FileText,
   Video,
   File,
   ExternalLink,
-  AlertCircle
+  AlertCircle,
+  Send,
+  TrendingUp,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Users,
+  UserPlus,
+  X as XIcon,
+  RefreshCw,
+  BarChart3
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 
 type Mode = 'view' | 'edit' | 'create';
 
@@ -78,6 +89,18 @@ export default function TemplatesFormDrawer({
   const [activeTab, setActiveTab] = useState('builder');
   const [currentMode, setCurrentMode] = useState<Mode>(mode);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Analytics state
+  const [analytics, setAnalytics] = useState<any>(null);
+  const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
+
+  // Send message state
+  const [sendMode, setSendMode] = useState<'single' | 'bulk'>('single');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [sendParameters, setSendParameters] = useState<Record<string, string>>({});
+  const [phoneNumbers, setPhoneNumbers] = useState<string[]>(['']);
+  const [bulkParameters, setBulkParameters] = useState<Record<string, string>>({});
+  const [isSending, setIsSending] = useState(false);
 
   // Load when viewing/editing
   const { template, isLoading, error, refetch } = useTemplate(templateId);
@@ -384,6 +407,116 @@ export default function TemplatesFormDrawer({
 
   const removeButton = (index: number) => {
     setButtons((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // ===== Analytics handlers =====
+  const fetchAnalytics = useCallback(async () => {
+    if (!templateId) return;
+
+    try {
+      setIsLoadingAnalytics(true);
+      const data = await templatesService.getTemplateAnalytics(templateId);
+      setAnalytics(data);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to fetch analytics');
+    } finally {
+      setIsLoadingAnalytics(false);
+    }
+  }, [templateId]);
+
+  // Fetch analytics when switching to analytics tab
+  useEffect(() => {
+    if (activeTab === 'analytics' && templateId && !analytics) {
+      fetchAnalytics();
+    }
+  }, [activeTab, templateId, analytics, fetchAnalytics]);
+
+  // ===== Send message handlers =====
+  const handleSendSingle = async () => {
+    if (!template) return;
+
+    if (!phoneNumber.trim()) {
+      toast.error('Please enter a phone number');
+      return;
+    }
+
+    const vars = templatesService.extractVariables(
+      template.components.find(c => c.type === 'BODY')?.text || ''
+    );
+    const missingParams = vars.filter(v => !sendParameters[v]);
+    if (missingParams.length > 0) {
+      toast.error(`Please fill in all required parameters: ${missingParams.join(', ')}`);
+      return;
+    }
+
+    try {
+      setIsSending(true);
+      await templatesService.sendTemplate({
+        to: phoneNumber.trim(),
+        template_name: template.name,
+        language: template.language as any,
+        parameters: sendParameters
+      });
+      toast.success(`Template sent to ${phoneNumber}`);
+      setPhoneNumber('');
+      setSendParameters({});
+      setActiveTab('builder');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send template');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleSendBulk = async () => {
+    if (!template) return;
+
+    const validPhones = phoneNumbers.filter(p => p.trim());
+    if (validPhones.length === 0) {
+      toast.error('Please enter at least one phone number');
+      return;
+    }
+
+    const vars = templatesService.extractVariables(
+      template.components.find(c => c.type === 'BODY')?.text || ''
+    );
+    const missingParams = vars.filter(v => !bulkParameters[v]);
+    if (missingParams.length > 0) {
+      toast.error(`Please fill in all required parameters: ${missingParams.join(', ')}`);
+      return;
+    }
+
+    try {
+      setIsSending(true);
+      const result = await templatesService.sendTemplateBulk({
+        template_name: template.name,
+        language: template.language as any,
+        recipients: validPhones,
+        default_parameters: bulkParameters
+      });
+      toast.success(`Sent to ${result.sent} recipients (${result.failed} failed)`);
+      setPhoneNumbers(['']);
+      setBulkParameters({});
+      setActiveTab('builder');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to send template bulk');
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const addPhoneNumberField = () => {
+    setPhoneNumbers([...phoneNumbers, '']);
+  };
+
+  const removePhoneNumberField = (index: number) => {
+    setPhoneNumbers(phoneNumbers.filter((_, i) => i !== index));
+  };
+
+  const updatePhoneNumber = (index: number, value: string) => {
+    const updated = [...phoneNumbers];
+    updated[index] = value;
+    setPhoneNumbers(updated);
   };
 
   // ===== Mobile-like preview card =====
@@ -1074,15 +1207,301 @@ export default function TemplatesFormDrawer({
     );
   };
 
+  // ===== Analytics Tab Content =====
+  const renderAnalyticsTab = () => {
+    if (!template) return null;
+
+    return (
+      <div className="space-y-6">
+        {isLoadingAnalytics && !analytics ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4" />
+              <p className="text-sm text-muted-foreground">Loading analytics...</p>
+            </div>
+          </div>
+        ) : analytics ? (
+          <>
+            <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold">{analytics.template_name}</h3>
+                <Badge variant="secondary">{analytics.status}</Badge>
+              </div>
+              <div className="text-sm text-muted-foreground">Template ID: {analytics.template_id}</div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Send className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm font-medium text-blue-900 dark:text-blue-100">Total Sends</span>
+                </div>
+                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">{analytics.total_sends}</div>
+              </div>
+
+              <div className="bg-green-50 dark:bg-green-950/20 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <span className="text-sm font-medium text-green-900 dark:text-green-100">Successful</span>
+                </div>
+                <div className="text-2xl font-bold text-green-600 dark:text-green-400">{analytics.successful_sends}</div>
+              </div>
+
+              <div className="bg-red-50 dark:bg-red-950/20 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <XCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                  <span className="text-sm font-medium text-red-900 dark:text-red-100">Failed</span>
+                </div>
+                <div className="text-2xl font-bold text-red-600 dark:text-red-400">{analytics.failed_sends}</div>
+              </div>
+
+              <div className="bg-purple-50 dark:bg-purple-950/20 rounded-lg p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                  <span className="text-sm font-medium text-purple-900 dark:text-purple-100">Success Rate</span>
+                </div>
+                <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">{analytics.success_rate.toFixed(1)}%</div>
+              </div>
+            </div>
+
+            <div className="bg-muted/30 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Usage Count</span>
+                </div>
+                <span className="text-lg font-semibold">{analytics.usage_count}</span>
+              </div>
+            </div>
+
+            {analytics.last_used_at && (
+              <div className="text-sm text-muted-foreground">
+                Last used: {new Date(analytics.last_used_at).toLocaleString()}
+              </div>
+            )}
+
+            {analytics.total_sends === 0 && (
+              <div className="bg-muted/30 rounded-lg p-8 text-center">
+                <Send className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+                <h3 className="text-sm font-semibold mb-2">No sends yet</h3>
+                <p className="text-sm text-muted-foreground">This template hasn't been used to send any messages yet.</p>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="text-center py-8 text-muted-foreground">
+            <Button onClick={fetchAnalytics} variant="outline">
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Load Analytics
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ===== Send Message Tab Content =====
+  const renderSendTab = () => {
+    if (!template) return null;
+
+    const extractedVars = templatesService.extractVariables(
+      template.components.find(c => c.type === 'BODY')?.text || ''
+    );
+
+    const getBodyPreview = () => {
+      const bodyComponent = template.components.find(c => c.type === 'BODY');
+      if (!bodyComponent?.text) return '';
+      const params = sendMode === 'single' ? sendParameters : bulkParameters;
+      return templatesService.replaceVariables(bodyComponent.text, params);
+    };
+
+    return (
+      <div className="space-y-6">
+        <Tabs value={sendMode} onValueChange={(v) => setSendMode(v as 'single' | 'bulk')}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="single">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Single Recipient
+            </TabsTrigger>
+            <TabsTrigger value="bulk">
+              <Users className="h-4 w-4 mr-2" />
+              Bulk Send
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="single" className="space-y-4 mt-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number *</Label>
+              <Input
+                id="phone"
+                placeholder="e.g., 919876543210"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                disabled={isSending}
+              />
+              <p className="text-xs text-muted-foreground">
+                Enter phone number with country code
+              </p>
+            </div>
+
+            {extractedVars.length > 0 && (
+              <div className="space-y-3">
+                <Label>Template Variables</Label>
+                {extractedVars.map((variable) => (
+                  <div key={variable} className="space-y-1">
+                    <Label htmlFor={`param-${variable}`} className="text-sm">
+                      Variable {variable} *
+                    </Label>
+                    <Input
+                      id={`param-${variable}`}
+                      placeholder={`Value for {{${variable}}}`}
+                      value={sendParameters[variable] || ''}
+                      onChange={(e) => setSendParameters({ ...sendParameters, [variable]: e.target.value })}
+                      disabled={isSending}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {extractedVars.length > 0 && (
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <Label className="text-sm font-medium">Preview</Label>
+                <p className="text-sm whitespace-pre-wrap">
+                  {getBodyPreview() || 'Fill in the variables to see preview'}
+                </p>
+              </div>
+            )}
+
+            <Button onClick={handleSendSingle} disabled={isSending} className="w-full">
+              {isSending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send Message
+                </>
+              )}
+            </Button>
+          </TabsContent>
+
+          <TabsContent value="bulk" className="space-y-4 mt-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Phone Numbers *</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addPhoneNumberField}
+                  disabled={isSending}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Add Number
+                </Button>
+              </div>
+
+              {phoneNumbers.map((phone, index) => (
+                <div key={index} className="flex gap-2">
+                  <Input
+                    placeholder={`Phone ${index + 1} (e.g., 919876543210)`}
+                    value={phone}
+                    onChange={(e) => updatePhoneNumber(index, e.target.value)}
+                    disabled={isSending}
+                  />
+                  {phoneNumbers.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removePhoneNumberField(index)}
+                      disabled={isSending}
+                    >
+                      <XIcon className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {extractedVars.length > 0 && (
+              <div className="space-y-3">
+                <Label>Template Variables (same for all recipients)</Label>
+                {extractedVars.map((variable) => (
+                  <div key={variable} className="space-y-1">
+                    <Label htmlFor={`bulk-param-${variable}`} className="text-sm">
+                      Variable {variable} *
+                    </Label>
+                    <Input
+                      id={`bulk-param-${variable}`}
+                      placeholder={`Value for {{${variable}}}`}
+                      value={bulkParameters[variable] || ''}
+                      onChange={(e) => setBulkParameters({ ...bulkParameters, [variable]: e.target.value })}
+                      disabled={isSending}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {extractedVars.length > 0 && (
+              <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                <Label className="text-sm font-medium">Preview</Label>
+                <p className="text-sm whitespace-pre-wrap">
+                  {getBodyPreview() || 'Fill in the variables to see preview'}
+                </p>
+              </div>
+            )}
+
+            <div className="bg-blue-50 dark:bg-blue-950/20 rounded-lg p-3">
+              <p className="text-sm text-blue-900 dark:text-blue-100">
+                <strong>Recipients:</strong> {phoneNumbers.filter(p => p.trim()).length}
+              </p>
+            </div>
+
+            <Button onClick={handleSendBulk} disabled={isSending} className="w-full">
+              {isSending ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send to {phoneNumbers.filter(p => p.trim()).length} Recipients
+                </>
+              )}
+            </Button>
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
+  };
+
   // ===== Main Content =====
   const drawerContent = (
     <div className="space-y-4 sm:space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 h-10 sm:h-11">
+        <TabsList className={`grid w-full h-10 sm:h-11 ${currentMode === 'create' ? 'grid-cols-2' : 'grid-cols-4'}`}>
           <TabsTrigger value="builder" className="text-xs sm:text-sm">
             {currentMode === 'create' ? 'Builder' : currentMode === 'edit' ? 'Edit' : 'Details'}
           </TabsTrigger>
           <TabsTrigger value="preview" className="text-xs sm:text-sm">Preview</TabsTrigger>
+          {currentMode !== 'create' && (
+            <>
+              <TabsTrigger value="analytics" className="text-xs sm:text-sm">
+                <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                Analytics
+              </TabsTrigger>
+              <TabsTrigger value="send" className="text-xs sm:text-sm" disabled={template?.status !== TemplateStatus.APPROVED}>
+                <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                Send
+              </TabsTrigger>
+            </>
+          )}
         </TabsList>
 
         <TabsContent value="builder" className="mt-4 sm:mt-6 space-y-4 sm:space-y-6">
@@ -1111,6 +1530,18 @@ export default function TemplatesFormDrawer({
             </div>
           ) : null}
         </TabsContent>
+
+        {currentMode !== 'create' && (
+          <>
+            <TabsContent value="analytics" className="mt-4 sm:mt-6">
+              {renderAnalyticsTab()}
+            </TabsContent>
+
+            <TabsContent value="send" className="mt-4 sm:mt-6">
+              {renderSendTab()}
+            </TabsContent>
+          </>
+        )}
       </Tabs>
     </div>
   );
