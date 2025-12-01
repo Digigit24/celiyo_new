@@ -18,6 +18,8 @@ import { FileText, Printer, Save, Loader2 } from 'lucide-react';
 import { OpdVisit } from '@/types/opdVisit.types';
 import { toast } from 'sonner';
 import { useOPDTemplate } from '@/hooks/useOPDTemplate';
+import { useTenant } from '@/hooks/useTenant';
+import { useAuth } from '@/hooks/useAuth';
 import type { Template, TemplateField } from '@/types/opdTemplate.types';
 
 interface ConsultationTabProps {
@@ -26,10 +28,20 @@ interface ConsultationTabProps {
 
 export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
   const { useTemplateGroups, useTemplates, useTemplate } = useOPDTemplate();
+  const { getTenant } = useAuth();
+  const { useTenantDetail } = useTenant();
   const [mode, setMode] = useState<'entry' | 'preview'>('entry');
   const [selectedTemplateGroup, setSelectedTemplateGroup] = useState<string>('');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [formData, setFormData] = useState<Record<string, any>>({});
+
+  // Get tenant from current session
+  const tenant = getTenant();
+  const tenantId = tenant?.id || null;
+
+  // Fetch tenant settings for branding
+  const { data: tenantData } = useTenantDetail(tenantId);
+  const tenantSettings = tenantData?.settings || {};
 
   // Fetch template groups
   const { data: groupsData, isLoading: isLoadingGroups } = useTemplateGroups({
@@ -421,19 +433,53 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         </div>
 
         {/* A4 Paper with Letterhead */}
-        <div className="mx-auto bg-white shadow-lg print:shadow-none" style={{ width: '210mm', minHeight: '297mm' }}>
+        <div
+          className="mx-auto bg-white shadow-lg print:shadow-none"
+          style={{ width: '210mm', minHeight: '297mm' }}
+        >
           {/* Letterhead Header */}
-          <div className="border-b-4 border-primary p-8 bg-gradient-to-r from-primary/5 to-primary/10">
+          <div
+            className="border-b-4 p-8"
+            style={{
+              borderColor: tenantSettings.primary_color || '#3b82f6',
+              background: `linear-gradient(to right, ${tenantSettings.primary_color || '#3b82f6'}10, ${tenantSettings.secondary_color || '#8b5cf6'}10)`
+            }}
+          >
             <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-3xl font-bold text-primary">Medical Center</h1>
-                <p className="text-sm text-muted-foreground mt-1">Excellence in Healthcare</p>
+              <div className="flex items-start gap-4">
+                {/* Logo */}
+                {tenantSettings.logo && (
+                  <div className="flex-shrink-0">
+                    <img
+                      src={tenantSettings.logo}
+                      alt="Logo"
+                      className="h-16 w-16 object-contain"
+                    />
+                  </div>
+                )}
+                <div>
+                  <h1
+                    className="text-3xl font-bold"
+                    style={{ color: tenantSettings.primary_color || '#3b82f6' }}
+                  >
+                    {tenantData?.name || 'Medical Center'}
+                  </h1>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {tenantSettings.address?.split('\n')[0] || 'Excellence in Healthcare'}
+                  </p>
+                </div>
               </div>
               <div className="text-right text-sm">
                 <p className="font-semibold">Contact Information</p>
-                <p className="text-muted-foreground">Phone: +1 (555) 123-4567</p>
-                <p className="text-muted-foreground">Email: info@medicalcenter.com</p>
-                <p className="text-muted-foreground">www.medicalcenter.com</p>
+                {tenantSettings.contact_phone && (
+                  <p className="text-muted-foreground">Phone: {tenantSettings.contact_phone}</p>
+                )}
+                {tenantSettings.contact_email && (
+                  <p className="text-muted-foreground">Email: {tenantSettings.contact_email}</p>
+                )}
+                {tenantSettings.website_url && (
+                  <p className="text-muted-foreground">{tenantSettings.website_url}</p>
+                )}
               </div>
             </div>
           </div>
@@ -535,12 +581,23 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           </div>
 
           {/* Letterhead Footer */}
-          <div className="border-t-4 border-primary p-6 bg-gradient-to-r from-primary/5 to-primary/10 mt-auto">
+          <div
+            className="border-t-4 p-6 mt-auto"
+            style={{
+              borderColor: tenantSettings.primary_color || '#3b82f6',
+              background: `linear-gradient(to right, ${tenantSettings.primary_color || '#3b82f6'}10, ${tenantSettings.secondary_color || '#8b5cf6'}10)`
+            }}
+          >
             <div className="flex justify-between items-center text-xs text-muted-foreground">
               <div>
-                <p className="font-semibold">Medical Center</p>
-                <p>123 Healthcare Avenue, Medical District</p>
-                <p>City, State 12345</p>
+                <p className="font-semibold">{tenantData?.name || 'Medical Center'}</p>
+                {tenantSettings.address && (
+                  <>
+                    {tenantSettings.address.split('\n').map((line: string, index: number) => (
+                      <p key={index}>{line}</p>
+                    ))}
+                  </>
+                )}
               </div>
               <div className="text-right">
                 <p>This is an official medical document</p>
