@@ -5,8 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Building2, Save } from 'lucide-react';
+import { Building2, Save, Check } from 'lucide-react';
 import { toast } from 'sonner';
 
 export const GeneralSettingsTab: React.FC = () => {
@@ -80,17 +79,7 @@ export const GeneralSettingsTab: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">General Settings</h2>
-          <p className="text-muted-foreground">
-            Configure hospital information and branding
-          </p>
-        </div>
-      </div>
-
+    <div className="space-y-6 max-w-6xl">
       {/* Basic Information Card */}
       <Card>
         <CardHeader>
@@ -98,14 +87,9 @@ export const GeneralSettingsTab: React.FC = () => {
             <Building2 className="h-5 w-5" />
             <CardTitle>Hospital Information</CardTitle>
           </div>
-          <CardDescription>
-            Basic hospital details and contact information
-          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Row 1: Hospital Name and Logo */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Hospital Name */}
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="hospitalName">Hospital Name</Label>
               <Input
@@ -116,27 +100,21 @@ export const GeneralSettingsTab: React.FC = () => {
               />
             </div>
 
-            {/* Logo Upload */}
             <div className="space-y-2">
               <Label htmlFor="logo">Logo</Label>
-              <div className="flex items-start gap-4">
-                <div className="flex-1">
-                  <Input
-                    id="logo"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoUpload}
-                    className="cursor-pointer"
-                  />
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Recommended: 200x200px
-                  </p>
-                </div>
+              <div className="flex items-start gap-3">
+                <Input
+                  id="logo"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="cursor-pointer flex-1"
+                />
                 {logoPreview && (
-                  <div className="w-20 h-20 border rounded-lg overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
+                  <div className="w-12 h-12 border rounded overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
                     <img
                       src={logoPreview}
-                      alt="Logo preview"
+                      alt="Logo"
                       className="max-w-full max-h-full object-contain"
                     />
                   </div>
@@ -145,7 +123,6 @@ export const GeneralSettingsTab: React.FC = () => {
             </div>
           </div>
 
-          {/* Address - Full Width */}
           <div className="space-y-2">
             <Label htmlFor="address">Address</Label>
             <Textarea
@@ -153,15 +130,13 @@ export const GeneralSettingsTab: React.FC = () => {
               placeholder="Enter hospital address"
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              rows={3}
+              rows={2}
             />
           </div>
 
-          {/* Row 2: Contact Email and Contact Number */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Contact Email */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="contactEmail">Contact Email</Label>
+              <Label htmlFor="contactEmail">Email</Label>
               <Input
                 id="contactEmail"
                 type="email"
@@ -171,9 +146,8 @@ export const GeneralSettingsTab: React.FC = () => {
               />
             </div>
 
-            {/* Contact Number */}
             <div className="space-y-2">
-              <Label htmlFor="contactNumber">Contact Number</Label>
+              <Label htmlFor="contactNumber">Phone</Label>
               <Input
                 id="contactNumber"
                 type="tel"
@@ -182,18 +156,17 @@ export const GeneralSettingsTab: React.FC = () => {
                 onChange={(e) => setContactNumber(e.target.value)}
               />
             </div>
-          </div>
 
-          {/* Website URL - Full Width */}
-          <div className="space-y-2">
-            <Label htmlFor="websiteUrl">Website URL</Label>
-            <Input
-              id="websiteUrl"
-              type="url"
-              placeholder="https://www.hospital.com"
-              value={websiteUrl}
-              onChange={(e) => setWebsiteUrl(e.target.value)}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="websiteUrl">Website</Label>
+              <Input
+                id="websiteUrl"
+                type="url"
+                placeholder="https://hospital.com"
+                value={websiteUrl}
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -201,119 +174,124 @@ export const GeneralSettingsTab: React.FC = () => {
       {/* Header Configuration Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Header Configuration</CardTitle>
-          <CardDescription>
-            Customize the header layout, colors, and appearance
-          </CardDescription>
+          <CardTitle>Header Design</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Header Layout Selection */}
+          {/* Header Layout Selection - Visual */}
           <div className="space-y-3">
-            <Label>Header Layout</Label>
-            <RadioGroup value={headerLayout} onValueChange={(value: any) => setHeaderLayout(value)}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="split" id="layout-split" />
-                <Label htmlFor="layout-split" className="font-normal cursor-pointer">
-                  Split Layout - Logo & Name on left, Contact Email & Website on right
-                </Label>
+            <Label>Layout Style</Label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Split Layout */}
+              <div
+                onClick={() => setHeaderLayout('split')}
+                className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                  headerLayout === 'split'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                {headerLayout === 'split' && (
+                  <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-primary-foreground" />
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Split Layout</div>
+                  <div className="border rounded p-3 bg-background">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <div className="w-6 h-6 bg-muted rounded" />
+                        <div className="h-3 w-20 bg-muted rounded" />
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="h-2 w-16 bg-muted rounded" />
+                        <div className="h-2 w-16 bg-muted rounded" />
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Logo & Name on left, Email & Website on right
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="centered" id="layout-centered" />
-                <Label htmlFor="layout-centered" className="font-normal cursor-pointer">
-                  Centered Layout - Logo, Name, Email, Contact, Address, Website (all centered)
-                </Label>
+
+              {/* Centered Layout */}
+              <div
+                onClick={() => setHeaderLayout('centered')}
+                className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all ${
+                  headerLayout === 'centered'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                {headerLayout === 'centered' && (
+                  <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                    <Check className="w-3 h-3 text-primary-foreground" />
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Centered Layout</div>
+                  <div className="border rounded p-3 bg-background">
+                    <div className="flex flex-col items-center gap-1.5">
+                      <div className="w-6 h-6 bg-muted rounded" />
+                      <div className="h-3 w-24 bg-muted rounded" />
+                      <div className="h-2 w-20 bg-muted rounded" />
+                      <div className="h-2 w-16 bg-muted rounded" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    All content centered vertically
+                  </p>
+                </div>
               </div>
-            </RadioGroup>
+            </div>
           </div>
 
-          {/* Header Background Color */}
-          <div className="space-y-4">
-            <Label>Header Background Color</Label>
+          {/* Header Colors - Simplified */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <Label>Background</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="headerUseGradient"
+                  checked={headerUseGradient}
+                  onChange={(e) => setHeaderUseGradient(e.target.checked)}
+                  className="w-4 h-4 rounded"
+                />
+                <Label htmlFor="headerUseGradient" className="font-normal text-sm cursor-pointer">
+                  Gradient
+                </Label>
+              </div>
 
-            {/* Gradient Toggle */}
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="headerUseGradient"
-                checked={headerUseGradient}
-                onChange={(e) => setHeaderUseGradient(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300"
-              />
-              <Label htmlFor="headerUseGradient" className="font-normal cursor-pointer">
-                Use gradient
-              </Label>
-            </div>
-
-            {headerUseGradient ? (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Gradient Start */}
-                  <div className="space-y-2">
-                    <Label htmlFor="headerGradientStart" className="text-sm">
-                      Gradient Start
-                    </Label>
-                    <div className="flex gap-2 items-center">
-                      <Input
-                        id="headerGradientStart"
-                        type="color"
-                        value={headerGradientStart}
-                        onChange={(e) => setHeaderGradientStart(e.target.value)}
-                        className="w-20 h-10 cursor-pointer"
-                      />
-                      <Input
-                        type="text"
-                        value={headerGradientStart}
-                        onChange={(e) => setHeaderGradientStart(e.target.value)}
-                        placeholder="#3b82f6"
-                        className="flex-1"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Gradient End */}
-                  <div className="space-y-2">
-                    <Label htmlFor="headerGradientEnd" className="text-sm">
-                      Gradient End
-                    </Label>
-                    <div className="flex gap-2 items-center">
-                      <Input
-                        id="headerGradientEnd"
-                        type="color"
-                        value={headerGradientEnd}
-                        onChange={(e) => setHeaderGradientEnd(e.target.value)}
-                        className="w-20 h-10 cursor-pointer"
-                      />
-                      <Input
-                        type="text"
-                        value={headerGradientEnd}
-                        onChange={(e) => setHeaderGradientEnd(e.target.value)}
-                        placeholder="#8b5cf6"
-                        className="flex-1"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Gradient Preview */}
-                <div className="space-y-2">
-                  <Label className="text-sm">Preview</Label>
+              {headerUseGradient ? (
+                <div className="flex gap-2">
+                  <Input
+                    type="color"
+                    value={headerGradientStart}
+                    onChange={(e) => setHeaderGradientStart(e.target.value)}
+                    className="w-16 h-10 cursor-pointer p-1"
+                  />
+                  <Input
+                    type="color"
+                    value={headerGradientEnd}
+                    onChange={(e) => setHeaderGradientEnd(e.target.value)}
+                    className="w-16 h-10 cursor-pointer p-1"
+                  />
                   <div
-                    className="h-12 rounded-lg border"
+                    className="flex-1 h-10 rounded border"
                     style={{
                       background: `linear-gradient(to right, ${headerGradientStart}, ${headerGradientEnd})`,
                     }}
                   />
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <div className="flex gap-2 items-center">
+              ) : (
+                <div className="flex gap-2">
                   <Input
-                    id="headerBgColor"
                     type="color"
                     value={headerBgColor}
                     onChange={(e) => setHeaderBgColor(e.target.value)}
-                    className="w-20 h-10 cursor-pointer"
+                    className="w-16 h-10 cursor-pointer p-1"
                   />
                   <Input
                     type="text"
@@ -323,36 +301,26 @@ export const GeneralSettingsTab: React.FC = () => {
                     className="flex-1"
                   />
                 </div>
-                {/* Solid Color Preview */}
-                <div className="space-y-2">
-                  <Label className="text-sm">Preview</Label>
-                  <div
-                    className="h-12 rounded-lg border"
-                    style={{ backgroundColor: headerBgColor }}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
-          {/* Header Text Color */}
-          <div className="space-y-2">
-            <Label htmlFor="headerTextColor">Header Text Color</Label>
-            <div className="flex gap-2 items-center">
-              <Input
-                id="headerTextColor"
-                type="color"
-                value={headerTextColor}
-                onChange={(e) => setHeaderTextColor(e.target.value)}
-                className="w-20 h-10 cursor-pointer"
-              />
-              <Input
-                type="text"
-                value={headerTextColor}
-                onChange={(e) => setHeaderTextColor(e.target.value)}
-                placeholder="#ffffff"
-                className="flex-1"
-              />
+            <div className="space-y-3">
+              <Label>Text Color</Label>
+              <div className="flex gap-2 mt-8">
+                <Input
+                  type="color"
+                  value={headerTextColor}
+                  onChange={(e) => setHeaderTextColor(e.target.value)}
+                  className="w-16 h-10 cursor-pointer p-1"
+                />
+                <Input
+                  type="text"
+                  value={headerTextColor}
+                  onChange={(e) => setHeaderTextColor(e.target.value)}
+                  placeholder="#ffffff"
+                  className="flex-1"
+                />
+              </div>
             </div>
           </div>
         </CardContent>
@@ -361,45 +329,92 @@ export const GeneralSettingsTab: React.FC = () => {
       {/* Footer Configuration Card */}
       <Card>
         <CardHeader>
-          <CardTitle>Footer Configuration</CardTitle>
-          <CardDescription>
-            Customize the footer alignment and colors
-          </CardDescription>
+          <CardTitle>Footer Design</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Footer Alignment */}
+          {/* Footer Alignment - Visual */}
           <div className="space-y-3">
-            <Label>Footer Alignment</Label>
-            <RadioGroup value={footerAlignment} onValueChange={(value: any) => setFooterAlignment(value)}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="left" id="align-left" />
-                <Label htmlFor="align-left" className="font-normal cursor-pointer">
-                  Left Aligned
-                </Label>
+            <Label>Content Alignment</Label>
+            <div className="grid grid-cols-3 gap-3">
+              {/* Left */}
+              <div
+                onClick={() => setFooterAlignment('left')}
+                className={`relative border-2 rounded-lg p-3 cursor-pointer transition-all ${
+                  footerAlignment === 'left'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                {footerAlignment === 'left' && (
+                  <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  <div className="border rounded p-2 bg-background">
+                    <div className="h-2 w-16 bg-muted rounded" />
+                    <div className="h-2 w-12 bg-muted rounded mt-1" />
+                  </div>
+                  <p className="text-xs text-center">Left</p>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="center" id="align-center" />
-                <Label htmlFor="align-center" className="font-normal cursor-pointer">
-                  Center Aligned
-                </Label>
+
+              {/* Center */}
+              <div
+                onClick={() => setFooterAlignment('center')}
+                className={`relative border-2 rounded-lg p-3 cursor-pointer transition-all ${
+                  footerAlignment === 'center'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                {footerAlignment === 'center' && (
+                  <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  <div className="border rounded p-2 bg-background flex flex-col items-center">
+                    <div className="h-2 w-16 bg-muted rounded" />
+                    <div className="h-2 w-12 bg-muted rounded mt-1" />
+                  </div>
+                  <p className="text-xs text-center">Center</p>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="right" id="align-right" />
-                <Label htmlFor="align-right" className="font-normal cursor-pointer">
-                  Right Aligned
-                </Label>
+
+              {/* Right */}
+              <div
+                onClick={() => setFooterAlignment('right')}
+                className={`relative border-2 rounded-lg p-3 cursor-pointer transition-all ${
+                  footerAlignment === 'right'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50'
+                }`}
+              >
+                {footerAlignment === 'right' && (
+                  <div className="absolute top-2 right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                    <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                  </div>
+                )}
+                <div className="space-y-1.5">
+                  <div className="border rounded p-2 bg-background flex flex-col items-end">
+                    <div className="h-2 w-16 bg-muted rounded" />
+                    <div className="h-2 w-12 bg-muted rounded mt-1" />
+                  </div>
+                  <p className="text-xs text-center">Right</p>
+                </div>
               </div>
-            </RadioGroup>
+            </div>
           </div>
 
-          {/* Use Separate Footer Color */}
-          <div className="flex items-center gap-2">
+          {/* Separate Footer Colors */}
+          <div className="flex items-center gap-2 pt-2">
             <input
               type="checkbox"
               id="useSeparateFooterColor"
               checked={useSeparateFooterColor}
               onChange={(e) => setUseSeparateFooterColor(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300"
+              className="w-4 h-4 rounded"
             />
             <Label htmlFor="useSeparateFooterColor" className="font-normal cursor-pointer">
               Use different colors for footer
@@ -407,126 +422,70 @@ export const GeneralSettingsTab: React.FC = () => {
           </div>
 
           {useSeparateFooterColor && (
-            <>
-              {/* Footer Background Color */}
-              <div className="space-y-4">
-                <Label>Footer Background Color</Label>
-
-                {/* Gradient Toggle */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="space-y-3">
+                <Label>Background</Label>
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     id="footerUseGradient"
                     checked={footerUseGradient}
                     onChange={(e) => setFooterUseGradient(e.target.checked)}
-                    className="w-4 h-4 rounded border-gray-300"
+                    className="w-4 h-4 rounded"
                   />
-                  <Label htmlFor="footerUseGradient" className="font-normal cursor-pointer">
-                    Use gradient
+                  <Label htmlFor="footerUseGradient" className="font-normal text-sm cursor-pointer">
+                    Gradient
                   </Label>
                 </div>
 
                 {footerUseGradient ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Gradient Start */}
-                      <div className="space-y-2">
-                        <Label htmlFor="footerGradientStart" className="text-sm">
-                          Gradient Start
-                        </Label>
-                        <div className="flex gap-2 items-center">
-                          <Input
-                            id="footerGradientStart"
-                            type="color"
-                            value={footerGradientStart}
-                            onChange={(e) => setFooterGradientStart(e.target.value)}
-                            className="w-20 h-10 cursor-pointer"
-                          />
-                          <Input
-                            type="text"
-                            value={footerGradientStart}
-                            onChange={(e) => setFooterGradientStart(e.target.value)}
-                            placeholder="#3b82f6"
-                            className="flex-1"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Gradient End */}
-                      <div className="space-y-2">
-                        <Label htmlFor="footerGradientEnd" className="text-sm">
-                          Gradient End
-                        </Label>
-                        <div className="flex gap-2 items-center">
-                          <Input
-                            id="footerGradientEnd"
-                            type="color"
-                            value={footerGradientEnd}
-                            onChange={(e) => setFooterGradientEnd(e.target.value)}
-                            className="w-20 h-10 cursor-pointer"
-                          />
-                          <Input
-                            type="text"
-                            value={footerGradientEnd}
-                            onChange={(e) => setFooterGradientEnd(e.target.value)}
-                            placeholder="#8b5cf6"
-                            className="flex-1"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Gradient Preview */}
-                    <div className="space-y-2">
-                      <Label className="text-sm">Preview</Label>
-                      <div
-                        className="h-12 rounded-lg border"
-                        style={{
-                          background: `linear-gradient(to right, ${footerGradientStart}, ${footerGradientEnd})`,
-                        }}
-                      />
-                    </div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={footerGradientStart}
+                      onChange={(e) => setFooterGradientStart(e.target.value)}
+                      className="w-16 h-10 cursor-pointer p-1"
+                    />
+                    <Input
+                      type="color"
+                      value={footerGradientEnd}
+                      onChange={(e) => setFooterGradientEnd(e.target.value)}
+                      className="w-16 h-10 cursor-pointer p-1"
+                    />
+                    <div
+                      className="flex-1 h-10 rounded border"
+                      style={{
+                        background: `linear-gradient(to right, ${footerGradientStart}, ${footerGradientEnd})`,
+                      }}
+                    />
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <div className="flex gap-2 items-center">
-                      <Input
-                        id="footerBgColor"
-                        type="color"
-                        value={footerBgColor}
-                        onChange={(e) => setFooterBgColor(e.target.value)}
-                        className="w-20 h-10 cursor-pointer"
-                      />
-                      <Input
-                        type="text"
-                        value={footerBgColor}
-                        onChange={(e) => setFooterBgColor(e.target.value)}
-                        placeholder="#3b82f6"
-                        className="flex-1"
-                      />
-                    </div>
-                    {/* Solid Color Preview */}
-                    <div className="space-y-2">
-                      <Label className="text-sm">Preview</Label>
-                      <div
-                        className="h-12 rounded-lg border"
-                        style={{ backgroundColor: footerBgColor }}
-                      />
-                    </div>
+                  <div className="flex gap-2">
+                    <Input
+                      type="color"
+                      value={footerBgColor}
+                      onChange={(e) => setFooterBgColor(e.target.value)}
+                      className="w-16 h-10 cursor-pointer p-1"
+                    />
+                    <Input
+                      type="text"
+                      value={footerBgColor}
+                      onChange={(e) => setFooterBgColor(e.target.value)}
+                      placeholder="#3b82f6"
+                      className="flex-1"
+                    />
                   </div>
                 )}
               </div>
 
-              {/* Footer Text Color */}
-              <div className="space-y-2">
-                <Label htmlFor="footerTextColor">Footer Text Color</Label>
-                <div className="flex gap-2 items-center">
+              <div className="space-y-3">
+                <Label>Text Color</Label>
+                <div className="flex gap-2 mt-8">
                   <Input
-                    id="footerTextColor"
                     type="color"
                     value={footerTextColor}
                     onChange={(e) => setFooterTextColor(e.target.value)}
-                    className="w-20 h-10 cursor-pointer"
+                    className="w-16 h-10 cursor-pointer p-1"
                   />
                   <Input
                     type="text"
@@ -537,20 +496,20 @@ export const GeneralSettingsTab: React.FC = () => {
                   />
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {!useSeparateFooterColor && (
             <p className="text-sm text-muted-foreground">
-              Footer will use the same colors as the header
+              Footer will use the same colors as header
             </p>
           )}
         </CardContent>
       </Card>
 
       {/* Save Button */}
-      <div className="flex justify-end">
-        <Button onClick={handleSave} size="lg">
+      <div className="flex justify-end sticky bottom-4 z-10">
+        <Button onClick={handleSave} size="lg" className="shadow-lg">
           <Save className="h-4 w-4 mr-2" />
           Save Settings
         </Button>
