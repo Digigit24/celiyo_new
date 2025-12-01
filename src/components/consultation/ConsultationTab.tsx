@@ -441,8 +441,9 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           <div
             className="border-b-4 p-8"
             style={{
-              borderColor: tenantSettings.primary_color || '#3b82f6',
-              background: `linear-gradient(to right, ${tenantSettings.primary_color || '#3b82f6'}10, ${tenantSettings.secondary_color || '#8b5cf6'}10)`
+              borderColor: tenantSettings.header_bg_color || '#3b82f6',
+              backgroundColor: tenantSettings.header_bg_color || '#3b82f6',
+              color: tenantSettings.header_text_color || '#ffffff'
             }}
           >
             <div className="flex justify-between items-start">
@@ -458,13 +459,10 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                   </div>
                 )}
                 <div>
-                  <h1
-                    className="text-3xl font-bold"
-                    style={{ color: tenantSettings.primary_color || '#3b82f6' }}
-                  >
+                  <h1 className="text-3xl font-bold">
                     {tenantData?.name || 'Medical Center'}
                   </h1>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="text-sm mt-1 opacity-90">
                     {tenantSettings.address?.split('\n')[0] || 'Excellence in Healthcare'}
                   </p>
                 </div>
@@ -472,13 +470,13 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
               <div className="text-right text-sm">
                 <p className="font-semibold">Contact Information</p>
                 {tenantSettings.contact_phone && (
-                  <p className="text-muted-foreground">Phone: {tenantSettings.contact_phone}</p>
+                  <p className="opacity-90">Phone: {tenantSettings.contact_phone}</p>
                 )}
                 {tenantSettings.contact_email && (
-                  <p className="text-muted-foreground">Email: {tenantSettings.contact_email}</p>
+                  <p className="opacity-90">Email: {tenantSettings.contact_email}</p>
                 )}
                 {tenantSettings.website_url && (
-                  <p className="text-muted-foreground">{tenantSettings.website_url}</p>
+                  <p className="opacity-90">{tenantSettings.website_url}</p>
                 )}
               </div>
             </div>
@@ -584,24 +582,25 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           <div
             className="border-t-4 p-6 mt-auto"
             style={{
-              borderColor: tenantSettings.primary_color || '#3b82f6',
-              background: `linear-gradient(to right, ${tenantSettings.primary_color || '#3b82f6'}10, ${tenantSettings.secondary_color || '#8b5cf6'}10)`
+              borderColor: tenantSettings.footer_bg_color || '#3b82f6',
+              backgroundColor: tenantSettings.footer_bg_color || '#3b82f6',
+              color: tenantSettings.footer_text_color || '#ffffff'
             }}
           >
-            <div className="flex justify-between items-center text-xs text-muted-foreground">
+            <div className="flex justify-between items-center text-xs">
               <div>
                 <p className="font-semibold">{tenantData?.name || 'Medical Center'}</p>
                 {tenantSettings.address && (
                   <>
                     {tenantSettings.address.split('\n').map((line: string, index: number) => (
-                      <p key={index}>{line}</p>
+                      <p key={index} className="opacity-90">{line}</p>
                     ))}
                   </>
                 )}
               </div>
               <div className="text-right">
-                <p>This is an official medical document</p>
-                <p>Generated on: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</p>
+                <p className="opacity-90">This is an official medical document</p>
+                <p className="opacity-90">Generated on: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}</p>
                 <p className="font-semibold mt-1">Confidential Medical Record</p>
               </div>
             </div>

@@ -44,17 +44,16 @@ export const AdminSettings: React.FC = () => {
   const [domain, setDomain] = useState('');
   const [logo, setLogo] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
-  const [banner, setBanner] = useState<File | null>(null);
-  const [bannerPreview, setBannerPreview] = useState<string>('');
   const [address, setAddress] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
 
   // Branding settings (all go into settings JSON)
-  const [primaryColor, setPrimaryColor] = useState('#3b82f6');
-  const [secondaryColor, setSecondaryColor] = useState('#8b5cf6');
-  const [accentColor, setAccentColor] = useState('#10b981');
+  const [headerBgColor, setHeaderBgColor] = useState('#3b82f6');
+  const [headerTextColor, setHeaderTextColor] = useState('#ffffff');
+  const [footerBgColor, setFooterBgColor] = useState('#3b82f6');
+  const [footerTextColor, setFooterTextColor] = useState('#ffffff');
 
   // Initialize form with tenant data
   useEffect(() => {
@@ -75,16 +74,14 @@ export const AdminSettings: React.FC = () => {
       setContactEmail(settings.contact_email || '');
       setContactPhone(settings.contact_phone || '');
       setWebsiteUrl(settings.website_url || '');
-      setPrimaryColor(settings.primary_color || '#3b82f6');
-      setSecondaryColor(settings.secondary_color || '#8b5cf6');
-      setAccentColor(settings.accent_color || '#10b981');
+      setHeaderBgColor(settings.header_bg_color || '#3b82f6');
+      setHeaderTextColor(settings.header_text_color || '#ffffff');
+      setFooterBgColor(settings.footer_bg_color || '#3b82f6');
+      setFooterTextColor(settings.footer_text_color || '#ffffff');
 
-      // Load existing logo/banner from settings
+      // Load existing logo from settings
       if (settings.logo) {
         setLogoPreview(settings.logo);
-      }
-      if (settings.banner) {
-        setBannerPreview(settings.banner);
       }
     }
   }, [tenantData]);
@@ -96,18 +93,6 @@ export const AdminSettings: React.FC = () => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setLogoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleBannerUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setBanner(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setBannerPreview(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -138,11 +123,11 @@ export const AdminSettings: React.FC = () => {
         contact_email: contactEmail,
         contact_phone: contactPhone,
         website_url: websiteUrl,
-        primary_color: primaryColor,
-        secondary_color: secondaryColor,
-        accent_color: accentColor,
+        header_bg_color: headerBgColor,
+        header_text_color: headerTextColor,
+        footer_bg_color: footerBgColor,
+        footer_text_color: footerTextColor,
         logo: logoPreview, // Base64 or URL
-        banner: bannerPreview, // Base64 or URL
       };
 
       const updateData: TenantUpdateData = {
@@ -290,49 +275,25 @@ export const AdminSettings: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="logo">Logo</Label>
-                  <div className="flex items-start gap-3">
-                    <Input
-                      id="logo"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleLogoUpload}
-                      className="cursor-pointer flex-1"
-                    />
-                    {logoPreview && (
-                      <div className="w-12 h-12 border rounded overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
-                        <img
-                          src={logoPreview}
-                          alt="Logo"
-                          className="max-w-full max-h-full object-contain"
-                        />
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="banner">Banner</Label>
-                  <div className="flex items-start gap-3">
-                    <Input
-                      id="banner"
-                      type="file"
-                      accept="image/*"
-                      onChange={handleBannerUpload}
-                      className="cursor-pointer flex-1"
-                    />
-                    {bannerPreview && (
-                      <div className="w-12 h-12 border rounded overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
-                        <img
-                          src={bannerPreview}
-                          alt="Banner"
-                          className="max-w-full max-h-full object-contain"
-                        />
-                      </div>
-                    )}
-                  </div>
+              <div className="space-y-2">
+                <Label htmlFor="logo">Logo</Label>
+                <div className="flex items-start gap-3">
+                  <Input
+                    id="logo"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="cursor-pointer flex-1"
+                  />
+                  {logoPreview && (
+                    <div className="w-12 h-12 border rounded overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
+                      <img
+                        src={logoPreview}
+                        alt="Logo"
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -428,62 +389,91 @@ export const AdminSettings: React.FC = () => {
             <CardHeader>
               <CardTitle>Branding & Colors</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-3">
-                  <Label>Primary Color</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      value={primaryColor}
-                      onChange={(e) => setPrimaryColor(e.target.value)}
-                      className="w-16 h-10 cursor-pointer p-1"
-                    />
-                    <Input
-                      type="text"
-                      value={primaryColor}
-                      onChange={(e) => setPrimaryColor(e.target.value)}
-                      placeholder="#3b82f6"
-                      className="flex-1"
-                    />
+            <CardContent className="space-y-6">
+              {/* Header Colors */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold">Header Colors</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Background Color</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        value={headerBgColor}
+                        onChange={(e) => setHeaderBgColor(e.target.value)}
+                        className="w-16 h-10 cursor-pointer p-1"
+                      />
+                      <Input
+                        type="text"
+                        value={headerBgColor}
+                        onChange={(e) => setHeaderBgColor(e.target.value)}
+                        placeholder="#3b82f6"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Text Color</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        value={headerTextColor}
+                        onChange={(e) => setHeaderTextColor(e.target.value)}
+                        className="w-16 h-10 cursor-pointer p-1"
+                      />
+                      <Input
+                        type="text"
+                        value={headerTextColor}
+                        onChange={(e) => setHeaderTextColor(e.target.value)}
+                        placeholder="#ffffff"
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
                 </div>
+              </div>
 
-                <div className="space-y-3">
-                  <Label>Secondary Color</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      value={secondaryColor}
-                      onChange={(e) => setSecondaryColor(e.target.value)}
-                      className="w-16 h-10 cursor-pointer p-1"
-                    />
-                    <Input
-                      type="text"
-                      value={secondaryColor}
-                      onChange={(e) => setSecondaryColor(e.target.value)}
-                      placeholder="#8b5cf6"
-                      className="flex-1"
-                    />
+              {/* Footer Colors */}
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold">Footer Colors</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Background Color</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        value={footerBgColor}
+                        onChange={(e) => setFooterBgColor(e.target.value)}
+                        className="w-16 h-10 cursor-pointer p-1"
+                      />
+                      <Input
+                        type="text"
+                        value={footerBgColor}
+                        onChange={(e) => setFooterBgColor(e.target.value)}
+                        placeholder="#3b82f6"
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-3">
-                  <Label>Accent Color</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      type="color"
-                      value={accentColor}
-                      onChange={(e) => setAccentColor(e.target.value)}
-                      className="w-16 h-10 cursor-pointer p-1"
-                    />
-                    <Input
-                      type="text"
-                      value={accentColor}
-                      onChange={(e) => setAccentColor(e.target.value)}
-                      placeholder="#10b981"
-                      className="flex-1"
-                    />
+                  <div className="space-y-2">
+                    <Label>Text Color</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        type="color"
+                        value={footerTextColor}
+                        onChange={(e) => setFooterTextColor(e.target.value)}
+                        className="w-16 h-10 cursor-pointer p-1"
+                      />
+                      <Input
+                        type="text"
+                        value={footerTextColor}
+                        onChange={(e) => setFooterTextColor(e.target.value)}
+                        placeholder="#ffffff"
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
