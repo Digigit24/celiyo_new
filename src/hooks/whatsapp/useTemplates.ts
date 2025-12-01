@@ -26,20 +26,20 @@ export interface UseTemplatesReturn {
   total: number;
   page: number;
   pageSize: number;
-  
+
   // Loading states
   isLoading: boolean;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
   isSending: boolean;
-  
+
   // Error states
   error: string | null;
-  
+
   // Query state
   query: TemplatesListQuery;
-  
+
   // Actions
   fetchTemplates: (newQuery?: TemplatesListQuery) => Promise<void>;
   createTemplate: (payload: CreateTemplatePayload) => Promise<Template | null>;
@@ -47,12 +47,14 @@ export interface UseTemplatesReturn {
   deleteTemplate: (id: number) => Promise<boolean>;
   sendTemplate: (payload: TemplateSendRequest) => Promise<boolean>;
   sendTemplateBulk: (payload: TemplateBulkSendRequest) => Promise<boolean>;
-  
+  syncAllTemplates: () => Promise<any>;
+  syncTemplate: (id: number) => Promise<any>;
+
   // Utility actions
   setQuery: (newQuery: TemplatesListQuery) => void;
   resetQuery: () => void;
   refetch: () => Promise<void>;
-  
+
   // Filter helpers
   filterByStatus: (status: TemplateStatus) => void;
   filterByCategory: (category: TemplateCategory) => void;
@@ -167,14 +169,14 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     try {
       setIsDeleting(true);
       setError(null);
-      
+
       const templateToDelete = templates.find(t => t.id === id);
       await templatesService.deleteTemplate(id);
-      
+
       // Remove from local state
       setTemplates(prev => prev.filter(template => template.id !== id));
       setTotal(prev => prev - 1);
-      
+
       toast.success(`Template "${templateToDelete?.name || id}" deleted successfully`);
       return true;
     } catch (err: any) {
@@ -186,6 +188,62 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
       setIsDeleting(false);
     }
   }, [templates]);
+
+  // Sync all templates
+  const syncAllTemplates = useCallback(async (): Promise<any> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const result = await templatesService.syncAllTemplates();
+
+      // Refresh templates after sync
+      await fetchTemplates();
+
+      toast.success(`Synced ${result.updated} template(s)`);
+      return result;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to sync templates';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [fetchTemplates]);
+
+  // Sync single template
+  const syncTemplate = useCallback(async (id: number): Promise<any> => {
+    try {
+      setIsUpdating(true);
+      setError(null);
+
+      const result = await templatesService.syncTemplate(id);
+
+      // Update local state if status changed
+      if (result.updated) {
+        setTemplates(prev =>
+          prev.map(template =>
+            template.id === id
+              ? { ...template, status: result.new_status }
+              : template
+          )
+        );
+        toast.success(`Template status updated: ${result.old_status} → ${result.new_status}`);
+      } else {
+        toast.info(`Template status unchanged: ${result.old_status}`);
+      }
+
+      return result;
+    } catch (err: any) {
+      const errorMessage = err.message || 'Failed to sync template';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      return null;
+    } finally {
+      setIsUpdating(false);
+    }
+  }, []);
 
   // Send template
   const sendTemplate = useCallback(async (payload: TemplateSendRequest): Promise<boolean> => {
@@ -284,20 +342,20 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     total,
     page,
     pageSize,
-    
+
     // Loading states
     isLoading,
     isCreating,
     isUpdating,
     isDeleting,
     isSending,
-    
+
     // Error state
     error,
-    
+
     // Query state
     query,
-    
+
     // Actions
     fetchTemplates,
     createTemplate,
@@ -305,12 +363,14 @@ export function useTemplates(options: UseTemplatesOptions = {}): UseTemplatesRet
     deleteTemplate,
     sendTemplate,
     sendTemplateBulk,
-    
+    syncAllTemplates,
+    syncTemplate,
+
     // Utility actions
     setQuery,
     resetQuery,
     refetch,
-    
+
     // Filter helpers
     filterByStatus,
     filterByCategory,

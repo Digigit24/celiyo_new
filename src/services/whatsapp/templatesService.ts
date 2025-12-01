@@ -447,6 +447,99 @@ class TemplatesService {
         return 'bg-gray-100 text-gray-800';
     }
   }
+
+  /**
+   * Sync all templates with Meta API
+   */
+  async syncAllTemplates(): Promise<any> {
+    try {
+      console.log('🔄 Syncing all templates with Meta API...');
+
+      const response = await whatsappClient.post<any>(
+        API_CONFIG.WHATSAPP.TEMPLATE_SYNC_ALL
+      );
+
+      console.log('✅ Templates synced:', {
+        total: response.data.total_templates,
+        updated: response.data.updated,
+        unchanged: response.data.unchanged,
+        failed: response.data.failed,
+        skipped: response.data.skipped
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Failed to sync templates:', error);
+
+      const message = error.response?.data?.detail || 'Failed to sync templates';
+      throw new Error(message);
+    }
+  }
+
+  /**
+   * Sync single template with Meta API
+   */
+  async syncTemplate(id: number): Promise<any> {
+    try {
+      console.log('🔄 Syncing template:', id);
+
+      const url = buildUrl(
+        API_CONFIG.WHATSAPP.TEMPLATE_SYNC,
+        { id },
+        'whatsapp'
+      );
+
+      const response = await whatsappClient.post<any>(url);
+
+      console.log('✅ Template synced:', {
+        template_id: response.data.template_id,
+        template_name: response.data.template_name,
+        updated: response.data.updated,
+        old_status: response.data.old_status,
+        new_status: response.data.new_status
+      });
+
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Failed to sync template:', error);
+
+      const message = error.response?.data?.detail || 'Failed to sync template';
+      throw new Error(message);
+    }
+  }
+
+  /**
+   * Create template from library
+   */
+  async createFromLibrary(payload: {
+    name: string;
+    library_template_name: string;
+    language: TemplateLanguage;
+    category: TemplateCategory;
+    button_inputs?: Record<string, string>[];
+  }): Promise<Template> {
+    try {
+      console.log('➕ Creating template from library:', payload.name);
+
+      const response = await whatsappClient.post<Template>(
+        API_CONFIG.WHATSAPP.TEMPLATE_LIBRARY_CREATE,
+        payload
+      );
+
+      console.log('✅ Template created from library:', response.data.name);
+
+      return response.data;
+    } catch (error: any) {
+      console.error('❌ Failed to create template from library:', error);
+
+      if (error.response?.status === 409) {
+        throw new Error('Template name already exists');
+      }
+
+      const message = error.response?.data?.detail || 'Failed to create template from library';
+      throw new Error(message);
+    }
+  }
 }
 
 export const templatesService = new TemplatesService();

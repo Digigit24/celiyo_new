@@ -1,6 +1,6 @@
 // src/pages/Templates.tsx
 import { useEffect, useMemo, useState } from 'react';
-import { Filter, Plus, Search, X, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Filter, Plus, Search, X, ArrowLeft, RefreshCw, RefreshCcw, Send, BarChart3 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -38,6 +38,8 @@ export default function Templates() {
     fetchTemplates,
     deleteTemplate,
     refetch,
+    syncAllTemplates,
+    syncTemplate,
   } = useTemplates({ initialQuery: filters, autoFetch: true });
 
   // Keep hook data in sync with local filters when they change
@@ -133,6 +135,35 @@ export default function Templates() {
     toast.success('Templates refreshed');
   };
 
+  const handleSyncAll = async () => {
+    try {
+      const result = await syncAllTemplates();
+      if (result) {
+        toast.success(`Synced! Updated: ${result.updated}, Unchanged: ${result.unchanged}`);
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to sync templates');
+    }
+  };
+
+  const handleSyncTemplate = async (template: Template) => {
+    try {
+      await syncTemplate(template.id);
+    } catch (err: any) {
+      toast.error(err?.message || 'Failed to sync template');
+    }
+  };
+
+  const handleViewAnalytics = (template: Template) => {
+    toast.info('Analytics view coming soon!');
+    // TODO: Open analytics drawer/modal
+  };
+
+  const handleSendTemplate = (template: Template) => {
+    toast.info('Send template dialog coming soon!');
+    // TODO: Open send template dialog
+  };
+
   // Loading & error states (full-page)
   if (isLoading && templates.length === 0) {
     return (
@@ -182,6 +213,16 @@ export default function Templates() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button
+              onClick={handleSyncAll}
+              variant="outline"
+              size={isMobile ? 'sm' : 'default'}
+              disabled={isLoading}
+              title="Sync all templates with Meta API"
+            >
+              <RefreshCcw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''} ${!isMobile ? 'mr-2' : ''}`} />
+              {!isMobile && 'Sync All'}
+            </Button>
             <Button
               onClick={handleRefresh}
               variant="outline"
@@ -267,8 +308,9 @@ export default function Templates() {
           isLoading={isLoading}
           onEdit={handleEditTemplate}
           onDelete={handleDeleteTemplate}
-          onViewAnalytics={undefined}
-          onSend={undefined}
+          onSync={handleSyncTemplate}
+          onViewAnalytics={handleViewAnalytics}
+          onSend={handleSendTemplate}
         />
       </div>
 

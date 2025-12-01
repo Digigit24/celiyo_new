@@ -1,6 +1,6 @@
 // src/components/TemplatesTable.tsx
 import React from 'react';
-import { Send, BarChart3 } from 'lucide-react';
+import { Send, BarChart3, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -13,6 +13,7 @@ interface TemplatesTableProps {
   isLoading?: boolean;
   onEdit?: (template: Template) => void;
   onDelete?: (template: Template) => Promise<void>;
+  onSync?: (template: Template) => void;
   onSend?: (template: Template) => void;
   onViewAnalytics?: (template: Template) => void;
 }
@@ -22,6 +23,7 @@ export function TemplatesTable({
   isLoading = false,
   onEdit,
   onDelete,
+  onSync,
   onSend,
   onViewAnalytics
 }: TemplatesTableProps) {
@@ -174,6 +176,17 @@ export function TemplatesTable({
       </div>
       
       <div className="flex gap-2 pt-2">
+        {onSync && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onSync(template)}
+            title="Sync template status with Meta API"
+          >
+            <RefreshCcw className="h-4 w-4 mr-1" />
+            Sync
+          </Button>
+        )}
         {template.status === TemplateStatus.APPROVED && onSend && (
           <Button
             variant="outline"
@@ -200,13 +213,20 @@ export function TemplatesTable({
 
   const getExtraActions = (template: Template) => (
     <>
+      {onSync && (
+        <DropdownMenuItem onClick={() => onSync(template)}>
+          <RefreshCcw className="mr-2 h-4 w-4" />
+          Sync Status
+        </DropdownMenuItem>
+      )}
+
       {template.status === TemplateStatus.APPROVED && onSend && (
         <DropdownMenuItem onClick={() => onSend(template)}>
           <Send className="mr-2 h-4 w-4" />
           Send Message
         </DropdownMenuItem>
       )}
-      
+
       {onViewAnalytics && (
         <DropdownMenuItem onClick={() => onViewAnalytics(template)}>
           <BarChart3 className="mr-2 h-4 w-4" />
