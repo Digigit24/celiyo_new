@@ -71,46 +71,49 @@ export const GeneralSettingsTab: React.FC = () => {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Hospital Name */}
-          <div className="space-y-2">
-            <Label htmlFor="hospitalName">Hospital Name</Label>
-            <Input
-              id="hospitalName"
-              placeholder="Enter hospital name"
-              value={hospitalName}
-              onChange={(e) => setHospitalName(e.target.value)}
-            />
-          </div>
+          {/* Row 1: Hospital Name and Logo */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Hospital Name */}
+            <div className="space-y-2">
+              <Label htmlFor="hospitalName">Hospital Name</Label>
+              <Input
+                id="hospitalName"
+                placeholder="Enter hospital name"
+                value={hospitalName}
+                onChange={(e) => setHospitalName(e.target.value)}
+              />
+            </div>
 
-          {/* Logo Upload */}
-          <div className="space-y-2">
-            <Label htmlFor="logo">Logo</Label>
-            <div className="flex items-start gap-4">
-              <div className="flex-1">
-                <Input
-                  id="logo"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoUpload}
-                  className="cursor-pointer"
-                />
-                <p className="text-sm text-muted-foreground mt-1">
-                  Recommended size: 200x200px (PNG, JPG)
-                </p>
-              </div>
-              {logoPreview && (
-                <div className="w-24 h-24 border rounded-lg overflow-hidden bg-muted flex items-center justify-center">
-                  <img
-                    src={logoPreview}
-                    alt="Logo preview"
-                    className="max-w-full max-h-full object-contain"
+            {/* Logo Upload */}
+            <div className="space-y-2">
+              <Label htmlFor="logo">Logo</Label>
+              <div className="flex items-start gap-4">
+                <div className="flex-1">
+                  <Input
+                    id="logo"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    className="cursor-pointer"
                   />
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Recommended: 200x200px
+                  </p>
                 </div>
-              )}
+                {logoPreview && (
+                  <div className="w-20 h-20 border rounded-lg overflow-hidden bg-muted flex items-center justify-center flex-shrink-0">
+                    <img
+                      src={logoPreview}
+                      alt="Logo preview"
+                      className="max-w-full max-h-full object-contain"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Address */}
+          {/* Address - Full Width */}
           <div className="space-y-2">
             <Label htmlFor="address">Address</Label>
             <Textarea
@@ -122,28 +125,31 @@ export const GeneralSettingsTab: React.FC = () => {
             />
           </div>
 
-          {/* Contact Email */}
-          <div className="space-y-2">
-            <Label htmlFor="contactEmail">Contact Email</Label>
-            <Input
-              id="contactEmail"
-              type="email"
-              placeholder="contact@hospital.com"
-              value={contactEmail}
-              onChange={(e) => setContactEmail(e.target.value)}
-            />
-          </div>
+          {/* Row 2: Contact Email and Contact Number */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Contact Email */}
+            <div className="space-y-2">
+              <Label htmlFor="contactEmail">Contact Email</Label>
+              <Input
+                id="contactEmail"
+                type="email"
+                placeholder="contact@hospital.com"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+              />
+            </div>
 
-          {/* Contact Number */}
-          <div className="space-y-2">
-            <Label htmlFor="contactNumber">Contact Number</Label>
-            <Input
-              id="contactNumber"
-              type="tel"
-              placeholder="+1 (555) 123-4567"
-              value={contactNumber}
-              onChange={(e) => setContactNumber(e.target.value)}
-            />
+            {/* Contact Number */}
+            <div className="space-y-2">
+              <Label htmlFor="contactNumber">Contact Number</Label>
+              <Input
+                id="contactNumber"
+                type="tel"
+                placeholder="+1 (555) 123-4567"
+                value={contactNumber}
+                onChange={(e) => setContactNumber(e.target.value)}
+              />
+            </div>
           </div>
 
           {/* Header/Footer Color */}
