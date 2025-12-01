@@ -5,14 +5,46 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Loader2, AlertCircle } from 'lucide-react';
 import { useTenant } from '@/hooks/useTenant';
+import { useAuth } from '@/hooks/useAuth';
 
 export const AdminSettings: React.FC = () => {
-  // For now, using a hardcoded tenant ID
-  // TODO: Get this from user context or use useCurrentTenant() if /tenants/me/ exists
-  const tenantId = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
+  // Get tenant from current session
+  const { getTenant } = useAuth();
+  const tenant = getTenant();
+  const tenantId = tenant?.id || null;
 
   const { useTenantDetail } = useTenant();
   const { data: tenantData, error, isLoading, mutate } = useTenantDetail(tenantId);
+
+  // Show error if no tenant ID is found
+  if (!tenantId) {
+    return (
+      <div className="container mx-auto p-4 sm:p-6 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold">Admin Settings</h1>
+            <p className="text-muted-foreground text-sm sm:text-base">
+              Tenant Configuration & System Information
+            </p>
+          </div>
+        </div>
+
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-lg text-destructive flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              No Tenant Found
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm">
+              Unable to retrieve tenant information from your session. Please try logging in again.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
