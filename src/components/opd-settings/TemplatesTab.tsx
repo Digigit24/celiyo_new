@@ -464,10 +464,9 @@ export function TemplatesTab() {
               renderMobileCard={renderGroupMobileCard}
               getRowId={(group) => group.id}
               getRowLabel={(group) => group.name}
-              onView={(group) => {
-                setSelectedGroupId(group.id);
-                handleViewGroup(group);
-              }}
+              onRowClick={(group) => setSelectedGroupId(group.id)}
+              selectedRowId={selectedGroupId}
+              onView={handleViewGroup}
               onEdit={handleEditGroup}
               onDelete={handleDeleteGroup}
               extraActions={groupExtraActions}

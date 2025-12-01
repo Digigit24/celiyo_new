@@ -54,7 +54,11 @@ export interface DataTableProps<T> {
   /** label to show in delete dialog, ex. row.full_name */
   getRowLabel: (row: T) => string;
 
-  /** view action */
+  /** row click action (separate from view details) - called when clicking the row */
+  onRowClick?: (row: T) => void;
+  /** selected row ID for highlighting */
+  selectedRowId?: string | number | null;
+  /** view action - only called from Actions menu */
   onView?: (row: T) => void;
   /** edit action */
   onEdit?: (row: T) => void;
@@ -95,6 +99,8 @@ export function DataTable<T>({
   renderMobileCard,
   getRowId,
   getRowLabel,
+  onRowClick,
+  selectedRowId,
   onView,
   onEdit,
   onDelete,
@@ -270,9 +276,13 @@ export function DataTable<T>({
             {rows.map((row) => {
               const id = getRowId(row);
 
-              // table row click triggers view (like your patient row)
+              // table row click triggers onRowClick if provided, otherwise onView (for backward compatibility)
               const handleRowClick = () => {
-                if (onView) onView(row);
+                if (onRowClick) {
+                  onRowClick(row);
+                } else if (onView) {
+                  onView(row);
+                }
               };
 
               const rowActions: RowActions<T> = {
@@ -283,11 +293,15 @@ export function DataTable<T>({
                 billing: onBilling ? () => onBilling(row) : undefined,
               };
 
+              // Only make row clickable if onRowClick or onView is provided
+              const isRowClickable = !!(onRowClick || onView);
+              const isSelected = selectedRowId !== undefined && selectedRowId !== null && id === selectedRowId;
+
               return (
                 <TableRow
                   key={id}
-                  className="group hover:bg-muted/50 cursor-pointer transition-colors align-top"
-                  onClick={handleRowClick}
+                  className={`group hover:bg-muted/50 transition-colors align-top ${isRowClickable ? 'cursor-pointer' : ''} ${isSelected ? 'bg-muted/70 border-l-4 border-l-primary' : ''}`}
+                  onClick={isRowClickable ? handleRowClick : undefined}
                 >
                   {columns.map((col) => (
                     <TableCell key={col.key} className={col.className}>
