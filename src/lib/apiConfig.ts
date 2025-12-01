@@ -56,10 +56,10 @@ export const API_CONFIG = {
     // Tenant Management endpoints
     TENANTS: {
       LIST: '/tenants/',
-      DETAIL: '/tenants/:id/',
+      DETAIL: '/tenant/:id/',
       CREATE: '/tenants/',
-      UPDATE: '/tenants/:id/',
-      DELETE: '/tenants/:id/',
+      UPDATE: '/tenant/:id/',
+      DELETE: '/tenant/:id/',
     },
   },
 
