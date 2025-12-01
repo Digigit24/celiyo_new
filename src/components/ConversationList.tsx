@@ -55,7 +55,7 @@ export const ConversationList = ({ conversations, selectedId, onSelect, isMobile
   }
 
   return (
-    <aside className={`flex flex-col ${isMobile ? "w-full" : "w-72"} border-r border-border bg-card h-screen`}>
+    <aside className={`flex flex-col ${isMobile ? "w-full h-full" : "w-72 h-full"} border-r border-border bg-card`}>
       <div className="flex items-center justify-between h-16 border-b border-border px-4 shrink-0">
         <span className="font-semibold text-lg">Conversations</span>
         <span className="text-xs text-muted-foreground">{conversations.length}</span>

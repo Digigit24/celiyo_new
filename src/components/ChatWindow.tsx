@@ -220,9 +220,14 @@ export const ChatWindow = ({ conversationId, selectedConversation, isMobile, onB
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: AttachmentType) => {
+    console.log('📎 File selected, type:', type);
     const files = e.target.files;
+    console.log('📎 Files:', files?.length);
+
     if (files && files.length > 0) {
       const fileArray = Array.from(files);
+      console.log('📎 Opening preview dialog for:', fileArray[0].name);
+
       setSelectedFiles(fileArray);
       setSelectedFileType(type);
 
@@ -230,6 +235,7 @@ export const ChatWindow = ({ conversationId, selectedConversation, isMobile, onB
       if (type === 'image' || type === 'camera' || type === 'video') {
         const reader = new FileReader();
         reader.onloadend = () => {
+          console.log('📎 Preview URL created');
           setFilePreviewUrl(reader.result as string);
         };
         reader.readAsDataURL(fileArray[0]);
@@ -238,6 +244,7 @@ export const ChatWindow = ({ conversationId, selectedConversation, isMobile, onB
       }
 
       // Open preview dialog
+      console.log('📎 Setting isFilePreviewOpen to true');
       setIsFilePreviewOpen(true);
     }
     // Reset input value to allow selecting the same file again
@@ -299,6 +306,12 @@ export const ChatWindow = ({ conversationId, selectedConversation, isMobile, onB
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [transformedMessages.length]);
+
+  useEffect(() => {
+    console.log('📎 isFilePreviewOpen changed:', isFilePreviewOpen);
+    console.log('📎 selectedFiles:', selectedFiles.length);
+    console.log('📎 selectedFileType:', selectedFileType);
+  }, [isFilePreviewOpen, selectedFiles, selectedFileType]);
 
   const getInitials = (name: string) => {
     return name

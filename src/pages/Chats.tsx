@@ -203,15 +203,15 @@ export default function Chats() {
 
   // Desktop view: show all components
   return (
-    <div className="flex h-screen bg-background">
-      
+    <div className="flex h-screen bg-background overflow-hidden">
+
       <ConversationList
         conversations={transformedConversations}
         selectedId={selectedConversationId}
         onSelect={handleConversationSelect}
       />
       {selectedConversationId ? (
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 h-full overflow-hidden">
           <ChatWindow
             conversationId={selectedConversationId}
             selectedConversation={conversations?.find(c => c.phone === selectedConversationId)}
