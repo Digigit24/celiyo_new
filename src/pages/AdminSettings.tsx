@@ -16,6 +16,20 @@ export const AdminSettings: React.FC = () => {
   const { useTenantDetail } = useTenant();
   const { data: tenantData, error, isLoading, mutate } = useTenantDetail(tenantId);
 
+  // Helper function to safely render field values (handles objects, arrays, strings)
+  const renderFieldValue = (value: any): string => {
+    if (value === null || value === undefined) {
+      return 'N/A';
+    }
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (typeof value === 'object') {
+      return JSON.stringify(value, null, 2);
+    }
+    return String(value);
+  };
+
   // Show error if no tenant ID is found
   if (!tenantId) {
     return (
@@ -149,7 +163,7 @@ export const AdminSettings: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">User Count</p>
-                  <p className="text-sm">{tenantData.user_count}</p>
+                  <p className="text-sm">{String(tenantData.user_count)}</p>
                 </div>
               </CardContent>
             </Card>
@@ -181,12 +195,14 @@ export const AdminSettings: React.FC = () => {
               <CardContent className="space-y-3">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Enabled Modules</p>
-                  <p className="text-sm">{tenantData.enabled_modules || 'N/A'}</p>
+                  <pre className="text-xs font-mono break-all bg-muted p-2 rounded">
+                    {renderFieldValue(tenantData.enabled_modules)}
+                  </pre>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Settings</p>
                   <pre className="text-xs font-mono break-all bg-muted p-2 rounded max-h-32 overflow-auto">
-                    {tenantData.settings || 'N/A'}
+                    {renderFieldValue(tenantData.settings)}
                   </pre>
                 </div>
               </CardContent>
