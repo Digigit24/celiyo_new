@@ -12,6 +12,8 @@ import type { TemplatesListQuery, Template } from '@/types/whatsappTypes';
 import { TemplatesTable } from '@/components/TemplatesTable';
 import TemplatesFormDrawer from '@/components/TemplatesFormDrawer';
 import { TemplatesFiltersDrawer } from '@/components/TemplatesFiltersDrawer';
+import { TemplateAnalyticsDrawer } from '@/components/TemplateAnalyticsDrawer';
+import { TemplateSendDialog } from '@/components/TemplateSendDialog';
 
 export default function Templates() {
   const isMobile = useIsMobile();
@@ -28,6 +30,15 @@ export default function Templates() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<number | null>(null);
   const [drawerMode, setDrawerMode] = useState<'create' | 'edit' | 'view'>('view');
+
+  // Analytics drawer state
+  const [analyticsDrawerOpen, setAnalyticsDrawerOpen] = useState(false);
+  const [analyticsTemplateId, setAnalyticsTemplateId] = useState<number | null>(null);
+  const [analyticsTemplateName, setAnalyticsTemplateName] = useState<string>('');
+
+  // Send dialog state
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [sendTemplate, setSendTemplate] = useState<Template | null>(null);
 
   // Data hook
   const {
@@ -155,13 +166,14 @@ export default function Templates() {
   };
 
   const handleViewAnalytics = (template: Template) => {
-    toast.info('Analytics view coming soon!');
-    // TODO: Open analytics drawer/modal
+    setAnalyticsTemplateId(template.id);
+    setAnalyticsTemplateName(template.name);
+    setAnalyticsDrawerOpen(true);
   };
 
   const handleSendTemplate = (template: Template) => {
-    toast.info('Send template dialog coming soon!');
-    // TODO: Open send template dialog
+    setSendTemplate(template);
+    setSendDialogOpen(true);
   };
 
   // Loading & error states (full-page)
@@ -338,6 +350,22 @@ export default function Templates() {
           }
         }}
         onModeChange={setDrawerMode}
+      />
+
+      {/* Analytics Drawer */}
+      <TemplateAnalyticsDrawer
+        open={analyticsDrawerOpen}
+        onOpenChange={setAnalyticsDrawerOpen}
+        templateId={analyticsTemplateId}
+        templateName={analyticsTemplateName}
+      />
+
+      {/* Send Template Dialog */}
+      <TemplateSendDialog
+        open={sendDialogOpen}
+        onOpenChange={setSendDialogOpen}
+        template={sendTemplate}
+        onSuccess={handleDrawerSuccess}
       />
     </div>
   );

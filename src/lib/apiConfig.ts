@@ -309,6 +309,7 @@ export const API_CONFIG = {
     TEMPLATE_SEND: '/templates/send',
     TEMPLATE_SEND_BULK: '/templates/send/bulk',
     TEMPLATE_ANALYTICS: '/templates/:id/analytics',
+    TEMPLATE_WEBHOOK_STATUS: '/templates/webhook/status',
     TEMPLATE_SYNC: '/templates/:id/sync',
     TEMPLATE_SYNC_ALL: '/templates/sync',
     
