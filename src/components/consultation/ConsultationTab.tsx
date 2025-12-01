@@ -418,7 +418,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
   if (mode === 'preview') {
     return (
       <div className="space-y-6">
-        {/* Mode Toggle - No Print */}
+        {/* Mode Toggle - Hidden in Print */}
         <div className="flex justify-between items-center print:hidden">
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setMode('entry')}>
@@ -427,14 +427,14 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             </Button>
             <Button variant="outline" onClick={handlePrint}>
               <Printer className="h-4 w-4 mr-2" />
-              Print
+              Print / Download
             </Button>
           </div>
         </div>
 
-        {/* A4 Paper with Letterhead */}
+        {/* A4 Paper with Letterhead - This is what gets printed */}
         <div
-          className="mx-auto bg-white shadow-lg print:shadow-none"
+          className="preview-container mx-auto bg-white shadow-lg print:shadow-none"
           style={{ width: '210mm', minHeight: '297mm' }}
         >
           {/* Letterhead Header */}
@@ -614,13 +614,32 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
               size: A4;
               margin: 0;
             }
-            body {
-              margin: 0;
-              padding: 0;
+
+            /* Hide everything except the preview container */
+            body * {
+              visibility: hidden;
             }
+
+            .preview-container,
+            .preview-container * {
+              visibility: visible;
+            }
+
+            /* Position preview container at top of page */
+            .preview-container {
+              position: absolute;
+              left: 0;
+              top: 0;
+              width: 210mm !important;
+              margin: 0 !important;
+              box-shadow: none !important;
+            }
+
+            /* Hide print buttons and UI elements */
             .print\\:hidden {
               display: none !important;
             }
+
             .print\\:shadow-none {
               box-shadow: none !important;
             }
