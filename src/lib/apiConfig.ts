@@ -305,6 +305,12 @@ export const API_CONFIG = {
     TEMPLATE_UPDATE: '/templates/:id',
     TEMPLATE_DELETE: '/templates/:id',
     TEMPLATE_BY_NAME: '/templates/name/:template_name',
+    TEMPLATE_LIBRARY_CREATE: '/templates/library',
+    TEMPLATE_SEND: '/templates/send',
+    TEMPLATE_SEND_BULK: '/templates/send/bulk',
+    TEMPLATE_ANALYTICS: '/templates/:id/analytics',
+    TEMPLATE_SYNC: '/templates/:id/sync',
+    TEMPLATE_SYNC_ALL: '/templates/sync',
     
     // Campaigns endpoints (align with FastAPI router without trailing slashes)
     CAMPAIGN_BROADCAST: '/campaigns/broadcast',

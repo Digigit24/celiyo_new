@@ -1,6 +1,6 @@
 // src/pages/Campaigns.tsx
 import { useEffect, useMemo, useState } from 'react';
-import { Plus, RefreshCw, ArrowLeft, Phone, Send, AlertTriangle, Calendar, Clock, Users, FileText, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Plus, RefreshCw, ArrowLeft, Phone, Send, AlertTriangle, Calendar, Clock, Users, FileText, ChevronRight, ChevronLeft, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,11 +12,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useIsMobile } from '@/hooks/use-is-mobile';
 import { toast } from 'sonner';
 
 import { useCampaigns } from '@/hooks/whatsapp/useCampaigns';
-import type { WACampaign, CreateCampaignPayload } from '@/types/whatsappTypes';
+import { useTemplates } from '@/hooks/whatsapp/useTemplates';
+import type { WACampaign, CreateCampaignPayload, Template, TemplateStatus } from '@/types/whatsappTypes';
 import CampaignsTable from '@/components/CampaignsTable';
 import { SideDrawer } from '@/components/SideDrawer';
 
@@ -36,32 +38,25 @@ function formatDate(iso?: string) {
   }
 }
 
-// Mock template type (you should import from your types)
-type Template = {
-  id: string;
-  name: string;
-  language: string;
-  category: string;
-  body: string;
-  header?: string;
-  footer?: string;
-};
-
-// Mock templates (replace with actual API call)
-const MOCK_TEMPLATES: Template[] = [
-  {
-    id: 'hello_world',
-    name: 'hello_world',
-    language: 'en_US',
-    category: 'UTILITY',
-    header: 'Hello World',
-    body: 'Welcome and congratulations!! This message demonstrates your ability to send a WhatsApp message notification from the Cloud API, hosted by Meta. Thank you for taking the time to test with us.\n\nWhatsApp Business Platform sample message',
-    footer: undefined,
-  },
-  // Add more templates as needed
-];
-
 type CampaignStep = 'template' | 'contacts' | 'review';
+
+// Helper to get template body text
+function getTemplateBody(template: Template): string {
+  const bodyComponent = template.components.find(c => c.type === 'BODY');
+  return bodyComponent?.text || '';
+}
+
+// Helper to get template header text
+function getTemplateHeader(template: Template): string | undefined {
+  const headerComponent = template.components.find(c => c.type === 'HEADER');
+  return headerComponent?.text;
+}
+
+// Helper to get template footer text
+function getTemplateFooter(template: Template): string | undefined {
+  const footerComponent = template.components.find(c => c.type === 'FOOTER');
+  return footerComponent?.text;
+}
 
 export default function Campaigns() {
   const isMobile = useIsMobile();
@@ -77,6 +72,16 @@ export default function Campaigns() {
     stats,
   } = useCampaigns({ autoFetch: true });
 
+  // Templates hook - fetch approved templates for campaigns
+  const {
+    templates,
+    isLoading: templatesLoading,
+    error: templatesError,
+  } = useTemplates({
+    autoFetch: true,
+    initialQuery: { skip: 0, limit: 100, status: 'APPROVED' as TemplateStatus }
+  });
+
   // Header actions
   const [createOpen, setCreateOpen] = useState(false);
   const [viewOpen, setViewOpen] = useState(false);
@@ -86,23 +91,15 @@ export default function Campaigns() {
   const [currentStep, setCurrentStep] = useState<CampaignStep>('template');
   const [creating, setCreating] = useState(false);
 
+  // Template selector dialog
+  const [templateSelectorOpen, setTemplateSelectorOpen] = useState(false);
+  const [templateSearchQuery, setTemplateSearchQuery] = useState('');
+
   // Step 1: Template Selection
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [campaignTitle, setCampaignTitle] = useState('');
 
-  // Step 2: Contacts and Schedule
-  const [contactsGroup, setContactsGroup] = useState('');
-  const [restrictByLanguage, setRestrictByLanguage] = useState(false);
-  const [scheduleNow, setScheduleNow] = useState(true);
-  const [scheduleDate, setScheduleDate] = useState('');
-  const [scheduleTime, setScheduleTime] = useState('');
-  const [noExpiry, setNoExpiry] = useState(true);
-  const [expiryDate, setExpiryDate] = useState('');
-  const [expiryTime, setExpiryTime] = useState('');
-  const [sendingPhoneNumber, setSendingPhoneNumber] = useState('');
-
-  // Legacy fields for backwards compatibility
-  const [messageText, setMessageText] = useState('');
+  // Step 2: Recipients (backend expects array of phone numbers)
   const [recipientsText, setRecipientsText] = useState('');
 
   const total = campaigns.length;
@@ -117,17 +114,8 @@ export default function Campaigns() {
     setCurrentStep('template');
     setSelectedTemplate(null);
     setCampaignTitle('');
-    setContactsGroup('');
-    setRestrictByLanguage(false);
-    setScheduleNow(true);
-    setScheduleDate('');
-    setScheduleTime('');
-    setNoExpiry(true);
-    setExpiryDate('');
-    setExpiryTime('');
-    setSendingPhoneNumber('');
-    setMessageText('');
     setRecipientsText('');
+    setTemplateSearchQuery('');
     setCreateOpen(true);
   };
 
@@ -154,12 +142,13 @@ export default function Campaigns() {
       }
       setCurrentStep('contacts');
     } else if (currentStep === 'contacts') {
-      if (!contactsGroup && !recipientsText) {
-        toast.error('Please select a contact group or enter recipients');
+      if (!recipientsText.trim()) {
+        toast.error('Please enter at least one recipient phone number');
         return;
       }
-      if (!sendingPhoneNumber) {
-        toast.error('Please select a sending phone number');
+      const recipients = parseRecipients(recipientsText);
+      if (recipients.length === 0) {
+        toast.error('Please enter valid phone numbers');
         return;
       }
       setCurrentStep('review');
@@ -186,9 +175,10 @@ export default function Campaigns() {
       return;
     }
 
+    // Backend expects: campaign_name, message_text, recipients
     const payload: CreateCampaignPayload = {
       campaign_name: campaignTitle.trim() || selectedTemplate.name,
-      message_text: selectedTemplate.body,
+      message_text: getTemplateBody(selectedTemplate),
       recipients,
     };
 
@@ -206,10 +196,21 @@ export default function Campaigns() {
 
   const viewStats = useMemo(() => (viewItem ? stats(viewItem) : null), [viewItem, stats]);
 
+  // Filter templates by search query
+  const filteredTemplates = useMemo(() => {
+    if (!templateSearchQuery.trim()) return templates;
+    const query = templateSearchQuery.toLowerCase();
+    return templates.filter(t =>
+      t.name.toLowerCase().includes(query) ||
+      t.language.toLowerCase().includes(query) ||
+      t.category.toLowerCase().includes(query)
+    );
+  }, [templates, templateSearchQuery]);
+
   // Step indicator
   const steps = [
     { key: 'template', label: 'Template', icon: FileText },
-    { key: 'contacts', label: 'Contacts & Schedule', icon: Users },
+    { key: 'contacts', label: 'Recipients', icon: Users },
     { key: 'review', label: 'Review', icon: Send },
   ];
 
@@ -218,9 +219,15 @@ export default function Campaigns() {
   // Message preview with template variables replaced
   const getPreviewMessage = () => {
     if (!selectedTemplate) return '';
-    // For demo purposes, showing the template as-is
-    // In production, you'd replace {{1}}, {{2}} etc. with actual values
-    return selectedTemplate.body;
+    // Show template body as-is (variables like {{1}}, {{2}} will be replaced at send time)
+    return getTemplateBody(selectedTemplate);
+  };
+
+  // Handle template selection from dialog
+  const handleSelectTemplate = (template: Template) => {
+    setSelectedTemplate(template);
+    setTemplateSelectorOpen(false);
+    setTemplateSearchQuery('');
   };
 
   // Render step content
@@ -232,32 +239,64 @@ export default function Campaigns() {
             <div className="space-y-4">
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <Label className="text-base font-semibold">Template</Label>
-                  <Button variant="outline" size="sm">
-                    Change
-                  </Button>
+                  <Label className="text-base font-semibold">Select Template</Label>
+                  {selectedTemplate && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setTemplateSelectorOpen(true)}
+                    >
+                      Change
+                    </Button>
+                  )}
                 </div>
 
                 {selectedTemplate ? (
                   <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
                     <div className="flex items-start justify-between">
-                      <div>
+                      <div className="flex-1">
                         <div className="font-semibold text-lg">{selectedTemplate.name}</div>
                         <div className="text-sm text-muted-foreground mt-1">
-                          Language Code: <span className="font-medium">{selectedTemplate.language}</span>
+                          Language: <span className="font-medium">{selectedTemplate.language}</span>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Category: <span className="font-medium">{selectedTemplate.category}</span>
+                          Category: <Badge variant="secondary" className="mt-1">{selectedTemplate.category}</Badge>
                         </div>
+                        <div className="text-sm text-muted-foreground mt-2">
+                          Status: <Badge variant="secondary" className="bg-green-100 text-green-800">{selectedTemplate.status}</Badge>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Preview */}
+                    <Separator />
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Preview</Label>
+                      <div className="bg-white border rounded-lg p-3 text-sm">
+                        {getTemplateHeader(selectedTemplate) && (
+                          <div className="font-semibold mb-2">{getTemplateHeader(selectedTemplate)}</div>
+                        )}
+                        <div className="whitespace-pre-wrap">{getTemplateBody(selectedTemplate)}</div>
+                        {getTemplateFooter(selectedTemplate) && (
+                          <div className="text-xs text-muted-foreground mt-2">{getTemplateFooter(selectedTemplate)}</div>
+                        )}
                       </div>
                     </div>
                   </div>
                 ) : (
                   <div className="border rounded-lg p-8 text-center bg-muted/20">
                     <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                    <p className="text-sm text-muted-foreground mb-4">No template selected</p>
-                    <Button onClick={() => setSelectedTemplate(MOCK_TEMPLATES[0])}>
-                      Select Template
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {templatesLoading ? 'Loading templates...' : 'No template selected'}
+                    </p>
+                    {templatesError && (
+                      <p className="text-xs text-destructive mb-4">{templatesError}</p>
+                    )}
+                    <Button
+                      onClick={() => setTemplateSelectorOpen(true)}
+                      disabled={templatesLoading || templates.length === 0}
+                    >
+                      {templates.length === 0 ? 'No Approved Templates' : 'Select Template'}
                     </Button>
                   </div>
                 )}
@@ -274,156 +313,47 @@ export default function Campaigns() {
                 <Label htmlFor="campaign-title">Campaign Title</Label>
                 <Input
                   id="campaign-title"
-                  placeholder="Enter campaign title"
+                  placeholder="Enter campaign title (optional)"
                   value={campaignTitle}
                   onChange={(e) => setCampaignTitle(e.target.value)}
                   className="mt-2"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  If empty, template name will be used
+                </p>
               </div>
 
               <Separator />
 
               <div className="space-y-3">
-                <Label className="text-base font-semibold">Target Contacts</Label>
-                
-                <div>
-                  <Label htmlFor="contacts-group" className="text-sm">Groups/Contact</Label>
-                  <Select value={contactsGroup} onValueChange={setContactsGroup}>
-                    <SelectTrigger id="contacts-group" className="mt-2">
-                      <SelectValue placeholder="Select Contacts Group" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Contacts</SelectItem>
-                      <SelectItem value="customers">Customers</SelectItem>
-                      <SelectItem value="leads">Leads</SelectItem>
-                      <SelectItem value="vip">VIP</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-start space-x-3 pt-2">
-                  <Checkbox
-                    id="restrict-language"
-                    checked={restrictByLanguage}
-                    onCheckedChange={(checked) => setRestrictByLanguage(checked as boolean)}
-                    className="mt-1"
-                  />
-                  <div className="grid gap-1.5 leading-none">
-                    <label
-                      htmlFor="restrict-language"
-                      className="text-sm font-medium leading-relaxed cursor-pointer"
-                    >
-                      Restrict by Language Code - Send only to the contacts whose language code matches with template language code.
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Schedule</Label>
-                
-                <div className="flex items-center space-x-3">
-                  <Switch
-                    id="schedule-now"
-                    checked={scheduleNow}
-                    onCheckedChange={setScheduleNow}
-                  />
-                  <Label htmlFor="schedule-now" className="cursor-pointer">Now</Label>
-                </div>
-
-                {!scheduleNow && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-10">
-                    <div>
-                      <Label htmlFor="schedule-date" className="text-sm">Date</Label>
-                      <Input
-                        id="schedule-date"
-                        type="date"
-                        value={scheduleDate}
-                        onChange={(e) => setScheduleDate(e.target.value)}
-                        className="mt-2"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="schedule-time" className="text-sm">Time</Label>
-                      <Input
-                        id="schedule-time"
-                        type="time"
-                        value={scheduleTime}
-                        onChange={(e) => setScheduleTime(e.target.value)}
-                        className="mt-2"
-                      />
-                    </div>
+                <Label htmlFor="recipients" className="text-base font-semibold">
+                  Recipients <span className="text-destructive">*</span>
+                </Label>
+                <Textarea
+                  id="recipients"
+                  placeholder="Enter phone numbers (one per line or comma-separated)&#10;Example:&#10;919876543210&#10;918765432109&#10;917654321098"
+                  value={recipientsText}
+                  onChange={(e) => setRecipientsText(e.target.value)}
+                  rows={8}
+                  className="font-mono text-sm"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter phone numbers in international format without + sign.
+                  You can separate numbers with new lines, commas, or spaces.
+                </p>
+                {recipientsText && (
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Users className="h-3 w-3" />
+                    <span>{parseRecipients(recipientsText).length} recipients</span>
                   </div>
                 )}
-              </div>
-
-              <Separator />
-
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Expiry</Label>
-                
-                <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-3">
-                  <p className="text-sm text-destructive">
-                    Messages will be set as expired if delayed in sending and won't be sent for the further processing.
-                  </p>
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <Switch
-                    id="no-expiry"
-                    checked={noExpiry}
-                    onCheckedChange={setNoExpiry}
-                  />
-                  <Label htmlFor="no-expiry" className="cursor-pointer">No Expiry for Processing</Label>
-                </div>
-
-                {!noExpiry && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-10">
-                    <div>
-                      <Label htmlFor="expiry-date" className="text-sm">Expiry Date</Label>
-                      <Input
-                        id="expiry-date"
-                        type="date"
-                        value={expiryDate}
-                        onChange={(e) => setExpiryDate(e.target.value)}
-                        className="mt-2"
-                      />
-                    </div>
-                    <div>
-                      <Label htmlFor="expiry-time" className="text-sm">Expiry Time</Label>
-                      <Input
-                        id="expiry-time"
-                        type="time"
-                        value={expiryTime}
-                        onChange={(e) => setExpiryTime(e.target.value)}
-                        className="mt-2"
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <Separator />
-
-              <div>
-                <Label htmlFor="phone-number">Send using Phone Number</Label>
-                <Select value={sendingPhoneNumber} onValueChange={setSendingPhoneNumber}>
-                  <SelectTrigger id="phone-number" className="mt-2">
-                    <SelectValue placeholder="Select phone number" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="+91 63727 44534">+91 63727 44534</SelectItem>
-                    <SelectItem value="+91 98765 43210">+91 98765 43210</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           </div>
         );
 
       case 'review':
+        const recipientsList = parseRecipients(recipientsText);
         return (
           <div className="space-y-6">
             <div className="space-y-4">
@@ -436,21 +366,26 @@ export default function Campaigns() {
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-sm">
                     <span className="text-muted-foreground">Campaign Title:</span>
-                    <span className="col-span-2 font-medium">{campaignTitle || 'Untitled'}</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-sm">
-                    <span className="text-muted-foreground">Contact Group:</span>
-                    <span className="col-span-2 font-medium">{contactsGroup || 'None selected'}</span>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2 text-sm">
-                    <span className="text-muted-foreground">Schedule:</span>
                     <span className="col-span-2 font-medium">
-                      {scheduleNow ? 'Now' : `${scheduleDate} at ${scheduleTime}`}
+                      {campaignTitle.trim() || selectedTemplate?.name || 'Untitled'}
                     </span>
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-sm">
-                    <span className="text-muted-foreground">Phone Number:</span>
-                    <span className="col-span-2 font-medium">{sendingPhoneNumber}</span>
+                    <span className="text-muted-foreground">Recipients:</span>
+                    <span className="col-span-2 font-medium flex items-center gap-2">
+                      <Users className="h-3 w-3" />
+                      {recipientsList.length} recipients
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <span className="text-muted-foreground">Language:</span>
+                    <span className="col-span-2 font-medium">{selectedTemplate?.language}</span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-sm">
+                    <span className="text-muted-foreground">Category:</span>
+                    <span className="col-span-2">
+                      <Badge variant="secondary">{selectedTemplate?.category}</Badge>
+                    </span>
                   </div>
                 </div>
               </div>
@@ -459,20 +394,21 @@ export default function Campaigns() {
 
               <div>
                 <Label className="text-base font-semibold mb-3">Message Preview</Label>
-                <div className="mt-3 border rounded-lg p-4 bg-muted/20">
-                  {selectedTemplate?.header && (
-                    <div className="font-semibold mb-2">{selectedTemplate.header}</div>
+                <div className="mt-3 border rounded-lg p-4 bg-white">
+                  {selectedTemplate && getTemplateHeader(selectedTemplate) && (
+                    <div className="font-semibold mb-2">{getTemplateHeader(selectedTemplate)}</div>
                   )}
                   <div className="whitespace-pre-wrap text-sm">{getPreviewMessage()}</div>
-                  {selectedTemplate?.footer && (
-                    <div className="text-xs text-muted-foreground mt-2">{selectedTemplate.footer}</div>
+                  {selectedTemplate && getTemplateFooter(selectedTemplate) && (
+                    <div className="text-xs text-muted-foreground mt-2">{getTemplateFooter(selectedTemplate)}</div>
                   )}
                 </div>
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <p className="text-sm text-blue-800">
-                  <strong>Please note:</strong> Words like {'{'}1{'}'}, {'{'}label{'}'} etc are dynamic variables and will be replaced based on your selections.
+                  <strong>Note:</strong> Template variables like {'{{1}}, {{2}}'} will be replaced with actual values when sending.
+                  Campaign will be sent in background immediately after creation.
                 </p>
               </div>
             </div>
@@ -731,6 +667,118 @@ export default function Campaigns() {
           </div>
         )}
       </SideDrawer>
+
+      {/* Template Selector Dialog */}
+      <Dialog open={templateSelectorOpen} onOpenChange={setTemplateSelectorOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Select Template</DialogTitle>
+            <DialogDescription>
+              Choose an approved WhatsApp template for your campaign
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search templates by name, language, or category..."
+              value={templateSearchQuery}
+              onChange={(e) => setTemplateSearchQuery(e.target.value)}
+              className="pl-9 pr-9"
+            />
+            {templateSearchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                onClick={() => setTemplateSearchQuery('')}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          {/* Templates List */}
+          <div className="flex-1 overflow-y-auto border rounded-lg">
+            {templatesLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center space-y-2">
+                  <RefreshCw className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">Loading templates...</p>
+                </div>
+              </div>
+            ) : templatesError ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center space-y-2">
+                  <AlertTriangle className="h-8 w-8 mx-auto text-destructive" />
+                  <p className="text-sm text-destructive">{templatesError}</p>
+                </div>
+              </div>
+            ) : filteredTemplates.length === 0 ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center space-y-2">
+                  <FileText className="h-8 w-8 mx-auto text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">
+                    {templateSearchQuery ? 'No templates found matching your search' : 'No approved templates available'}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="divide-y">
+                {filteredTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    onClick={() => handleSelectTemplate(template)}
+                    className="w-full text-left p-4 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm truncate">{template.name}</h4>
+                          <div className="flex items-center gap-2 mt-1 flex-wrap">
+                            <Badge variant="secondary" className="text-xs">
+                              {template.language}
+                            </Badge>
+                            <Badge variant="secondary" className="text-xs">
+                              {template.category}
+                            </Badge>
+                            <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
+                              {template.status}
+                            </Badge>
+                          </div>
+                        </div>
+                        <ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                      </div>
+
+                      {/* Preview */}
+                      <div className="text-xs text-muted-foreground line-clamp-2 bg-muted/30 rounded p-2 mt-2">
+                        {getTemplateBody(template)}
+                      </div>
+
+                      {template.usage_count !== undefined && (
+                        <div className="text-xs text-muted-foreground">
+                          Used {template.usage_count} times
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-4 border-t">
+            <div className="text-sm text-muted-foreground">
+              {filteredTemplates.length} template{filteredTemplates.length !== 1 ? 's' : ''} available
+            </div>
+            <Button variant="outline" onClick={() => setTemplateSelectorOpen(false)}>
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
