@@ -1,79 +1,18 @@
 // src/pages/AdminSettings.tsx
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Loader2 } from 'lucide-react';
-import { API_CONFIG, buildUrl } from '@/lib/apiConfig';
-import { toast } from 'sonner';
-
-interface TenantData {
-  id: string;
-  name: string;
-  slug: string;
-  domain: string;
-  database_name: string;
-  database_url: string;
-  enabled_modules: string;
-  settings: string;
-  is_active: boolean;
-  trial_ends_at: string;
-  user_count: string;
-  created_at: string;
-  updated_at: string;
-}
+import { RefreshCw, Loader2, AlertCircle } from 'lucide-react';
+import { useTenant } from '@/hooks/useTenant';
 
 export const AdminSettings: React.FC = () => {
-  const [tenantData, setTenantData] = useState<TenantData | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // For now, using a hardcoded tenant ID
+  // TODO: Get this from user context or use useCurrentTenant() if /tenants/me/ exists
+  const tenantId = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
 
-  const fetchTenantData = async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      // Get the access token from localStorage
-      const accessToken = localStorage.getItem('accessToken');
-
-      if (!accessToken) {
-        throw new Error('No access token found. Please login again.');
-      }
-
-      // For now, we'll use a hardcoded tenant ID
-      // In production, this should come from the user's context or auth state
-      const tenantId = '3fa85f64-5717-4562-b3fc-2c963f66afa6';
-
-      const url = buildUrl(API_CONFIG.AUTH.TENANTS.DETAIL, { id: tenantId }, 'auth');
-
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch tenant data: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setTenantData(data);
-      toast.success('Tenant data loaded successfully');
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to fetch tenant data';
-      setError(errorMessage);
-      toast.error(errorMessage);
-      console.error('Error fetching tenant data:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchTenantData();
-  }, []);
+  const { useTenantDetail } = useTenant();
+  const { data: tenantData, error, isLoading, mutate } = useTenantDetail(tenantId);
 
   return (
     <div className="container mx-auto p-4 sm:p-6 space-y-6">
@@ -94,7 +33,7 @@ export const AdminSettings: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={fetchTenantData}
+            onClick={() => mutate()}
             disabled={isLoading}
           >
             {isLoading ? (
@@ -111,10 +50,16 @@ export const AdminSettings: React.FC = () => {
       {error && (
         <Card className="border-destructive">
           <CardHeader>
-            <CardTitle className="text-lg text-destructive">Error</CardTitle>
+            <CardTitle className="text-lg text-destructive flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              Error Loading Tenant Data
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm">{error}</p>
+            <p className="text-sm">{error.message || 'Failed to load tenant data'}</p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Tenant ID: {tenantId}
+            </p>
           </CardContent>
         </Card>
       )}
@@ -156,7 +101,7 @@ export const AdminSettings: React.FC = () => {
               <CardContent className="space-y-3">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">ID</p>
-                  <p className="text-sm font-mono">{tenantData.id}</p>
+                  <p className="text-sm font-mono break-all">{tenantData.id}</p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Name</p>
