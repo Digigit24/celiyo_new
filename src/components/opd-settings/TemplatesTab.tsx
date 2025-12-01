@@ -68,6 +68,13 @@ export function TemplatesTab() {
     ordering: 'display_order',
   });
 
+  const {
+    data: templatesData,
+    error: templatesError,
+    isLoading: templatesLoading,
+    mutate: mutateTemplates,
+  } = useTemplates(templatesQueryParams);
+
   React.useEffect(() => {
     if (selectedGroupId) {
       setIsLoadingTemplates(true);
@@ -81,13 +88,6 @@ export function TemplatesTab() {
       setIsLoadingTemplates(false);
     }
   }, [templatesLoading, selectedGroupId]);
-
-  const {
-    data: templatesData,
-    error: templatesError,
-    isLoading: templatesLoading,
-    mutate: mutateTemplates,
-  } = useTemplates(templatesQueryParams);
 
   // Template Group handlers
   const handleCreateGroup = useCallback(() => {
