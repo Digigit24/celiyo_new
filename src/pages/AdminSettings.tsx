@@ -6,17 +6,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { RefreshCw, Loader2, AlertCircle, Save, Building2, Database, Settings as SettingsIcon, Image as ImageIcon, X } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RefreshCw, Loader2, AlertCircle, Save, Building2, Database, Settings as SettingsIcon, Image as ImageIcon, X, User } from 'lucide-react';
 import { useTenant } from '@/hooks/useTenant';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import type { TenantUpdateData, TenantSettings } from '@/types/tenant.types';
+import { authClient } from '@/lib/client';
+import { API_CONFIG, buildUrl } from '@/lib/apiConfig';
 
 export const AdminSettings: React.FC = () => {
   // Get tenant from current session
-  const { getTenant } = useAuth();
+  const { getTenant, user } = useAuth();
   const tenant = getTenant();
   const tenantId = tenant?.id || null;
+  const userId = user?.id || null;
 
   const {
     useTenantDetail,
@@ -25,6 +29,11 @@ export const AdminSettings: React.FC = () => {
   } = useTenant();
 
   const { data: tenantData, error, isLoading, mutate } = useTenantDetail(tenantId);
+
+  // User Preferences state
+  const [userPreferencesData, setUserPreferencesData] = useState<any>(null);
+  const [userPreferencesLoading, setUserPreferencesLoading] = useState<boolean>(false);
+  const [userPreferencesError, setUserPreferencesError] = useState<string | null>(null);
 
   // Basic tenant fields (direct fields, not in settings)
   const [name, setName] = useState('');
@@ -158,6 +167,30 @@ export const AdminSettings: React.FC = () => {
     }
   };
 
+  // Fetch user preferences data
+  const fetchUserPreferences = async () => {
+    if (!userId) {
+      setUserPreferencesError('No user ID found');
+      return;
+    }
+
+    setUserPreferencesLoading(true);
+    setUserPreferencesError(null);
+
+    try {
+      const url = buildUrl(API_CONFIG.AUTH.USERS.DETAIL, { id: userId }, 'auth');
+      const response = await authClient.get(url);
+      setUserPreferencesData(response.data);
+      console.log('User preferences data:', response.data);
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to fetch user preferences';
+      setUserPreferencesError(errorMessage);
+      toast.error(errorMessage);
+    } finally {
+      setUserPreferencesLoading(false);
+    }
+  };
+
   // Show error if no tenant ID is found
   if (!tenantId) {
     return (
@@ -252,7 +285,18 @@ export const AdminSettings: React.FC = () => {
 
       {/* Tenant Settings Forms */}
       {tenantData && (
-        <div className="space-y-6 max-w-6xl">
+        <Tabs defaultValue="tenant" className="w-full max-w-6xl">
+          <TabsList className="grid w-full grid-cols-2 max-w-md">
+            <TabsTrigger value="tenant">Tenant Settings</TabsTrigger>
+            <TabsTrigger value="user" onClick={() => fetchUserPreferences()}>
+              <User className="h-4 w-4 mr-2" />
+              User Preferences
+            </TabsTrigger>
+          </TabsList>
+
+          {/* Tenant Settings Tab */}
+          <TabsContent value="tenant">
+            <div className="space-y-6">
           {/* Basic Information Card */}
           <Card>
             <CardHeader>
@@ -650,7 +694,68 @@ export const AdminSettings: React.FC = () => {
               Save Settings
             </Button>
           </div>
-        </div>
+            </div>
+          </TabsContent>
+
+          {/* User Preferences Tab */}
+          <TabsContent value="user">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    <CardTitle>User Preferences</CardTitle>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={fetchUserPreferences}
+                    disabled={userPreferencesLoading}
+                  >
+                    {userPreferencesLoading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                    )}
+                    Refresh
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {userPreferencesLoading && (
+                  <div className="flex items-center justify-center py-12">
+                    <div className="text-center">
+                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+                      <p className="text-sm text-muted-foreground">Loading user data...</p>
+                    </div>
+                  </div>
+                )}
+
+                {userPreferencesError && (
+                  <div className="text-destructive py-4">
+                    <p className="text-sm font-semibold">Error:</p>
+                    <p className="text-sm">{userPreferencesError}</p>
+                  </div>
+                )}
+
+                {userPreferencesData && !userPreferencesLoading && (
+                  <div className="space-y-4">
+                    <pre className="bg-muted p-4 rounded-lg overflow-auto text-xs">
+                      {JSON.stringify(userPreferencesData, null, 2)}
+                    </pre>
+                  </div>
+                )}
+
+                {!userPreferencesData && !userPreferencesLoading && !userPreferencesError && (
+                  <div className="text-center py-12 text-muted-foreground">
+                    <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                    <p className="text-sm">Click the tab to load user preferences data</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       )}
     </div>
   );
