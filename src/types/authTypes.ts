@@ -5,11 +5,24 @@ export interface LoginPayload {
   password: string;
 }
 
+export interface TenantImage {
+  id: string;
+  tenant: string;
+  image: string;
+  label: string;
+  description: string | null;
+  order: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Tenant {
   id: string;
   name: string;
   slug: string;
   enabled_modules: string[];
+  gallery_images?: TenantImage[];
 }
 
 export interface Role {

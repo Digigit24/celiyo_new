@@ -45,6 +45,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useAuth } from "@/hooks/useAuth";
 
 interface MenuItem {
   id: string;
@@ -314,7 +315,14 @@ export function UniversalSidebar({
   setMobileOpen,
 }: UniversalSidebarProps) {
   const location = useLocation();
+  const { user } = useAuth();
   const [openSections, setOpenSections] = useState<string[]>(["masters"]);
+
+  // Get tenant logo from gallery images
+  const tenantLogo = user?.tenant?.gallery_images?.find(
+    (img) => img.label?.toLowerCase() === 'logo' && img.is_active
+  )?.image;
+  const tenantName = user?.tenant?.name || 'HMS';
 
   const toggleSection = (sectionId: string) => {
     setOpenSections((prev) =>
@@ -346,16 +354,32 @@ export function UniversalSidebar({
       <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Stethoscope className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="font-bold text-lg">HMS</span>
+            {tenantLogo ? (
+              <img
+                src={tenantLogo}
+                alt={`${tenantName} logo`}
+                className="w-8 h-8 object-contain rounded-lg"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <Stethoscope className="w-5 h-5 text-primary-foreground" />
+              </div>
+            )}
+            <span className="font-bold text-lg">{tenantName}</span>
           </div>
         )}
         {collapsed && (
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mx-auto">
-            <Stethoscope className="w-5 h-5 text-primary-foreground" />
-          </div>
+          tenantLogo ? (
+            <img
+              src={tenantLogo}
+              alt={`${tenantName} logo`}
+              className="w-8 h-8 object-contain rounded-lg mx-auto"
+            />
+          ) : (
+            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mx-auto">
+              <Stethoscope className="w-5 h-5 text-primary-foreground" />
+            </div>
+          )
         )}
         {mobileOpen && setMobileOpen && (
           <Button
