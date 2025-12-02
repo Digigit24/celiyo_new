@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -317,10 +317,34 @@ export function UniversalSidebar({
   const location = useLocation();
   const { user } = useAuth();
   const [openSections, setOpenSections] = useState<string[]>(["masters"]);
+  const [logoError, setLogoError] = useState(false);
 
   // Get tenant logo from settings
-  const tenantLogo = user?.tenant?.settings?.logo;
+  // Logo can be a URL or base64 string (data:image/...;base64,...)
+  const tenantLogo = user?.tenant?.settings?.logo && user?.tenant?.settings?.logo.trim() !== ''
+    ? user.tenant.settings.logo
+    : undefined;
   const tenantName = user?.tenant?.name || 'HMS';
+
+  // Debug logging
+  console.log('Tenant data:', {
+    hasTenant: !!user?.tenant,
+    hasSettings: !!user?.tenant?.settings,
+    logoValue: user?.tenant?.settings?.logo,
+    logoLength: user?.tenant?.settings?.logo?.length,
+    tenantName: user?.tenant?.name,
+    isBase64: user?.tenant?.settings?.logo?.startsWith('data:image')
+  });
+
+  // Reset logo error when logo changes
+  useEffect(() => {
+    setLogoError(false);
+  }, [tenantLogo]);
+
+  const handleLogoError = () => {
+    console.error('Failed to load tenant logo:', tenantLogo);
+    setLogoError(true);
+  };
 
   const toggleSection = (sectionId: string) => {
     setOpenSections((prev) =>
@@ -352,11 +376,12 @@ export function UniversalSidebar({
       <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            {tenantLogo ? (
+            {tenantLogo && !logoError ? (
               <img
                 src={tenantLogo}
                 alt={`${tenantName} logo`}
                 className="w-8 h-8 object-contain rounded-lg"
+                onError={handleLogoError}
               />
             ) : (
               <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
@@ -367,11 +392,12 @@ export function UniversalSidebar({
           </div>
         )}
         {collapsed && (
-          tenantLogo ? (
+          tenantLogo && !logoError ? (
             <img
               src={tenantLogo}
               alt={`${tenantName} logo`}
               className="w-8 h-8 object-contain rounded-lg mx-auto"
+              onError={handleLogoError}
             />
           ) : (
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center mx-auto">
