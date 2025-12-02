@@ -20,6 +20,7 @@ import { toast } from 'sonner';
 import { useOPDTemplate } from '@/hooks/useOPDTemplate';
 import { useTenant } from '@/hooks/useTenant';
 import { useAuth } from '@/hooks/useAuth';
+import { authService } from '@/services/authService';
 import type { Template, TemplateField } from '@/types/opdTemplate.types';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -36,6 +37,8 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
   const [selectedTemplateGroup, setSelectedTemplateGroup] = useState<string>('');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
   const [formData, setFormData] = useState<Record<string, any>>({});
+  const [hasDefaultTemplate, setHasDefaultTemplate] = useState<boolean>(false);
+  const [isLoadingDefaultTemplate, setIsLoadingDefaultTemplate] = useState<boolean>(true);
 
   // Get tenant from current session
   const tenant = getTenant();
@@ -67,11 +70,52 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
   const fieldsData = templateData?.fields || [];
   const isLoadingFields = isLoadingTemplate;
 
-  // Reset template selection when group changes
+  // Load default template from user preferences on mount
   useEffect(() => {
-    setSelectedTemplate('');
-    setFormData({});
-  }, [selectedTemplateGroup]);
+    const loadDefaultTemplate = async () => {
+      setIsLoadingDefaultTemplate(true);
+      try {
+        const preferences = authService.getUserPreferences();
+        const defaultTemplateId = preferences?.defaultOPDTemplate;
+
+        if (defaultTemplateId) {
+          console.log('📋 Loading default template:', defaultTemplateId);
+
+          // Fetch the default template to get its group
+          const { getTemplate } = await import('@/services/opdTemplate.service');
+          const defaultTemplate = await getTemplate(defaultTemplateId);
+
+          if (defaultTemplate) {
+            // Set the group and template IDs
+            setSelectedTemplateGroup(String(defaultTemplate.group));
+            setSelectedTemplate(String(defaultTemplate.id));
+            setHasDefaultTemplate(true);
+            console.log('✅ Default template loaded:', defaultTemplate.name);
+            toast.success(`Loading default template: ${defaultTemplate.name}`);
+          }
+        } else {
+          console.log('ℹ️ No default template set');
+          setHasDefaultTemplate(false);
+        }
+      } catch (error) {
+        console.error('❌ Failed to load default template:', error);
+        toast.error('Failed to load default template');
+        setHasDefaultTemplate(false);
+      } finally {
+        setIsLoadingDefaultTemplate(false);
+      }
+    };
+
+    loadDefaultTemplate();
+  }, []); // Only run on mount
+
+  // Reset template selection when group changes (only if manually changed, not on initial load)
+  useEffect(() => {
+    if (!isLoadingDefaultTemplate) {
+      setSelectedTemplate('');
+      setFormData({});
+    }
+  }, [selectedTemplateGroup, isLoadingDefaultTemplate]);
 
   // Reset form data when template changes
   useEffect(() => {
@@ -787,12 +831,23 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
 
   return (
     <div className="space-y-6">
-      {/* Template Group Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Select Template</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+      {/* Loading state for default template */}
+      {isLoadingDefaultTemplate && (
+        <Card>
+          <CardContent className="flex items-center justify-center py-8">
+            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <span className="text-sm text-muted-foreground">Loading default template...</span>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Template Selection - Only show if no default template is set */}
+      {!isLoadingDefaultTemplate && !hasDefaultTemplate && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Select Template</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
           {/* Template Group Dropdown */}
           <div className="space-y-2">
             <Label htmlFor="template-group">Template Group</Label>
@@ -860,6 +915,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           )}
         </CardContent>
       </Card>
+      )}
 
       {/* Dynamic Form Fields - Only show if template is selected */}
       {selectedTemplate && (
