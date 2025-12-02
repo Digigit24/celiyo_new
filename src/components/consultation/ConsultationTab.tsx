@@ -493,7 +493,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             className="border-b-4 py-8"
             style={{
               borderColor: tenantSettings.header_bg_color || '#3b82f6',
-              backgroundColor: tenantSettings.header_bg_color || '#3b82f6',
+              background: tenantSettings.header_bg_color || '#3b82f6',
               color: tenantSettings.header_text_color || '#ffffff'
             }}
           >
@@ -646,7 +646,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             className="border-t-4 py-6 flex-shrink-0"
             style={{
               borderColor: tenantSettings.footer_bg_color || '#3b82f6',
-              backgroundColor: tenantSettings.footer_bg_color || '#3b82f6',
+              background: tenantSettings.footer_bg_color || '#3b82f6',
               color: tenantSettings.footer_text_color || '#ffffff'
             }}
           >

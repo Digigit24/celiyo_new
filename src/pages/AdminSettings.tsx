@@ -54,6 +54,8 @@ export const AdminSettings: React.FC = () => {
   const [headerTextColor, setHeaderTextColor] = useState('#ffffff');
   const [footerBgColor, setFooterBgColor] = useState('#3b82f6');
   const [footerTextColor, setFooterTextColor] = useState('#ffffff');
+  const [headerUseGradient, setHeaderUseGradient] = useState(false);
+  const [footerUseGradient, setFooterUseGradient] = useState(false);
 
   // Initialize form with tenant data
   useEffect(() => {
@@ -74,10 +76,17 @@ export const AdminSettings: React.FC = () => {
       setContactEmail(settings.contact_email || '');
       setContactPhone(settings.contact_phone || '');
       setWebsiteUrl(settings.website_url || '');
-      setHeaderBgColor(settings.header_bg_color || '#3b82f6');
+      const headerBg = settings.header_bg_color || '#3b82f6';
+      const footerBg = settings.footer_bg_color || '#3b82f6';
+
+      setHeaderBgColor(headerBg);
       setHeaderTextColor(settings.header_text_color || '#ffffff');
-      setFooterBgColor(settings.footer_bg_color || '#3b82f6');
+      setFooterBgColor(footerBg);
       setFooterTextColor(settings.footer_text_color || '#ffffff');
+
+      // Detect if it's a gradient (contains 'gradient')
+      setHeaderUseGradient(headerBg.includes('gradient'));
+      setFooterUseGradient(footerBg.includes('gradient'));
 
       // Load existing logo from settings
       if (settings.logo) {
@@ -395,22 +404,58 @@ export const AdminSettings: React.FC = () => {
                 <h3 className="text-sm font-semibold">Header Colors</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Background Color</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="color"
-                        value={headerBgColor}
-                        onChange={(e) => setHeaderBgColor(e.target.value)}
-                        className="w-16 h-10 cursor-pointer p-1"
-                      />
-                      <Input
-                        type="text"
-                        value={headerBgColor}
-                        onChange={(e) => setHeaderBgColor(e.target.value)}
-                        placeholder="#3b82f6"
-                        className="flex-1"
-                      />
+                    <div className="flex items-center justify-between">
+                      <Label>Background Color</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="headerUseGradient"
+                          checked={headerUseGradient}
+                          onChange={(e) => {
+                            setHeaderUseGradient(e.target.checked);
+                            if (e.target.checked && !headerBgColor.includes('gradient')) {
+                              setHeaderBgColor('linear-gradient(to right, #3b82f6, #8b5cf6)');
+                            } else if (!e.target.checked && headerBgColor.includes('gradient')) {
+                              setHeaderBgColor('#3b82f6');
+                            }
+                          }}
+                          className="w-4 h-4 rounded"
+                        />
+                        <Label htmlFor="headerUseGradient" className="text-xs font-normal cursor-pointer">
+                          Use Gradient
+                        </Label>
+                      </div>
                     </div>
+                    {headerUseGradient ? (
+                      <Textarea
+                        value={headerBgColor}
+                        onChange={(e) => setHeaderBgColor(e.target.value)}
+                        placeholder="linear-gradient(to right, #3b82f6, #8b5cf6)"
+                        rows={2}
+                        className="font-mono text-xs"
+                      />
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          type="color"
+                          value={headerBgColor}
+                          onChange={(e) => setHeaderBgColor(e.target.value)}
+                          className="w-16 h-10 cursor-pointer p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={headerBgColor}
+                          onChange={(e) => setHeaderBgColor(e.target.value)}
+                          placeholder="#3b82f6"
+                          className="flex-1"
+                        />
+                      </div>
+                    )}
+                    {/* Preview */}
+                    <div
+                      className="h-10 rounded border"
+                      style={{ background: headerBgColor }}
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -439,22 +484,58 @@ export const AdminSettings: React.FC = () => {
                 <h3 className="text-sm font-semibold">Footer Colors</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Background Color</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        type="color"
-                        value={footerBgColor}
-                        onChange={(e) => setFooterBgColor(e.target.value)}
-                        className="w-16 h-10 cursor-pointer p-1"
-                      />
-                      <Input
-                        type="text"
-                        value={footerBgColor}
-                        onChange={(e) => setFooterBgColor(e.target.value)}
-                        placeholder="#3b82f6"
-                        className="flex-1"
-                      />
+                    <div className="flex items-center justify-between">
+                      <Label>Background Color</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="footerUseGradient"
+                          checked={footerUseGradient}
+                          onChange={(e) => {
+                            setFooterUseGradient(e.target.checked);
+                            if (e.target.checked && !footerBgColor.includes('gradient')) {
+                              setFooterBgColor('linear-gradient(to right, #3b82f6, #8b5cf6)');
+                            } else if (!e.target.checked && footerBgColor.includes('gradient')) {
+                              setFooterBgColor('#3b82f6');
+                            }
+                          }}
+                          className="w-4 h-4 rounded"
+                        />
+                        <Label htmlFor="footerUseGradient" className="text-xs font-normal cursor-pointer">
+                          Use Gradient
+                        </Label>
+                      </div>
                     </div>
+                    {footerUseGradient ? (
+                      <Textarea
+                        value={footerBgColor}
+                        onChange={(e) => setFooterBgColor(e.target.value)}
+                        placeholder="linear-gradient(to right, #3b82f6, #8b5cf6)"
+                        rows={2}
+                        className="font-mono text-xs"
+                      />
+                    ) : (
+                      <div className="flex gap-2">
+                        <Input
+                          type="color"
+                          value={footerBgColor}
+                          onChange={(e) => setFooterBgColor(e.target.value)}
+                          className="w-16 h-10 cursor-pointer p-1"
+                        />
+                        <Input
+                          type="text"
+                          value={footerBgColor}
+                          onChange={(e) => setFooterBgColor(e.target.value)}
+                          placeholder="#3b82f6"
+                          className="flex-1"
+                        />
+                      </div>
+                    )}
+                    {/* Preview */}
+                    <div
+                      className="h-10 rounded border"
+                      style={{ background: footerBgColor }}
+                    />
                   </div>
 
                   <div className="space-y-2">
