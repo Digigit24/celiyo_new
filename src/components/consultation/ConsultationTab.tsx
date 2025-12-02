@@ -537,31 +537,33 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           <div className="px-8 py-4 border-b flex-shrink-0">
             <h2 className="text-lg font-bold mb-3 text-center">CONSULTATION RECORD</h2>
 
-            <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
-              <div className="flex items-end">
-                <span className="font-semibold w-28 flex-shrink-0">Patient Name:</span>
+            <div className="grid grid-cols-12 gap-x-3 gap-y-1 text-sm">
+              <div className="col-span-5 flex items-end">
+                <span className="font-semibold w-24 flex-shrink-0">Patient Name:</span>
                 <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.patient_details?.full_name || 'N/A'}</span>
               </div>
-              <div className="flex items-end">
-                <span className="font-semibold w-28 flex-shrink-0">Patient ID:</span>
+              <div className="col-span-4 flex items-end">
+                <span className="font-semibold w-20 flex-shrink-0">Patient ID:</span>
                 <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.patient_details?.patient_id || 'N/A'}</span>
               </div>
-              <div className="flex items-end">
-                <span className="font-semibold w-28 flex-shrink-0">Age/Gender:</span>
-                <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">
-                  {visit.patient_details?.age || 'N/A'} years / {visit.patient_details?.gender || 'N/A'}
-                </span>
+              <div className="col-span-3 flex items-end">
+                <span className="font-semibold w-16 flex-shrink-0">Age:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.patient_details?.age || 'N/A'}</span>
               </div>
-              <div className="flex items-end">
-                <span className="font-semibold w-28 flex-shrink-0">Visit Date:</span>
+              <div className="col-span-3 flex items-end">
+                <span className="font-semibold w-16 flex-shrink-0">Gender:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.patient_details?.gender || 'N/A'}</span>
+              </div>
+              <div className="col-span-3 flex items-end">
+                <span className="font-semibold w-20 flex-shrink-0">Visit Date:</span>
                 <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.visit_date || 'N/A'}</span>
               </div>
-              <div className="flex items-end">
-                <span className="font-semibold w-28 flex-shrink-0">Doctor:</span>
+              <div className="col-span-5 flex items-end">
+                <span className="font-semibold w-16 flex-shrink-0">Doctor:</span>
                 <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.doctor_details?.full_name || 'N/A'}</span>
               </div>
-              <div className="flex items-end">
-                <span className="font-semibold w-28 flex-shrink-0">Visit Number:</span>
+              <div className="col-span-4 flex items-end">
+                <span className="font-semibold w-24 flex-shrink-0">Visit Number:</span>
                 <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.visit_number || 'N/A'}</span>
               </div>
             </div>
@@ -575,26 +577,44 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                   {templatesData?.results.find(t => t.id.toString() === selectedTemplate)?.name}
                 </h3>
 
-                <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
+                <div className="grid grid-cols-12 gap-x-3 gap-y-1">
                   {fieldsData
                     .sort((a, b) => a.display_order - b.display_order)
                     .map((field) => {
                       const value = formData[field.id];
                       if (!value || (Array.isArray(value) && value.length === 0) || value === false) return null;
 
-                      // Determine if field should span full width
-                      const isFullWidth = field.field_type === 'textarea' ||
-                                        (typeof value === 'string' && value.length > 50);
+                      // Determine field width based on type and content
+                      let colSpan = 'col-span-6'; // Default: half width
+
+                      // Full width fields
+                      if (field.field_type === 'textarea' || (typeof value === 'string' && value.length > 50)) {
+                        colSpan = 'col-span-12';
+                      }
+                      // Small fields (numbers, dates, short text)
+                      else if (
+                        field.field_type === 'number' ||
+                        field.field_type === 'date' ||
+                        field.field_type === 'datetime' ||
+                        field.field_label.toLowerCase().includes('age') ||
+                        (typeof value === 'string' && value.length <= 10)
+                      ) {
+                        colSpan = 'col-span-3';
+                      }
+                      // Medium fields
+                      else if (typeof value === 'string' && value.length <= 25) {
+                        colSpan = 'col-span-4';
+                      }
 
                       return (
                         <div
                           key={field.id}
-                          className={`${isFullWidth ? 'col-span-2' : 'col-span-1'} flex items-end`}
+                          className={`${colSpan} flex items-end`}
                         >
-                          <span className="text-xs font-semibold text-gray-700 mr-2 flex-shrink-0">
+                          <span className="text-xs font-semibold text-gray-700 mr-1.5 flex-shrink-0 whitespace-nowrap">
                             {field.field_label}:
                           </span>
-                          <span className={`flex-1 border-b border-dotted border-gray-400 pb-0.5 text-sm ${isFullWidth ? 'min-h-[40px]' : ''}`}>
+                          <span className={`flex-1 border-b border-dotted border-gray-400 pb-0.5 text-sm min-w-0 ${colSpan === 'col-span-12' ? 'min-h-[40px]' : ''}`}>
                             {Array.isArray(value)
                               ? value.join(', ')
                               : typeof value === 'boolean'
