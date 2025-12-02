@@ -189,7 +189,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         return (
           <div key={field.id} className="space-y-1">
             <div className="flex items-center gap-2">
-              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit">
+              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit mb-0">
                 {field.field_label}
                 {field.is_required && <span className="text-destructive ml-1">*</span>}:
               </Label>
@@ -203,7 +203,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                 minLength={field.min_length}
                 maxLength={field.max_length}
                 pattern={field.pattern}
-                className="flex-1"
+                className="flex-1 m-0"
               />
             </div>
             {field.help_text && (
@@ -239,7 +239,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         return (
           <div key={field.id} className="space-y-1">
             <div className="flex items-center gap-2">
-              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit">
+              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit mb-0">
                 {field.field_label}
                 {field.is_required && <span className="text-destructive ml-1">*</span>}:
               </Label>
@@ -252,7 +252,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                 required={field.is_required}
                 min={field.min_value}
                 max={field.max_value}
-                className="flex-1"
+                className="flex-1 m-0"
               />
             </div>
             {field.help_text && (
@@ -265,7 +265,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         return (
           <div key={field.id} className="space-y-1">
             <div className="flex items-center gap-2">
-              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit">
+              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit mb-0">
                 {field.field_label}
                 {field.is_required && <span className="text-destructive ml-1">*</span>}:
               </Label>
@@ -275,7 +275,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                 value={value}
                 onChange={(e) => handleFieldChange(field.id, e.target.value)}
                 required={field.is_required}
-                className="flex-1"
+                className="flex-1 m-0"
               />
             </div>
             {field.help_text && (
@@ -288,7 +288,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         return (
           <div key={field.id} className="space-y-1">
             <div className="flex items-center gap-2">
-              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit">
+              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit mb-0">
                 {field.field_label}
                 {field.is_required && <span className="text-destructive ml-1">*</span>}:
               </Label>
@@ -298,7 +298,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                 value={value}
                 onChange={(e) => handleFieldChange(field.id, e.target.value)}
                 required={field.is_required}
-                className="flex-1"
+                className="flex-1 m-0"
               />
             </div>
             {field.help_text && (
