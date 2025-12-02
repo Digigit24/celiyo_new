@@ -135,6 +135,9 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
     try {
       toast.info('Generating PDF...');
 
+      // Temporarily add class to hide borders during capture
+      element.classList.add('pdf-mode');
+
       // Capture the element as canvas with high quality
       const canvas = await html2canvas(element, {
         scale: 2, // Higher quality
@@ -142,6 +145,9 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         logging: false,
         backgroundColor: '#ffffff',
       });
+
+      // Remove the temporary class
+      element.classList.remove('pdf-mode');
 
       // A4 dimensions in mm
       const imgWidth = 210;
@@ -167,6 +173,8 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
     } catch (error) {
       console.error('Error generating PDF:', error);
       toast.error('Failed to generate PDF');
+      // Make sure to remove the class even if there's an error
+      element.classList.remove('pdf-mode');
     }
   };
 
@@ -540,29 +548,29 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
               <div className="flex items-end">
                 <span className="font-semibold w-28 flex-shrink-0">Patient Name:</span>
-                <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.patient_details?.full_name || 'N/A'}</span>
+                <span className="flex-1 border-b border-dotted border-gray-400 print:border-0 pb-0.5 ml-2">{visit.patient_details?.full_name || 'N/A'}</span>
               </div>
               <div className="flex items-end">
                 <span className="font-semibold w-28 flex-shrink-0">Patient ID:</span>
-                <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.patient_details?.patient_id || 'N/A'}</span>
+                <span className="flex-1 border-b border-dotted border-gray-400 print:border-0 pb-0.5 ml-2">{visit.patient_details?.patient_id || 'N/A'}</span>
               </div>
               <div className="flex items-end">
                 <span className="font-semibold w-28 flex-shrink-0">Age/Gender:</span>
-                <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">
+                <span className="flex-1 border-b border-dotted border-gray-400 print:border-0 pb-0.5 ml-2">
                   {visit.patient_details?.age || 'N/A'} years / {visit.patient_details?.gender || 'N/A'}
                 </span>
               </div>
               <div className="flex items-end">
                 <span className="font-semibold w-28 flex-shrink-0">Visit Date:</span>
-                <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.visit_date || 'N/A'}</span>
+                <span className="flex-1 border-b border-dotted border-gray-400 print:border-0 pb-0.5 ml-2">{visit.visit_date || 'N/A'}</span>
               </div>
               <div className="flex items-end">
                 <span className="font-semibold w-28 flex-shrink-0">Doctor:</span>
-                <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.doctor_details?.full_name || 'N/A'}</span>
+                <span className="flex-1 border-b border-dotted border-gray-400 print:border-0 pb-0.5 ml-2">{visit.doctor_details?.full_name || 'N/A'}</span>
               </div>
               <div className="flex items-end">
                 <span className="font-semibold w-28 flex-shrink-0">Visit Number:</span>
-                <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.visit_number || 'N/A'}</span>
+                <span className="flex-1 border-b border-dotted border-gray-400 print:border-0 pb-0.5 ml-2">{visit.visit_number || 'N/A'}</span>
               </div>
             </div>
           </div>
@@ -612,7 +620,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                           <span className="text-xs font-semibold text-gray-700 mr-2 flex-shrink-0 whitespace-nowrap">
                             {field.field_label}:
                           </span>
-                          <span className={`flex-1 border-b border-dotted border-gray-400 pb-0.5 text-sm min-w-0 ${colSpan === 'col-span-12' ? 'min-h-[40px]' : ''}`}>
+                          <span className={`flex-1 border-b border-dotted border-gray-400 print:border-0 pb-0.5 text-sm min-w-0 ${colSpan === 'col-span-12' ? 'min-h-[40px]' : ''}`}>
                             {Array.isArray(value)
                               ? value.join(', ')
                               : typeof value === 'boolean'
@@ -672,6 +680,11 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
 
         {/* Print Styles */}
         <style>{`
+          /* Hide borders in PDF download mode */
+          .pdf-mode .border-b {
+            border-bottom: 0 !important;
+          }
+
           @media print {
             @page {
               size: A4;
