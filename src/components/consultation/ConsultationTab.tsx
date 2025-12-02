@@ -340,6 +340,8 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           existingResponse.id,
           payload
         );
+        // Preserve the ID since API response might not include it
+        setExistingResponse({ ...savedResponse, id: existingResponse.id });
         toast.success('Consultation updated successfully');
       } else {
         // Create new response
@@ -348,11 +350,11 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           visit.id,
           payload
         );
+        setExistingResponse(savedResponse);
         toast.success('Consultation saved successfully');
       }
 
       console.log('✅ Response saved:', savedResponse);
-      setExistingResponse(savedResponse);
     } catch (error: any) {
       console.error('❌ Failed to save consultation:', error);
       toast.error(error.message || 'Failed to save consultation');
