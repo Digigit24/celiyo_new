@@ -1,5 +1,5 @@
 // src/components/opd-settings/TemplatesTab.tsx
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { useOPDTemplate } from '@/hooks/useOPDTemplate';
 import { DataTable, type DataTableColumn } from '@/components/DataTable';
 import { TemplateGroupFormDrawer } from './TemplateGroupFormDrawer';
@@ -9,9 +9,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
-import { Plus, RefreshCw, Eye, Edit, Trash2, Copy, Wrench } from 'lucide-react';
+import { Plus, RefreshCw, Eye, Edit, Trash2, Copy, Wrench, Star } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatDistanceToNow } from 'date-fns';
+import { authService } from '@/services/authService';
+import { authClient } from '@/lib/client';
+import { API_CONFIG, buildUrl } from '@/lib/apiConfig';
 import type { TemplateGroup, Template, TemplatesQueryParams } from '@/types/opdTemplate.types';
 
 type DrawerMode = 'view' | 'edit' | 'create';
@@ -47,6 +50,18 @@ export function TemplatesTab() {
   const [selectedTemplateForDesigner, setSelectedTemplateForDesigner] = useState<number | null>(
     null
   );
+
+  // Default template state
+  const [defaultTemplateId, setDefaultTemplateId] = useState<number | null>(null);
+  const [isSavingDefault, setIsSavingDefault] = useState(false);
+
+  // Load default template from user preferences on mount
+  useEffect(() => {
+    const preferences = authService.getUserPreferences();
+    if (preferences?.defaultOPDTemplate) {
+      setDefaultTemplateId(preferences.defaultOPDTemplate);
+    }
+  }, []);
 
   // Fetch template groups
   const {
@@ -226,6 +241,41 @@ export function TemplatesTab() {
     setDesignerDrawerOpen(true);
   }, []);
 
+  const handleSetDefaultTemplate = useCallback(
+    async (template: Template) => {
+      setIsSavingDefault(true);
+      try {
+        const user = authService.getCurrentUser();
+        if (!user) {
+          toast.error('User not found');
+          return;
+        }
+
+        // Update preferences on backend
+        const url = buildUrl(API_CONFIG.AUTH.USERS.UPDATE, { id: user.id }, 'auth');
+        const updatedPreferences = {
+          ...authService.getUserPreferences(),
+          defaultOPDTemplate: template.id,
+        };
+
+        await authClient.patch(url, { preferences: updatedPreferences });
+
+        // Update local storage
+        authService.updateUserPreferences(updatedPreferences);
+
+        // Update local state
+        setDefaultTemplateId(template.id);
+
+        toast.success(`"${template.name}" set as default template`);
+      } catch (error: any) {
+        toast.error(error.message || 'Failed to set default template');
+      } finally {
+        setIsSavingDefault(false);
+      }
+    },
+    []
+  );
+
   const handleTemplateDrawerClose = useCallback(() => {
     setTemplateDrawerOpen(false);
     setSelectedTemplateId(null);
@@ -296,7 +346,15 @@ export function TemplatesTab() {
         key: 'name',
         cell: (template) => (
           <div>
-            <div className="font-medium">{template.name}</div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{template.name}</span>
+              {defaultTemplateId === template.id && (
+                <Badge variant="default" className="gap-1">
+                  <Star className="h-3 w-3 fill-current" />
+                  Default
+                </Badge>
+              )}
+            </div>
             <div className="text-sm text-muted-foreground">{template.code}</div>
             {template.description && (
               <div className="text-sm text-muted-foreground mt-1">{template.description}</div>
@@ -321,7 +379,7 @@ export function TemplatesTab() {
         className: 'text-center w-24',
       },
     ],
-    []
+    [defaultTemplateId]
   );
 
   // Render mobile card for groups
@@ -372,7 +430,15 @@ export function TemplatesTab() {
       <div className="p-4 border rounded-lg space-y-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <div className="font-medium">{template.name}</div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium">{template.name}</span>
+              {defaultTemplateId === template.id && (
+                <Badge variant="default" className="gap-1">
+                  <Star className="h-3 w-3 fill-current" />
+                  Default
+                </Badge>
+              )}
+            </div>
             <div className="text-sm text-muted-foreground">{template.code}</div>
             {template.description && (
               <div className="text-sm text-muted-foreground mt-1">{template.description}</div>
@@ -388,6 +454,17 @@ export function TemplatesTab() {
         </div>
 
         <div className="flex gap-2 pt-2 flex-wrap">
+          {defaultTemplateId !== template.id && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => handleSetDefaultTemplate(template)}
+              disabled={isSavingDefault}
+            >
+              <Star className="h-4 w-4 mr-1" />
+              Set as Default
+            </Button>
+          )}
           <Button size="sm" variant="outline" onClick={() => handleDesignTemplate(template)}>
             <Wrench className="h-4 w-4 mr-1" />
             Design
@@ -410,7 +487,7 @@ export function TemplatesTab() {
         </div>
       </div>
     ),
-    [handleDesignTemplate]
+    [handleDesignTemplate, handleSetDefaultTemplate, defaultTemplateId, isSavingDefault]
   );
 
   // Extra actions for groups
@@ -429,6 +506,15 @@ export function TemplatesTab() {
   const templateExtraActions = useCallback(
     (template: Template) => (
       <>
+        {defaultTemplateId !== template.id && (
+          <DropdownMenuItem
+            onClick={() => handleSetDefaultTemplate(template)}
+            disabled={isSavingDefault}
+          >
+            <Star className="mr-2 h-4 w-4" />
+            Set as Default
+          </DropdownMenuItem>
+        )}
         <DropdownMenuItem onClick={() => handleDesignTemplate(template)}>
           <Wrench className="mr-2 h-4 w-4" />
           Design Template
@@ -442,7 +528,14 @@ export function TemplatesTab() {
         </DropdownMenuItem>
       </>
     ),
-    [handleDesignTemplate, handleDuplicateTemplate, handleToggleTemplateActive]
+    [
+      handleDesignTemplate,
+      handleDuplicateTemplate,
+      handleToggleTemplateActive,
+      handleSetDefaultTemplate,
+      defaultTemplateId,
+      isSavingDefault,
+    ]
   );
 
   return (
