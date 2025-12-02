@@ -14,13 +14,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { FileText, Printer, Save, Loader2 } from 'lucide-react';
+import { FileText, Printer, Save, Loader2, Download } from 'lucide-react';
 import { OpdVisit } from '@/types/opdVisit.types';
 import { toast } from 'sonner';
 import { useOPDTemplate } from '@/hooks/useOPDTemplate';
 import { useTenant } from '@/hooks/useTenant';
 import { useAuth } from '@/hooks/useAuth';
 import type { Template, TemplateField } from '@/types/opdTemplate.types';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface ConsultationTabProps {
   visit: OpdVisit;
@@ -121,6 +123,51 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleDownload = async () => {
+    const element = document.querySelector('.preview-container') as HTMLElement;
+    if (!element) {
+      toast.error('Preview container not found');
+      return;
+    }
+
+    try {
+      toast.info('Generating PDF...');
+
+      // Capture the element as canvas with high quality
+      const canvas = await html2canvas(element, {
+        scale: 2, // Higher quality
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      // A4 dimensions in mm
+      const imgWidth = 210;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      // Create PDF
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+
+      // Generate filename with patient name and date
+      const patientName = visit.patient_details?.full_name?.replace(/\s+/g, '_') || 'Patient';
+      const date = new Date().toISOString().split('T')[0];
+      const filename = `Consultation_${patientName}_${date}.pdf`;
+
+      pdf.save(filename);
+      toast.success('PDF downloaded successfully');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+    }
   };
 
   const renderField = (field: TemplateField) => {
@@ -427,7 +474,11 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             </Button>
             <Button variant="outline" onClick={handlePrint}>
               <Printer className="h-4 w-4 mr-2" />
-              Print / Download
+              Print
+            </Button>
+            <Button variant="outline" onClick={handleDownload}>
+              <Download className="h-4 w-4 mr-2" />
+              Download PDF
             </Button>
           </div>
         </div>
@@ -613,6 +664,13 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             @page {
               size: A4;
               margin: 0;
+            }
+
+            /* Force background colors and images to print */
+            * {
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              color-adjust: exact !important;
             }
 
             /* Hide everything except the preview container */
