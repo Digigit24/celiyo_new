@@ -21,6 +21,7 @@ import { useOPDTemplate } from '@/hooks/useOPDTemplate';
 import { useTenant } from '@/hooks/useTenant';
 import { useAuth } from '@/hooks/useAuth';
 import { authService } from '@/services/authService';
+import { opdTemplateService } from '@/services/opdTemplate.service';
 import type { Template, TemplateField } from '@/types/opdTemplate.types';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -78,28 +79,33 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         const preferences = authService.getUserPreferences();
         const defaultTemplateId = preferences?.defaultOPDTemplate;
 
+        console.log('🔍 Checking for default template...', { preferences, defaultTemplateId });
+
         if (defaultTemplateId) {
           console.log('📋 Loading default template:', defaultTemplateId);
 
           // Fetch the default template to get its group
-          const { getTemplate } = await import('@/services/opdTemplate.service');
-          const defaultTemplate = await getTemplate(defaultTemplateId);
+          const defaultTemplate = await opdTemplateService.getTemplate(defaultTemplateId);
 
           if (defaultTemplate) {
             // Set the group and template IDs
             setSelectedTemplateGroup(String(defaultTemplate.group));
             setSelectedTemplate(String(defaultTemplate.id));
             setHasDefaultTemplate(true);
-            console.log('✅ Default template loaded:', defaultTemplate.name);
-            toast.success(`Loading default template: ${defaultTemplate.name}`);
+            console.log('✅ Default template loaded:', {
+              id: defaultTemplate.id,
+              name: defaultTemplate.name,
+              group: defaultTemplate.group
+            });
+            toast.success(`Default template loaded: ${defaultTemplate.name}`);
           }
         } else {
-          console.log('ℹ️ No default template set');
+          console.log('ℹ️ No default template set in preferences');
           setHasDefaultTemplate(false);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Failed to load default template:', error);
-        toast.error('Failed to load default template');
+        toast.error(error.message || 'Failed to load default template');
         setHasDefaultTemplate(false);
       } finally {
         setIsLoadingDefaultTemplate(false);
