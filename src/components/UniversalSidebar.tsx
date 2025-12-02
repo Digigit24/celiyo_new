@@ -318,10 +318,8 @@ export function UniversalSidebar({
   const { user } = useAuth();
   const [openSections, setOpenSections] = useState<string[]>(["masters"]);
 
-  // Get tenant logo from gallery images
-  const tenantLogo = user?.tenant?.gallery_images?.find(
-    (img) => img.label?.toLowerCase() === 'logo' && img.is_active
-  )?.image;
+  // Get tenant logo from settings
+  const tenantLogo = user?.tenant?.settings?.logo;
   const tenantName = user?.tenant?.name || 'HMS';
 
   const toggleSection = (sectionId: string) => {

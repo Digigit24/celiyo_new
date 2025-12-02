@@ -5,6 +5,20 @@ export interface LoginPayload {
   password: string;
 }
 
+export interface TenantSettings {
+  logo?: string;
+  domain?: string;
+  address?: string;
+  website_url?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  footer_bg_color?: string;
+  header_bg_color?: string;
+  footer_text_color?: string;
+  header_text_color?: string;
+  [key: string]: any;
+}
+
 export interface TenantImage {
   id: string;
   tenant: string;
@@ -22,6 +36,7 @@ export interface Tenant {
   name: string;
   slug: string;
   enabled_modules: string[];
+  settings?: TenantSettings;
   gallery_images?: TenantImage[];
 }
 
