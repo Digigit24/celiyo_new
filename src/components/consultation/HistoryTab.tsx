@@ -96,6 +96,18 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ patientId }) => {
     }
   };
 
+  const formatDate = (dateString: string | null | undefined, formatString: string = 'MMM dd, yyyy'): string => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return 'N/A';
+      return format(date, formatString);
+    } catch (error) {
+      console.error('Error formatting date:', dateString, error);
+      return 'N/A';
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Overview Stats */}
@@ -128,7 +140,7 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ patientId }) => {
                   {loadingVisits ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : visitHistory[0] ? (
-                    format(new Date(visitHistory[0].visit_date), 'MMM dd, yyyy')
+                    formatDate(visitHistory[0].visit_date, 'MMM dd, yyyy')
                   ) : (
                     'N/A'
                   )}
@@ -190,7 +202,7 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ patientId }) => {
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {format(new Date(visit.visit_date), 'MMM dd, yyyy')} • {visit.doctor_details?.full_name || 'N/A'}
+                          {formatDate(visit.visit_date, 'MMM dd, yyyy')} • {visit.doctor_details?.full_name || 'N/A'}
                         </p>
                       </div>
                       <Badge
@@ -248,7 +260,7 @@ export const HistoryTab: React.FC<HistoryTabProps> = ({ patientId }) => {
                                       {response.template_name || `Template #${response.template}`}
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                      {format(new Date(response.created_at), 'MMM dd, yyyy HH:mm')}
+                                      {formatDate(response.created_at, 'MMM dd, yyyy HH:mm')}
                                       {response.filled_by_name && ` • by ${response.filled_by_name}`}
                                     </p>
                                   </div>
