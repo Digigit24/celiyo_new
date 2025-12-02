@@ -537,33 +537,31 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           <div className="px-8 py-4 border-b flex-shrink-0">
             <h2 className="text-lg font-bold mb-3 text-center">CONSULTATION RECORD</h2>
 
-            <div className="grid grid-cols-12 gap-x-3 gap-y-1 text-sm">
-              <div className="col-span-5 flex items-end">
-                <span className="font-semibold w-24 flex-shrink-0">Patient Name:</span>
+            <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
+              <div className="flex items-end">
+                <span className="font-semibold w-28 flex-shrink-0">Patient Name:</span>
                 <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.patient_details?.full_name || 'N/A'}</span>
               </div>
-              <div className="col-span-4 flex items-end">
-                <span className="font-semibold w-20 flex-shrink-0">Patient ID:</span>
+              <div className="flex items-end">
+                <span className="font-semibold w-28 flex-shrink-0">Patient ID:</span>
                 <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.patient_details?.patient_id || 'N/A'}</span>
               </div>
-              <div className="col-span-3 flex items-end">
-                <span className="font-semibold w-16 flex-shrink-0">Age:</span>
-                <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.patient_details?.age || 'N/A'}</span>
+              <div className="flex items-end">
+                <span className="font-semibold w-28 flex-shrink-0">Age/Gender:</span>
+                <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">
+                  {visit.patient_details?.age || 'N/A'} years / {visit.patient_details?.gender || 'N/A'}
+                </span>
               </div>
-              <div className="col-span-3 flex items-end">
-                <span className="font-semibold w-16 flex-shrink-0">Gender:</span>
-                <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.patient_details?.gender || 'N/A'}</span>
-              </div>
-              <div className="col-span-3 flex items-end">
-                <span className="font-semibold w-20 flex-shrink-0">Visit Date:</span>
+              <div className="flex items-end">
+                <span className="font-semibold w-28 flex-shrink-0">Visit Date:</span>
                 <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.visit_date || 'N/A'}</span>
               </div>
-              <div className="col-span-5 flex items-end">
-                <span className="font-semibold w-16 flex-shrink-0">Doctor:</span>
+              <div className="flex items-end">
+                <span className="font-semibold w-28 flex-shrink-0">Doctor:</span>
                 <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.doctor_details?.full_name || 'N/A'}</span>
               </div>
-              <div className="col-span-4 flex items-end">
-                <span className="font-semibold w-24 flex-shrink-0">Visit Number:</span>
+              <div className="flex items-end">
+                <span className="font-semibold w-28 flex-shrink-0">Visit Number:</span>
                 <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.visit_number || 'N/A'}</span>
               </div>
             </div>
