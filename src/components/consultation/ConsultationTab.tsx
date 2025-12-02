@@ -680,6 +680,47 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
 
         {/* Print Styles */}
         <style>{`
+          /* Force preview to be theme-independent */
+          .preview-container {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+          }
+
+          .preview-container * {
+            color: inherit;
+          }
+
+          /* Override specific text colors */
+          .preview-container .text-gray-700 {
+            color: #374151 !important;
+          }
+
+          .preview-container .text-gray-600 {
+            color: #4b5563 !important;
+          }
+
+          .preview-container .text-gray-400 {
+            color: #9ca3af !important;
+          }
+
+          /* Ensure borders are visible regardless of theme */
+          .preview-container .border-t,
+          .preview-container .border-b {
+            border-color: #e5e7eb !important;
+          }
+
+          .preview-container .border-dotted {
+            border-color: #9ca3af !important;
+          }
+
+          .preview-container .border-gray-300 {
+            border-color: #d1d5db !important;
+          }
+
+          .preview-container .border-gray-400 {
+            border-color: #9ca3af !important;
+          }
+
           /* Hide borders in PDF download mode */
           .pdf-mode .border-b {
             border-bottom: 0 !important;
