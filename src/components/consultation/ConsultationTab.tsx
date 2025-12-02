@@ -21,7 +21,8 @@ import { useOPDTemplate } from '@/hooks/useOPDTemplate';
 import { useTenant } from '@/hooks/useTenant';
 import { useAuth } from '@/hooks/useAuth';
 import { authService } from '@/services/authService';
-import type { Template, TemplateField } from '@/types/opdTemplate.types';
+import { opdTemplateService } from '@/services/opdTemplate.service';
+import type { Template, TemplateField, TemplateResponse, FieldResponsePayload } from '@/types/opdTemplate.types';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -39,6 +40,12 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [hasDefaultTemplate, setHasDefaultTemplate] = useState<boolean>(false);
   const [isLoadingDefaultTemplate, setIsLoadingDefaultTemplate] = useState<boolean>(true);
+  const [isDefaultTemplateLoaded, setIsDefaultTemplateLoaded] = useState<boolean>(false);
+
+  // Template response state
+  const [existingResponse, setExistingResponse] = useState<TemplateResponse | null>(null);
+  const [isLoadingResponse, setIsLoadingResponse] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // Get tenant from current session
   const tenant = getTenant();
@@ -70,6 +77,78 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
   const fieldsData = templateData?.fields || [];
   const isLoadingFields = isLoadingTemplate;
 
+  // Debug: Log template data changes
+  useEffect(() => {
+    if (selectedTemplate) {
+      console.log('📊 Template data status:', {
+        selectedTemplate,
+        hasTemplateData: !!templateData,
+        isLoadingTemplate,
+        fieldsCount: fieldsData.length,
+        templateName: templateData?.name
+      });
+    }
+  }, [selectedTemplate, templateData, isLoadingTemplate, fieldsData.length]);
+
+  // Fetch existing template response when template is selected
+  useEffect(() => {
+    const fetchExistingResponse = async () => {
+      if (!selectedTemplate || !visit?.id) return;
+
+      setIsLoadingResponse(true);
+      try {
+        console.log('🔍 Fetching existing response for visit:', visit.id);
+        const responses = await opdTemplateService.getVisitTemplateResponses(visit.id);
+
+        // Find response for current template
+        const response = responses.find(r => r.template === parseInt(selectedTemplate));
+
+        if (response) {
+          console.log('✅ Found existing response:', response);
+          setExistingResponse(response);
+
+          // Populate form data from existing response
+          if (response.field_responses && response.field_responses.length > 0) {
+            const populatedData: Record<string, any> = {};
+
+            response.field_responses.forEach((fieldResp: any) => {
+              const fieldId = String(fieldResp.field);
+
+              // Determine which value to use based on field type
+              if (fieldResp.selected_options && fieldResp.selected_options.length > 0) {
+                populatedData[fieldId] = fieldResp.selected_options;
+              } else if (fieldResp.value_text !== null) {
+                populatedData[fieldId] = fieldResp.value_text;
+              } else if (fieldResp.value_number !== null) {
+                populatedData[fieldId] = fieldResp.value_number;
+              } else if (fieldResp.value_date !== null) {
+                populatedData[fieldId] = fieldResp.value_date;
+              } else if (fieldResp.value_datetime !== null) {
+                populatedData[fieldId] = fieldResp.value_datetime;
+              } else if (fieldResp.value_boolean !== null) {
+                populatedData[fieldId] = fieldResp.value_boolean;
+              }
+            });
+
+            setFormData(populatedData);
+            console.log('✅ Form data populated from existing response:', populatedData);
+            toast.info('Loaded existing consultation data');
+          }
+        } else {
+          console.log('ℹ️ No existing response found for this template');
+          setExistingResponse(null);
+        }
+      } catch (error: any) {
+        console.error('❌ Failed to fetch existing response:', error);
+        // Don't show error toast - it's ok if there's no existing response
+      } finally {
+        setIsLoadingResponse(false);
+      }
+    };
+
+    fetchExistingResponse();
+  }, [selectedTemplate, visit?.id]);
+
   // Load default template from user preferences on mount
   useEffect(() => {
     const loadDefaultTemplate = async () => {
@@ -78,28 +157,42 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         const preferences = authService.getUserPreferences();
         const defaultTemplateId = preferences?.defaultOPDTemplate;
 
+        console.log('🔍 Checking for default template...', {
+          preferences,
+          defaultTemplateId,
+          serviceAvailable: !!opdTemplateService,
+          hasGetTemplate: typeof opdTemplateService?.getTemplate === 'function'
+        });
+
         if (defaultTemplateId) {
           console.log('📋 Loading default template:', defaultTemplateId);
+          console.log('Service object:', opdTemplateService);
 
-          // Fetch the default template to get its group
-          const { getTemplate } = await import('@/services/opdTemplate.service');
-          const defaultTemplate = await getTemplate(defaultTemplateId);
+          // Fetch the default template to get its group using hmsClient directly
+          const { hmsClient } = await import('@/lib/client');
+          const response = await hmsClient.get(`/opd/templates/${defaultTemplateId}/`);
+          const defaultTemplate = response.data;
 
           if (defaultTemplate) {
             // Set the group and template IDs
             setSelectedTemplateGroup(String(defaultTemplate.group));
             setSelectedTemplate(String(defaultTemplate.id));
             setHasDefaultTemplate(true);
-            console.log('✅ Default template loaded:', defaultTemplate.name);
-            toast.success(`Loading default template: ${defaultTemplate.name}`);
+            setIsDefaultTemplateLoaded(true);
+            console.log('✅ Default template loaded:', {
+              id: defaultTemplate.id,
+              name: defaultTemplate.name,
+              group: defaultTemplate.group
+            });
+            toast.success(`Default template loaded: ${defaultTemplate.name}`);
           }
         } else {
-          console.log('ℹ️ No default template set');
+          console.log('ℹ️ No default template set in preferences');
           setHasDefaultTemplate(false);
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ Failed to load default template:', error);
-        toast.error('Failed to load default template');
+        toast.error(error.message || 'Failed to load default template');
         setHasDefaultTemplate(false);
       } finally {
         setIsLoadingDefaultTemplate(false);
@@ -109,13 +202,17 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
     loadDefaultTemplate();
   }, []); // Only run on mount
 
-  // Reset template selection when group changes (only if manually changed, not on initial load)
+  // Reset template selection when group changes (only if manually changed, not from default load)
   useEffect(() => {
-    if (!isLoadingDefaultTemplate) {
+    if (!isLoadingDefaultTemplate && !isDefaultTemplateLoaded) {
       setSelectedTemplate('');
       setFormData({});
     }
-  }, [selectedTemplateGroup, isLoadingDefaultTemplate]);
+    // Reset the flag after the first group change
+    if (isDefaultTemplateLoaded) {
+      setIsDefaultTemplateLoaded(false);
+    }
+  }, [selectedTemplateGroup]);
 
   // Reset form data when template changes
   useEffect(() => {
@@ -159,10 +256,109 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
     }));
   };
 
-  const handleSave = () => {
-    console.log('Form Data:', formData);
-    console.log('Fields:', fieldsData);
-    toast.success('Consultation saved successfully');
+  const handleSave = async () => {
+    if (!selectedTemplate || !visit?.id) {
+      toast.error('Please select a template first');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      console.log('💾 Saving consultation...', { formData, fieldsData });
+
+      // Build field_responses array from formData
+      const fieldResponses: FieldResponsePayload[] = fieldsData.map((field) => {
+        const fieldValue = formData[String(field.id)];
+        const response: FieldResponsePayload = {
+          field: field.id,
+        };
+
+        // Determine which value field to populate based on field type
+        switch (field.field_type) {
+          case 'text':
+          case 'textarea':
+          case 'email':
+          case 'phone':
+          case 'url':
+            response.value_text = fieldValue || null;
+            break;
+
+          case 'number':
+          case 'decimal':
+            response.value_number = fieldValue ? Number(fieldValue) : null;
+            break;
+
+          case 'date':
+            response.value_date = fieldValue || null;
+            break;
+
+          case 'datetime':
+            response.value_datetime = fieldValue || null;
+            break;
+
+          case 'boolean':
+          case 'checkbox': // Single checkbox
+            response.value_boolean = Boolean(fieldValue);
+            break;
+
+          case 'select':
+          case 'radio':
+            // Single selection - convert to array
+            response.selected_options = fieldValue ? [Number(fieldValue)] : [];
+            break;
+
+          case 'multiselect':
+            // Multiple selection - already an array
+            response.selected_options = Array.isArray(fieldValue)
+              ? fieldValue.map(Number)
+              : fieldValue
+              ? [Number(fieldValue)]
+              : [];
+            break;
+
+          default:
+            response.value_text = fieldValue ? String(fieldValue) : null;
+        }
+
+        return response;
+      });
+
+      console.log('📤 Submitting field responses:', fieldResponses);
+
+      const payload = {
+        template: parseInt(selectedTemplate),
+        status: 'draft' as const,
+        field_responses: fieldResponses,
+      };
+
+      let savedResponse: TemplateResponse;
+
+      if (existingResponse) {
+        // Update existing response
+        console.log('🔄 Updating existing response:', existingResponse.id);
+        savedResponse = await opdTemplateService.updateTemplateResponse(
+          existingResponse.id,
+          payload
+        );
+        toast.success('Consultation updated successfully');
+      } else {
+        // Create new response
+        console.log('✨ Creating new response');
+        savedResponse = await opdTemplateService.createVisitTemplateResponse(
+          visit.id,
+          payload
+        );
+        toast.success('Consultation saved successfully');
+      }
+
+      console.log('✅ Response saved:', savedResponse);
+      setExistingResponse(savedResponse);
+    } catch (error: any) {
+      console.error('❌ Failed to save consultation:', error);
+      toast.error(error.message || 'Failed to save consultation');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handlePrint = () => {
@@ -917,8 +1113,8 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
       </Card>
       )}
 
-      {/* Dynamic Form Fields - Only show if template is selected */}
-      {selectedTemplate && (
+      {/* Dynamic Form Fields - Only show if template is selected and not loading default */}
+      {selectedTemplate && !isLoadingDefaultTemplate && (
         <>
           {/* Mode Toggle */}
           <div className="flex justify-between items-center">
@@ -928,9 +1124,18 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                 Preview Mode
               </Button>
             </div>
-            <Button onClick={handleSave}>
-              <Save className="h-4 w-4 mr-2" />
-              Save Consultation
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Consultation
+                </>
+              )}
             </Button>
           </div>
 
@@ -945,7 +1150,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  {templatesData?.results.find(t => t.id.toString() === selectedTemplate)?.name}
+                  {templateData?.name || templatesData?.results.find(t => t.id.toString() === selectedTemplate)?.name || 'Template'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
