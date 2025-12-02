@@ -71,6 +71,19 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
   const fieldsData = templateData?.fields || [];
   const isLoadingFields = isLoadingTemplate;
 
+  // Debug: Log template data changes
+  useEffect(() => {
+    if (selectedTemplate) {
+      console.log('📊 Template data status:', {
+        selectedTemplate,
+        hasTemplateData: !!templateData,
+        isLoadingTemplate,
+        fieldsCount: fieldsData.length,
+        templateName: templateData?.name
+      });
+    }
+  }, [selectedTemplate, templateData, isLoadingTemplate, fieldsData.length]);
+
   // Load default template from user preferences on mount
   useEffect(() => {
     const loadDefaultTemplate = async () => {
@@ -931,8 +944,8 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
       </Card>
       )}
 
-      {/* Dynamic Form Fields - Only show if template is selected */}
-      {selectedTemplate && (
+      {/* Dynamic Form Fields - Only show if template is selected and not loading default */}
+      {selectedTemplate && !isLoadingDefaultTemplate && (
         <>
           {/* Mode Toggle */}
           <div className="flex justify-between items-center">
@@ -959,7 +972,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             <Card>
               <CardHeader>
                 <CardTitle>
-                  {templatesData?.results.find(t => t.id.toString() === selectedTemplate)?.name}
+                  {templateData?.name || templatesData?.results.find(t => t.id.toString() === selectedTemplate)?.name || 'Template'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
