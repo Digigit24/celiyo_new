@@ -485,8 +485,8 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
 
         {/* A4 Paper with Letterhead - This is what gets printed */}
         <div
-          className="preview-container mx-auto bg-white shadow-lg print:shadow-none"
-          style={{ width: '210mm', minHeight: '297mm' }}
+          className="preview-container mx-auto bg-white shadow-lg print:shadow-none flex flex-col"
+          style={{ width: '210mm', height: '297mm' }}
         >
           {/* Letterhead Header */}
           <div
@@ -534,7 +534,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           </div>
 
           {/* Patient & Visit Information */}
-          <div className="p-8 border-b">
+          <div className="p-8 border-b flex-shrink-0">
             <h2 className="text-xl font-bold mb-4 text-center">CONSULTATION RECORD</h2>
 
             <div className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm">
@@ -568,7 +568,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           </div>
 
           {/* Form Fields Content */}
-          <div className="p-8 min-h-[600px]">
+          <div className="p-8 flex-1 overflow-auto">
             {selectedTemplate && fieldsData && fieldsData.length > 0 ? (
               <div className="space-y-6">
                 <h3 className="text-lg font-bold border-b-2 border-gray-300 pb-2 mb-4">
@@ -631,7 +631,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
 
           {/* Letterhead Footer */}
           <div
-            className="border-t-4 p-6 mt-auto"
+            className="border-t-4 p-6 flex-shrink-0"
             style={{
               borderColor: tenantSettings.footer_bg_color || '#3b82f6',
               backgroundColor: tenantSettings.footer_bg_color || '#3b82f6',
