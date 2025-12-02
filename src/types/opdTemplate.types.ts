@@ -257,16 +257,26 @@ export interface TemplateResponse {
   field_responses?: TemplateFieldResponse[];
 }
 
+export interface FieldResponsePayload {
+  field: number;
+  value_text?: string | null;
+  value_number?: number | null;
+  value_date?: string | null;
+  value_datetime?: string | null;
+  value_boolean?: boolean | null;
+  selected_options?: number[];
+}
+
 export interface CreateTemplateResponsePayload {
-  visit: number;
   template: number;
   status?: TemplateResponseStatus;
-  filled_by?: string; // UUID - optional if backend auto-fills from request user
+  field_responses?: FieldResponsePayload[];
 }
 
 export interface UpdateTemplateResponsePayload {
   status?: TemplateResponseStatus;
   completed_at?: string | null;
+  field_responses?: FieldResponsePayload[];
 }
 
 export interface TemplateResponsesQueryParams {

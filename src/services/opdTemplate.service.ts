@@ -452,6 +452,41 @@ class OPDTemplateService {
     }
   }
 
+  // Visit-specific template response methods
+  async getVisitTemplateResponses(visitId: number): Promise<TemplateResponse[]> {
+    try {
+      const response = await hmsClient.get<TemplateResponse[]>(
+        `${this.baseURL}/visits/${visitId}/template_responses/`
+      );
+      return response.data;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to fetch visit template responses';
+      throw new Error(message);
+    }
+  }
+
+  async createVisitTemplateResponse(
+    visitId: number,
+    data: CreateTemplateResponsePayload
+  ): Promise<TemplateResponse> {
+    try {
+      const response = await hmsClient.post<TemplateResponse>(
+        `${this.baseURL}/visits/${visitId}/template_responses/`,
+        data
+      );
+      return response.data;
+    } catch (error: any) {
+      const message =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        'Failed to create template response';
+      throw new Error(message);
+    }
+  }
+
   // ==================== TEMPLATE FIELD RESPONSES ====================
 
   async getTemplateFieldResponses(

@@ -187,6 +187,17 @@ export const API_CONFIG = {
         CREATE: '/opd/visit-attachments/',
         UPDATE: '/opd/visit-attachments/:id/',
         DELETE: '/opd/visit-attachments/:id/',
+      },
+      TEMPLATE_RESPONSES: {
+        // Visit-specific template responses
+        VISIT_LIST: '/opd/visits/:visit_id/template_responses/',
+        VISIT_CREATE: '/opd/visits/:visit_id/template_responses/',
+        // Individual template response operations
+        DETAIL: '/opd/template-responses/:id/',
+        UPDATE: '/opd/template-responses/:id/',
+        DELETE: '/opd/template-responses/:id/',
+        // Field responses
+        FIELD_RESPONSES: '/opd/template-field-responses/',
       }
     },
     PAYMENTS: {
