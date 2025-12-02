@@ -537,7 +537,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           <div className="px-8 py-4 border-b flex-shrink-0">
             <h2 className="text-lg font-bold mb-3 text-center">CONSULTATION RECORD</h2>
 
-            <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
               <div className="flex items-end">
                 <span className="font-semibold w-28 flex-shrink-0">Patient Name:</span>
                 <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.patient_details?.full_name || 'N/A'}</span>
@@ -575,7 +575,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                   {templatesData?.results.find(t => t.id.toString() === selectedTemplate)?.name}
                 </h3>
 
-                <div className="grid grid-cols-12 gap-x-3 gap-y-1">
+                <div className="grid grid-cols-12 gap-x-4 gap-y-2">
                   {fieldsData
                     .sort((a, b) => a.display_order - b.display_order)
                     .map((field) => {
@@ -609,7 +609,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                           key={field.id}
                           className={`${colSpan} flex items-end`}
                         >
-                          <span className="text-xs font-semibold text-gray-700 mr-1.5 flex-shrink-0 whitespace-nowrap">
+                          <span className="text-xs font-semibold text-gray-700 mr-2 flex-shrink-0 whitespace-nowrap">
                             {field.field_label}:
                           </span>
                           <span className={`flex-1 border-b border-dotted border-gray-400 pb-0.5 text-sm min-w-0 ${colSpan === 'col-span-12' ? 'min-h-[40px]' : ''}`}>
