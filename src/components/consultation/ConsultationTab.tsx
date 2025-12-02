@@ -534,7 +534,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           </div>
 
           {/* Patient & Visit Information */}
-          <div className="px-8 py-4 border-b flex-shrink-0">
+          <div className="px-8 py-4 border-t border-b flex-shrink-0">
             <h2 className="text-lg font-bold mb-3 text-center">CONSULTATION RECORD</h2>
 
             <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
@@ -568,7 +568,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           </div>
 
           {/* Form Fields Content */}
-          <div className="px-8 py-4 flex-1 overflow-auto">
+          <div className="px-8 py-4 flex-1 overflow-auto border-b">
             {selectedTemplate && fieldsData && fieldsData.length > 0 ? (
               <div className="space-y-2">
                 <h3 className="text-base font-bold pb-1 mb-2">
