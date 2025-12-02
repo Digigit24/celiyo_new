@@ -534,10 +534,10 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           </div>
 
           {/* Patient & Visit Information */}
-          <div className="p-8 border-b flex-shrink-0">
-            <h2 className="text-xl font-bold mb-4 text-center">CONSULTATION RECORD</h2>
+          <div className="px-8 py-4 border-b flex-shrink-0">
+            <h2 className="text-lg font-bold mb-3 text-center">CONSULTATION RECORD</h2>
 
-            <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-sm">
               <div className="flex items-end">
                 <span className="font-semibold w-28 flex-shrink-0">Patient Name:</span>
                 <span className="flex-1 border-b border-dotted border-gray-400 pb-0.5 ml-2">{visit.patient_details?.full_name || 'N/A'}</span>
@@ -568,14 +568,14 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           </div>
 
           {/* Form Fields Content */}
-          <div className="p-8 flex-1 overflow-auto">
+          <div className="px-8 py-4 flex-1 overflow-auto">
             {selectedTemplate && fieldsData && fieldsData.length > 0 ? (
-              <div className="space-y-6">
-                <h3 className="text-lg font-bold border-b-2 border-gray-300 pb-2 mb-4">
+              <div className="space-y-2">
+                <h3 className="text-base font-bold pb-1 mb-2">
                   {templatesData?.results.find(t => t.id.toString() === selectedTemplate)?.name}
                 </h3>
 
-                <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1.5">
                   {fieldsData
                     .sort((a, b) => a.display_order - b.display_order)
                     .map((field) => {
@@ -589,22 +589,18 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                       return (
                         <div
                           key={field.id}
-                          className={`${isFullWidth ? 'col-span-2' : 'col-span-1'}`}
+                          className={`${isFullWidth ? 'col-span-2' : 'col-span-1'} flex items-end`}
                         >
-                          <div className="flex flex-col">
-                            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
-                              {field.field_label}
-                            </span>
-                            <div className={`${isFullWidth ? 'min-h-[60px]' : 'min-h-[30px]'} border-b border-gray-300 pb-1`}>
-                              <span className="text-sm">
-                                {Array.isArray(value)
-                                  ? value.join(', ')
-                                  : typeof value === 'boolean'
-                                    ? (value ? '✓ Yes' : 'No')
-                                    : value}
-                              </span>
-                            </div>
-                          </div>
+                          <span className="text-xs font-semibold text-gray-700 mr-2 flex-shrink-0">
+                            {field.field_label}:
+                          </span>
+                          <span className={`flex-1 border-b border-dotted border-gray-400 pb-0.5 text-sm ${isFullWidth ? 'min-h-[40px]' : ''}`}>
+                            {Array.isArray(value)
+                              ? value.join(', ')
+                              : typeof value === 'boolean'
+                                ? (value ? '✓ Yes' : 'No')
+                                : value}
+                          </span>
                         </div>
                       );
                     })}
@@ -615,16 +611,14 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                   const value = formData[field.id];
                   return !value || (Array.isArray(value) && value.length === 0) || value === false;
                 }) && (
-                  <div className="text-center py-12 text-gray-400">
-                    <p>No data recorded</p>
-                    <p className="text-sm">Please fill out the form in Edit Mode</p>
+                  <div className="text-center py-8 text-gray-400">
+                    <p className="text-sm">No data recorded</p>
                   </div>
                 )}
               </div>
             ) : (
-              <div className="text-center py-12 text-gray-400">
-                <p>No template selected</p>
-                <p className="text-sm">Please select a template and fill out the form</p>
+              <div className="text-center py-8 text-gray-400">
+                <p className="text-sm">No template selected</p>
               </div>
             )}
           </div>
