@@ -187,24 +187,27 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
       case 'phone':
       case 'url':
         return (
-          <div key={field.id} className="space-y-2">
-            <Label htmlFor={`field-${field.id}`}>
-              {field.field_label}
-              {field.is_required && <span className="text-destructive ml-1">*</span>}
-            </Label>
-            <Input
-              id={`field-${field.id}`}
-              type={field.field_type === 'email' ? 'email' : field.field_type === 'phone' ? 'tel' : field.field_type === 'url' ? 'url' : 'text'}
-              placeholder={field.placeholder || ''}
-              value={value}
-              onChange={(e) => handleFieldChange(field.id, e.target.value)}
-              required={field.is_required}
-              minLength={field.min_length}
-              maxLength={field.max_length}
-              pattern={field.pattern}
-            />
+          <div key={field.id} className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit">
+                {field.field_label}
+                {field.is_required && <span className="text-destructive ml-1">*</span>}:
+              </Label>
+              <Input
+                id={`field-${field.id}`}
+                type={field.field_type === 'email' ? 'email' : field.field_type === 'phone' ? 'tel' : field.field_type === 'url' ? 'url' : 'text'}
+                placeholder={field.placeholder || ''}
+                value={value}
+                onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                required={field.is_required}
+                minLength={field.min_length}
+                maxLength={field.max_length}
+                pattern={field.pattern}
+                className="flex-1"
+              />
+            </div>
             {field.help_text && (
-              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+              <p className="text-xs text-muted-foreground ml-2">{field.help_text}</p>
             )}
           </div>
         );
@@ -234,63 +237,72 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
 
       case 'number':
         return (
-          <div key={field.id} className="space-y-2">
-            <Label htmlFor={`field-${field.id}`}>
-              {field.field_label}
-              {field.is_required && <span className="text-destructive ml-1">*</span>}
-            </Label>
-            <Input
-              id={`field-${field.id}`}
-              type="number"
-              placeholder={field.placeholder || ''}
-              value={value}
-              onChange={(e) => handleFieldChange(field.id, e.target.value)}
-              required={field.is_required}
-              min={field.min_value}
-              max={field.max_value}
-            />
+          <div key={field.id} className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit">
+                {field.field_label}
+                {field.is_required && <span className="text-destructive ml-1">*</span>}:
+              </Label>
+              <Input
+                id={`field-${field.id}`}
+                type="number"
+                placeholder={field.placeholder || ''}
+                value={value}
+                onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                required={field.is_required}
+                min={field.min_value}
+                max={field.max_value}
+                className="flex-1"
+              />
+            </div>
             {field.help_text && (
-              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+              <p className="text-xs text-muted-foreground ml-2">{field.help_text}</p>
             )}
           </div>
         );
 
       case 'date':
         return (
-          <div key={field.id} className="space-y-2">
-            <Label htmlFor={`field-${field.id}`}>
-              {field.field_label}
-              {field.is_required && <span className="text-destructive ml-1">*</span>}
-            </Label>
-            <Input
-              id={`field-${field.id}`}
-              type="date"
-              value={value}
-              onChange={(e) => handleFieldChange(field.id, e.target.value)}
-              required={field.is_required}
-            />
+          <div key={field.id} className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit">
+                {field.field_label}
+                {field.is_required && <span className="text-destructive ml-1">*</span>}:
+              </Label>
+              <Input
+                id={`field-${field.id}`}
+                type="date"
+                value={value}
+                onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                required={field.is_required}
+                className="flex-1"
+              />
+            </div>
             {field.help_text && (
-              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+              <p className="text-xs text-muted-foreground ml-2">{field.help_text}</p>
             )}
           </div>
         );
 
       case 'datetime':
         return (
-          <div key={field.id} className="space-y-2">
-            <Label htmlFor={`field-${field.id}`}>
-              {field.field_label}
-              {field.is_required && <span className="text-destructive ml-1">*</span>}
-            </Label>
-            <Input
-              id={`field-${field.id}`}
-              type="datetime-local"
-              value={value}
-              onChange={(e) => handleFieldChange(field.id, e.target.value)}
-              required={field.is_required}
-            />
+          <div key={field.id} className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit">
+                {field.field_label}
+                {field.is_required && <span className="text-destructive ml-1">*</span>}:
+              </Label>
+              <Input
+                id={`field-${field.id}`}
+                type="datetime-local"
+                value={value}
+                onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                required={field.is_required}
+                className="flex-1"
+              />
+            </div>
             {field.help_text && (
-              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+              <p className="text-xs text-muted-foreground ml-2">{field.help_text}</p>
             )}
           </div>
         );
