@@ -40,6 +40,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
   const [formData, setFormData] = useState<Record<string, any>>({});
   const [hasDefaultTemplate, setHasDefaultTemplate] = useState<boolean>(false);
   const [isLoadingDefaultTemplate, setIsLoadingDefaultTemplate] = useState<boolean>(true);
+  const [isDefaultTemplateLoaded, setIsDefaultTemplateLoaded] = useState<boolean>(false);
 
   // Get tenant from current session
   const tenant = getTenant();
@@ -113,6 +114,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             setSelectedTemplateGroup(String(defaultTemplate.group));
             setSelectedTemplate(String(defaultTemplate.id));
             setHasDefaultTemplate(true);
+            setIsDefaultTemplateLoaded(true);
             console.log('✅ Default template loaded:', {
               id: defaultTemplate.id,
               name: defaultTemplate.name,
@@ -136,13 +138,17 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
     loadDefaultTemplate();
   }, []); // Only run on mount
 
-  // Reset template selection when group changes (only if manually changed, not on initial load)
+  // Reset template selection when group changes (only if manually changed, not from default load)
   useEffect(() => {
-    if (!isLoadingDefaultTemplate) {
+    if (!isLoadingDefaultTemplate && !isDefaultTemplateLoaded) {
       setSelectedTemplate('');
       setFormData({});
     }
-  }, [selectedTemplateGroup, isLoadingDefaultTemplate]);
+    // Reset the flag after the first group change
+    if (isDefaultTemplateLoaded) {
+      setIsDefaultTemplateLoaded(false);
+    }
+  }, [selectedTemplateGroup]);
 
   // Reset form data when template changes
   useEffect(() => {
