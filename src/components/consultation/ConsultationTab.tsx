@@ -490,14 +490,14 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         >
           {/* Letterhead Header */}
           <div
-            className="border-b-4 p-8"
+            className="border-b-4 py-8"
             style={{
               borderColor: tenantSettings.header_bg_color || '#3b82f6',
               backgroundColor: tenantSettings.header_bg_color || '#3b82f6',
               color: tenantSettings.header_text_color || '#ffffff'
             }}
           >
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-start px-8">
               <div className="flex items-start gap-4">
                 {/* Logo */}
                 {tenantSettings.logo && (
@@ -631,14 +631,14 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
 
           {/* Letterhead Footer */}
           <div
-            className="border-t-4 p-6 flex-shrink-0"
+            className="border-t-4 py-6 flex-shrink-0"
             style={{
               borderColor: tenantSettings.footer_bg_color || '#3b82f6',
               backgroundColor: tenantSettings.footer_bg_color || '#3b82f6',
               color: tenantSettings.footer_text_color || '#ffffff'
             }}
           >
-            <div className="flex justify-between items-center text-xs">
+            <div className="flex justify-between items-center text-xs px-8">
               <div>
                 <p className="font-semibold">{tenantData?.name || 'Medical Center'}</p>
                 {tenantSettings.address && (
