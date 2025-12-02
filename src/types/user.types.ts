@@ -40,6 +40,12 @@ export interface RoleListParams {
   [key: string]: string | number | boolean | undefined;
 }
 
+// User preferences interface - flexible key-value structure
+export interface UserPreferences {
+  theme?: 'light' | 'dark';
+  [key: string]: any; // Allow any additional preference key-value pairs
+}
+
 // User interface
 export interface User {
   id: string;
@@ -56,6 +62,7 @@ export interface User {
   timezone?: string;
   is_active: boolean;
   date_joined: string;
+  preferences?: UserPreferences;
 }
 
 // User list query parameters
@@ -91,6 +98,7 @@ export interface UserUpdateData {
   is_active?: boolean;
   profile_picture?: string | null;
   role_ids?: string[];
+  preferences?: UserPreferences;
 }
 
 // Assign roles data

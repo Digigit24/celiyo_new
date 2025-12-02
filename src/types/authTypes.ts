@@ -17,11 +17,17 @@ export interface Role {
   name: string;
 }
 
+export interface UserPreferences {
+  theme?: 'light' | 'dark';
+  [key: string]: any; // Allow any additional preference key-value pairs
+}
+
 export interface User {
   id: string;
   email: string;
   tenant: Tenant;
   roles: Role[];
+  preferences?: UserPreferences;
 }
 
 export interface LoginResponse {

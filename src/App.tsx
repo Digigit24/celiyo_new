@@ -1,5 +1,5 @@
 // src/App.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SWRConfig } from "swr";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -151,6 +151,13 @@ const AppLayout = () => {
 const App = () => {
   const isAuthenticated = authService.isAuthenticated();
 
+  // Apply stored user preferences on app load
+  useEffect(() => {
+    if (isAuthenticated) {
+      authService.applyStoredPreferences();
+    }
+  }, [isAuthenticated]);
+
   return (
     <SWRConfig value={swrConfig}>
       <QueryClientProvider client={queryClient}>
@@ -160,13 +167,13 @@ const App = () => {
           <BrowserRouter>
             <Routes>
               {/* Public Routes */}
-              <Route 
-                path="/login" 
+              <Route
+                path="/login"
                 element={
                   isAuthenticated ? <Navigate to="/" replace /> : <Login />
-                } 
+                }
               />
-              
+
 
               {/* Protected Routes */}
               <Route

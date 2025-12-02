@@ -37,7 +37,7 @@ class AuthService {
   async login(payload: LoginPayload): Promise<User> {
     try {
       console.log('🔐 Login attempt:', { email: payload.email });
-      
+
       const response = await authClient.post<any>(
         API_CONFIG.AUTH.LOGIN,
         payload
@@ -50,9 +50,9 @@ class AuthService {
       const access = tokens.access;
       const refresh = tokens.refresh;
 
-      console.log('🎫 Tokens received:', { 
-        access: access ? 'Yes ✓' : 'No ✗', 
-        refresh: refresh ? 'Yes ✓' : 'No ✗' 
+      console.log('🎫 Tokens received:', {
+        access: access ? 'Yes ✓' : 'No ✗',
+        refresh: refresh ? 'Yes ✓' : 'No ✗'
       });
 
       // Decode JWT to get tenant info and modules
@@ -69,14 +69,37 @@ class AuthService {
           slug: decoded?.tenant_slug || '',
           enabled_modules: decoded?.enabled_modules || []
         },
-        roles: userData.roles || []
+        roles: userData.roles || [],
+        preferences: userData.preferences || {}
       };
 
       console.log('👤 Constructed user object:', user);
 
-      // Store tokens and user
+      // Store tokens and user temporarily
       tokenManager.setAccessToken(access);
       tokenManager.setRefreshToken(refresh);
+
+      // Fetch full user details including preferences if not in login response
+      if (!userData.preferences) {
+        try {
+          console.log('🔄 Fetching user preferences...');
+          const userDetailUrl = API_CONFIG.AUTH.USERS.DETAIL.replace(':id', userData.id);
+          const userDetailResponse = await authClient.get(userDetailUrl);
+          user.preferences = userDetailResponse.data?.preferences || {};
+          console.log('✅ User preferences fetched:', user.preferences);
+        } catch (prefError) {
+          console.warn('⚠️ Failed to fetch user preferences, using defaults:', prefError);
+          user.preferences = {};
+        }
+      }
+
+      // Apply theme preference
+      if (user.preferences?.theme) {
+        console.log('🎨 Applying theme preference:', user.preferences.theme);
+        this.applyThemePreference(user.preferences.theme);
+      }
+
+      // Store user with preferences
       this.setUser(user);
 
       // Verify storage
@@ -89,21 +112,79 @@ class AuthService {
         refreshTokenStored: storedRefresh ? 'Yes ✓' : 'No ✗',
         userStored: storedUser ? 'Yes ✓' : 'No ✗',
         tenantId: storedUser?.tenant?.id,
-        modules: storedUser?.tenant?.enabled_modules
+        modules: storedUser?.tenant?.enabled_modules,
+        preferences: storedUser?.preferences
       });
 
       return user;
     } catch (error: any) {
       console.error('❌ Login failed:', error);
-      
+
       // Clear any stale data
       this.clearAuth();
-      
-      const message = error.response?.data?.error || 
+
+      const message = error.response?.data?.error ||
                      error.response?.data?.email?.[0] ||
                      error.response?.data?.password?.[0] ||
                      'Login failed. Please check your credentials.';
       throw new Error(message);
+    }
+  }
+
+  // Apply theme preference to document
+  private applyThemePreference(theme: 'light' | 'dark'): void {
+    try {
+      const root = document.documentElement;
+      if (theme === 'dark') {
+        root.classList.add('dark');
+      } else {
+        root.classList.remove('dark');
+      }
+      console.log('✅ Theme applied:', theme);
+    } catch (error) {
+      console.error('❌ Failed to apply theme:', error);
+    }
+  }
+
+  // Apply all preferences from stored user (for app initialization)
+  applyStoredPreferences(): void {
+    try {
+      const user = this.getUser();
+      if (user?.preferences) {
+        console.log('🔄 Applying stored preferences:', user.preferences);
+
+        // Apply theme
+        if (user.preferences.theme) {
+          this.applyThemePreference(user.preferences.theme);
+        }
+
+        // You can add more preference applications here as needed
+        console.log('✅ Stored preferences applied');
+      }
+    } catch (error) {
+      console.error('❌ Failed to apply stored preferences:', error);
+    }
+  }
+
+  // Get user preferences
+  getUserPreferences() {
+    const user = this.getUser();
+    return user?.preferences || {};
+  }
+
+  // Update user preferences in storage
+  updateUserPreferences(preferences: any): void {
+    const user = this.getUser();
+    if (user) {
+      user.preferences = { ...user.preferences, ...preferences };
+      this.setUser(user);
+
+      // Apply theme if it changed
+      if (preferences.theme) {
+        this.applyThemePreference(preferences.theme);
+      }
+
+      console.log('✅ User preferences updated in storage:', user.preferences);
     }
   }
 

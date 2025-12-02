@@ -7,11 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { RefreshCw, Loader2, AlertCircle, Save, Building2, Database, Settings as SettingsIcon, Image as ImageIcon, X, User } from 'lucide-react';
+import { RefreshCw, Loader2, AlertCircle, Save, Building2, Database, Settings as SettingsIcon, Image as ImageIcon, X, User, Plus, Trash2, Moon, Sun } from 'lucide-react';
 import { useTenant } from '@/hooks/useTenant';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import type { TenantUpdateData, TenantSettings } from '@/types/tenant.types';
+import type { UserPreferences } from '@/types/user.types';
 import { authClient } from '@/lib/client';
 import { API_CONFIG, buildUrl } from '@/lib/apiConfig';
 
@@ -34,6 +35,10 @@ export const AdminSettings: React.FC = () => {
   const [userPreferencesData, setUserPreferencesData] = useState<any>(null);
   const [userPreferencesLoading, setUserPreferencesLoading] = useState<boolean>(false);
   const [userPreferencesError, setUserPreferencesError] = useState<string | null>(null);
+  const [editedPreferences, setEditedPreferences] = useState<UserPreferences>({});
+  const [isSavingPreferences, setIsSavingPreferences] = useState<boolean>(false);
+  const [newPrefKey, setNewPrefKey] = useState<string>('');
+  const [newPrefValue, setNewPrefValue] = useState<string>('');
 
   // Basic tenant fields (direct fields, not in settings)
   const [name, setName] = useState('');
@@ -181,6 +186,8 @@ export const AdminSettings: React.FC = () => {
       const url = buildUrl(API_CONFIG.AUTH.USERS.DETAIL, { id: userId }, 'auth');
       const response = await authClient.get(url);
       setUserPreferencesData(response.data);
+      // Initialize editedPreferences with current preferences or empty object
+      setEditedPreferences(response.data?.preferences || {});
       console.log('User preferences data:', response.data);
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || err.message || 'Failed to fetch user preferences';
@@ -189,6 +196,68 @@ export const AdminSettings: React.FC = () => {
     } finally {
       setUserPreferencesLoading(false);
     }
+  };
+
+  // Save user preferences
+  const saveUserPreferences = async () => {
+    if (!userId) {
+      toast.error('No user ID found');
+      return;
+    }
+
+    setIsSavingPreferences(true);
+
+    try {
+      const url = buildUrl(API_CONFIG.AUTH.USERS.UPDATE, { id: userId }, 'auth');
+      const response = await authClient.patch(url, { preferences: editedPreferences });
+      setUserPreferencesData(response.data);
+      setEditedPreferences(response.data?.preferences || {});
+
+      // Update local storage and apply preferences immediately
+      const { authService } = await import('@/services/authService');
+      authService.updateUserPreferences(response.data?.preferences || {});
+
+      toast.success('Preferences saved successfully');
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || err.message || 'Failed to save preferences';
+      toast.error(errorMessage);
+    } finally {
+      setIsSavingPreferences(false);
+    }
+  };
+
+  // Add custom preference
+  const addCustomPreference = () => {
+    if (!newPrefKey.trim()) {
+      toast.error('Please enter a preference key');
+      return;
+    }
+
+    setEditedPreferences(prev => ({
+      ...prev,
+      [newPrefKey]: newPrefValue
+    }));
+    setNewPrefKey('');
+    setNewPrefValue('');
+    toast.success('Preference added');
+  };
+
+  // Remove custom preference
+  const removeCustomPreference = (key: string) => {
+    setEditedPreferences(prev => {
+      const updated = { ...prev };
+      delete updated[key];
+      return updated;
+    });
+    toast.success('Preference removed');
+  };
+
+  // Update preference value
+  const updatePreferenceValue = (key: string, value: any) => {
+    setEditedPreferences(prev => ({
+      ...prev,
+      [key]: value
+    }));
   };
 
   // Show error if no tenant ID is found
@@ -699,61 +768,212 @@ export const AdminSettings: React.FC = () => {
 
           {/* User Preferences Tab */}
           <TabsContent value="user">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
-                    <CardTitle>User Preferences</CardTitle>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={fetchUserPreferences}
-                    disabled={userPreferencesLoading}
-                  >
-                    {userPreferencesLoading ? (
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    ) : (
-                      <RefreshCw className="h-4 w-4 mr-2" />
-                    )}
-                    Refresh
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {userPreferencesLoading && (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="text-center">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
-                      <p className="text-sm text-muted-foreground">Loading user data...</p>
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <User className="h-5 w-5" />
+                      <CardTitle>User Preferences</CardTitle>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={fetchUserPreferences}
+                        disabled={userPreferencesLoading}
+                      >
+                        {userPreferencesLoading ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                        )}
+                        Refresh
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={saveUserPreferences}
+                        disabled={isSavingPreferences || userPreferencesLoading}
+                      >
+                        {isSavingPreferences ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Save className="h-4 w-4 mr-2" />
+                        )}
+                        Save Preferences
+                      </Button>
                     </div>
                   </div>
-                )}
+                </CardHeader>
+                <CardContent>
+                  {userPreferencesLoading && (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="text-center">
+                        <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+                        <p className="text-sm text-muted-foreground">Loading user data...</p>
+                      </div>
+                    </div>
+                  )}
 
-                {userPreferencesError && (
-                  <div className="text-destructive py-4">
-                    <p className="text-sm font-semibold">Error:</p>
-                    <p className="text-sm">{userPreferencesError}</p>
-                  </div>
-                )}
+                  {userPreferencesError && (
+                    <div className="text-destructive py-4">
+                      <p className="text-sm font-semibold">Error:</p>
+                      <p className="text-sm">{userPreferencesError}</p>
+                    </div>
+                  )}
 
-                {userPreferencesData && !userPreferencesLoading && (
-                  <div className="space-y-4">
-                    <pre className="bg-muted p-4 rounded-lg overflow-auto text-xs">
-                      {JSON.stringify(userPreferencesData, null, 2)}
-                    </pre>
-                  </div>
-                )}
+                  {userPreferencesData && !userPreferencesLoading && (
+                    <div className="space-y-6">
+                      {/* Theme Preference */}
+                      <div className="space-y-2">
+                        <Label>Theme Preference</Label>
+                        <div className="flex items-center gap-4">
+                          <Button
+                            type="button"
+                            variant={editedPreferences.theme === 'light' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => updatePreferenceValue('theme', 'light')}
+                            className="flex items-center gap-2"
+                          >
+                            <Sun className="h-4 w-4" />
+                            Light
+                          </Button>
+                          <Button
+                            type="button"
+                            variant={editedPreferences.theme === 'dark' ? 'default' : 'outline'}
+                            size="sm"
+                            onClick={() => updatePreferenceValue('theme', 'dark')}
+                            className="flex items-center gap-2"
+                          >
+                            <Moon className="h-4 w-4" />
+                            Dark
+                          </Button>
+                          {editedPreferences.theme && (
+                            <Badge variant="secondary">
+                              Current: {editedPreferences.theme}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
 
-                {!userPreferencesData && !userPreferencesLoading && !userPreferencesError && (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p className="text-sm">Click the tab to load user preferences data</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      {/* Custom Preferences */}
+                      <div className="space-y-2">
+                        <Label>Custom Preferences</Label>
+                        <div className="space-y-3">
+                          {Object.entries(editedPreferences)
+                            .filter(([key]) => key !== 'theme')
+                            .map(([key, value]) => (
+                              <div key={key} className="flex items-center gap-2 p-3 border rounded-lg bg-muted/50">
+                                <div className="flex-1 grid grid-cols-2 gap-2">
+                                  <div>
+                                    <Label className="text-xs text-muted-foreground">Key</Label>
+                                    <p className="font-medium">{key}</p>
+                                  </div>
+                                  <div>
+                                    <Label className="text-xs text-muted-foreground">Value</Label>
+                                    <Input
+                                      value={typeof value === 'object' ? JSON.stringify(value) : String(value)}
+                                      onChange={(e) => {
+                                        try {
+                                          const parsed = JSON.parse(e.target.value);
+                                          updatePreferenceValue(key, parsed);
+                                        } catch {
+                                          updatePreferenceValue(key, e.target.value);
+                                        }
+                                      }}
+                                      className="h-8"
+                                    />
+                                  </div>
+                                </div>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => removeCustomPreference(key)}
+                                  className="text-destructive hover:text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+
+                      {/* Add New Preference */}
+                      <div className="space-y-2 pt-4 border-t">
+                        <Label>Add New Preference</Label>
+                        <div className="flex items-end gap-2">
+                          <div className="flex-1">
+                            <Label htmlFor="newPrefKey" className="text-xs">Key</Label>
+                            <Input
+                              id="newPrefKey"
+                              placeholder="e.g., language, timezone"
+                              value={newPrefKey}
+                              onChange={(e) => setNewPrefKey(e.target.value)}
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <Label htmlFor="newPrefValue" className="text-xs">Value</Label>
+                            <Input
+                              id="newPrefValue"
+                              placeholder="Enter value"
+                              value={newPrefValue}
+                              onChange={(e) => setNewPrefValue(e.target.value)}
+                            />
+                          </div>
+                          <Button
+                            type="button"
+                            onClick={addCustomPreference}
+                            size="sm"
+                          >
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {!userPreferencesData && !userPreferencesLoading && !userPreferencesError && (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p className="text-sm">Click the tab to load user preferences data</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* User Info Card (Read-only) */}
+              {userPreferencesData && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">User Information</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Email</Label>
+                        <p className="font-medium">{userPreferencesData.email}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Name</Label>
+                        <p className="font-medium">{userPreferencesData.first_name} {userPreferencesData.last_name}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Timezone</Label>
+                        <p className="font-medium">{userPreferencesData.timezone || 'Not set'}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Status</Label>
+                        <Badge variant={userPreferencesData.is_active ? 'default' : 'secondary'}>
+                          {userPreferencesData.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       )}
