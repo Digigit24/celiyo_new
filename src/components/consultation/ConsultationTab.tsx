@@ -79,13 +79,21 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         const preferences = authService.getUserPreferences();
         const defaultTemplateId = preferences?.defaultOPDTemplate;
 
-        console.log('🔍 Checking for default template...', { preferences, defaultTemplateId });
+        console.log('🔍 Checking for default template...', {
+          preferences,
+          defaultTemplateId,
+          serviceAvailable: !!opdTemplateService,
+          hasGetTemplate: typeof opdTemplateService?.getTemplate === 'function'
+        });
 
         if (defaultTemplateId) {
           console.log('📋 Loading default template:', defaultTemplateId);
+          console.log('Service object:', opdTemplateService);
 
-          // Fetch the default template to get its group
-          const defaultTemplate = await opdTemplateService.getTemplate(defaultTemplateId);
+          // Fetch the default template to get its group using hmsClient directly
+          const { hmsClient } = await import('@/lib/client');
+          const response = await hmsClient.get(`/opd/templates/${defaultTemplateId}/`);
+          const defaultTemplate = response.data;
 
           if (defaultTemplate) {
             // Set the group and template IDs
