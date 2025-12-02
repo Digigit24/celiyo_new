@@ -455,10 +455,10 @@ class OPDTemplateService {
   // Visit-specific template response methods
   async getVisitTemplateResponses(visitId: number): Promise<TemplateResponse[]> {
     try {
-      const response = await hmsClient.get<TemplateResponse[]>(
+      const response = await hmsClient.get<{ success: boolean; count: number; data: TemplateResponse[] }>(
         `${this.baseURL}/visits/${visitId}/template_responses/`
       );
-      return response.data;
+      return response.data.data;
     } catch (error: any) {
       const message =
         error.response?.data?.error ||
