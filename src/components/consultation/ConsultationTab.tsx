@@ -601,7 +601,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
               </Label>
               <div className="grid grid-cols-2 gap-2">
                 {field.options
-                  .filter(opt => opt.is_active)
+                  .filter(opt => opt.is_active !== false)
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((option) => {
                     const selectedValues = Array.isArray(value) ? value : [];
@@ -666,7 +666,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
               <SelectContent>
                 {field.options && field.options.length > 0 ? (
                   field.options
-                    .filter(opt => opt.is_active)
+                    .filter(opt => opt.is_active !== false)
                     .sort((a, b) => a.display_order - b.display_order)
                     .map((option) => (
                       <SelectItem key={option.id} value={String(option.id)}>
@@ -697,7 +697,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             >
               {field.options && field.options.length > 0 ? (
                 field.options
-                  .filter(opt => opt.is_active)
+                  .filter(opt => opt.is_active !== false)
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((option) => (
                     <div key={option.id} className="flex items-center space-x-2">
@@ -727,7 +727,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             <div className="grid grid-cols-2 gap-2">
               {field.options && field.options.length > 0 ? (
                 field.options
-                  .filter(opt => opt.is_active)
+                  .filter(opt => opt.is_active !== false)
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((option) => {
                     const selectedValues = Array.isArray(value) ? value : [];
