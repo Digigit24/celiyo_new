@@ -51,8 +51,6 @@ const FIELD_TYPES: { value: FieldType; label: string; description: string }[] = 
   { value: 'select', label: 'Single Select', description: 'Dropdown with single selection' },
   { value: 'radio', label: 'Radio Buttons', description: 'Single choice from options' },
   { value: 'multiselect', label: 'Multiple Select', description: 'Multiple selection checkboxes' },
-  { value: 'image', label: 'Image Upload', description: 'Upload image files' },
-  { value: 'file', label: 'File Upload', description: 'Upload any file type' },
 ];
 
 // Field types that support options
