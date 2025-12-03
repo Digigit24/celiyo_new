@@ -63,13 +63,13 @@ const menuItems: MenuItem[] = [
     icon: LayoutDashboard,
     path: "/",
   },
-  {
-    id: "inbox",
-    label: "Inbox",
-    icon: Mail,
-    path: "/inbox",
-    badge: 3,
-  },
+  // {
+  //   id: "inbox",
+  //   label: "Inbox",
+  //   icon: Mail,
+  //   path: "/inbox",
+  //   badge: 3,
+  // },
 
   {
     id: "whatsapp",
