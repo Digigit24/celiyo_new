@@ -284,7 +284,6 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             break;
 
           case 'number':
-          case 'decimal':
             response.value_number = fieldValue ? Number(fieldValue) : null;
             break;
 
@@ -293,12 +292,14 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             break;
 
           case 'datetime':
-          case 'time':
             response.value_datetime = fieldValue || null;
             break;
 
-          case 'boolean':
-            response.value_boolean = Boolean(fieldValue);
+          case 'image':
+          case 'file':
+            // For image/file fields, store the URL or file name
+            // In a real implementation, you would upload the file to a server first
+            response.value_text = fieldValue?.url || fieldValue?.name || null;
             break;
 
           case 'checkbox':
@@ -494,7 +495,6 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         );
 
       case 'number':
-      case 'decimal':
         return (
           <div key={field.id} className="space-y-2">
             <Label htmlFor={`field-${field.id}`}>
@@ -504,7 +504,6 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             <Input
               id={`field-${field.id}`}
               type="number"
-              step={field.field_type === 'decimal' ? '0.01' : '1'}
               placeholder={field.placeholder || ''}
               value={value}
               onChange={(e) => handleFieldChange(field.id, e.target.value)}
@@ -558,7 +557,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
           </div>
         );
 
-      case 'time':
+      case 'image':
         return (
           <div key={field.id} className="space-y-2">
             <Label htmlFor={`field-${field.id}`}>
@@ -567,33 +566,55 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             </Label>
             <Input
               id={`field-${field.id}`}
-              type="time"
-              value={value}
-              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  // For now, store the file object URL for preview
+                  const fileUrl = URL.createObjectURL(file);
+                  handleFieldChange(field.id, { file, url: fileUrl, name: file.name });
+                }
+              }}
               required={field.is_required}
             />
+            {value?.url && (
+              <div className="mt-2">
+                <img src={value.url} alt={value.name || 'Preview'} className="max-w-xs max-h-48 border rounded" />
+              </div>
+            )}
             {field.help_text && (
               <p className="text-xs text-muted-foreground">{field.help_text}</p>
             )}
           </div>
         );
 
-      case 'boolean':
+      case 'file':
         return (
           <div key={field.id} className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id={`field-${field.id}`}
-                checked={value || false}
-                onCheckedChange={(checked) => handleFieldChange(field.id, checked)}
-              />
-              <Label htmlFor={`field-${field.id}`} className="cursor-pointer">
-                {field.field_label}
-                {field.is_required && <span className="text-destructive ml-1">*</span>}
-              </Label>
-            </div>
+            <Label htmlFor={`field-${field.id}`}>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Input
+              id={`field-${field.id}`}
+              type="file"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) {
+                  handleFieldChange(field.id, { file, name: file.name, size: file.size });
+                }
+              }}
+              required={field.is_required}
+            />
+            {value?.name && (
+              <div className="mt-2 p-2 bg-muted rounded text-sm">
+                <p><strong>File:</strong> {value.name}</p>
+                {value.size && <p><strong>Size:</strong> {(value.size / 1024).toFixed(2)} KB</p>}
+              </div>
+            )}
             {field.help_text && (
-              <p className="text-xs text-muted-foreground ml-2">{field.help_text}</p>
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
             )}
           </div>
         );
@@ -919,6 +940,22 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                         colSpan = 'col-span-4';
                       }
 
+                      // Special handling for image fields
+                      if (field.field_type === 'image' && value?.url) {
+                        return (
+                          <div key={field.id} className="col-span-12 py-2">
+                            <span className="text-xs font-semibold text-gray-700 block mb-1">
+                              {field.field_label}:
+                            </span>
+                            <img
+                              src={value.url}
+                              alt={field.field_label}
+                              className="max-w-md max-h-64 border rounded shadow-sm"
+                            />
+                          </div>
+                        );
+                      }
+
                       // For fields with options, convert IDs to labels
                       let displayValue = value;
                       if (Array.isArray(value) && field.options && field.options.length > 0) {
@@ -936,6 +973,12 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                         displayValue = option ? option.option_label : String(value);
                       } else if (typeof value === 'boolean') {
                         displayValue = value ? '✓ Yes' : 'No';
+                      } else if (value?.name && field.field_type === 'file') {
+                        // File field display
+                        displayValue = `📎 ${value.name}`;
+                      } else if (typeof value === 'object') {
+                        // Handle other object types
+                        displayValue = value?.url || value?.name || JSON.stringify(value);
                       }
 
                       return (
