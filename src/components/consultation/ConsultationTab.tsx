@@ -293,12 +293,23 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
             break;
 
           case 'datetime':
+          case 'time':
             response.value_datetime = fieldValue || null;
             break;
 
           case 'boolean':
-          case 'checkbox': // Single checkbox
             response.value_boolean = Boolean(fieldValue);
+            break;
+
+          case 'checkbox':
+            // If field has options, use selected_options, otherwise use boolean
+            if (field.options && field.options.length > 0) {
+              response.selected_options = Array.isArray(fieldValue)
+                ? fieldValue.map(Number)
+                : [];
+            } else {
+              response.value_boolean = Boolean(fieldValue);
+            }
             break;
 
           case 'select':
@@ -429,27 +440,24 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
       case 'phone':
       case 'url':
         return (
-          <div key={field.id} className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit mb-0">
-                {field.field_label}
-                {field.is_required && <span className="text-destructive ml-1">*</span>}:
-              </Label>
-              <Input
-                id={`field-${field.id}`}
-                type={field.field_type === 'email' ? 'email' : field.field_type === 'phone' ? 'tel' : field.field_type === 'url' ? 'url' : 'text'}
-                placeholder={field.placeholder || ''}
-                value={value}
-                onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                required={field.is_required}
-                minLength={field.min_length}
-                maxLength={field.max_length}
-                pattern={field.pattern}
-                className="flex-1 m-0"
-              />
-            </div>
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={`field-${field.id}`}>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Input
+              id={`field-${field.id}`}
+              type={field.field_type === 'email' ? 'email' : field.field_type === 'phone' ? 'tel' : field.field_type === 'url' ? 'url' : 'text'}
+              placeholder={field.placeholder || ''}
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              required={field.is_required}
+              minLength={field.min_length}
+              maxLength={field.max_length}
+              pattern={field.pattern}
+            />
             {field.help_text && (
-              <p className="text-xs text-muted-foreground ml-2">{field.help_text}</p>
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
             )}
           </div>
         );
@@ -478,70 +486,103 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         );
 
       case 'number':
+      case 'decimal':
         return (
-          <div key={field.id} className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit mb-0">
-                {field.field_label}
-                {field.is_required && <span className="text-destructive ml-1">*</span>}:
-              </Label>
-              <Input
-                id={`field-${field.id}`}
-                type="number"
-                placeholder={field.placeholder || ''}
-                value={value}
-                onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                required={field.is_required}
-                min={field.min_value}
-                max={field.max_value}
-                className="flex-1 m-0"
-              />
-            </div>
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={`field-${field.id}`}>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Input
+              id={`field-${field.id}`}
+              type="number"
+              step={field.field_type === 'decimal' ? '0.01' : '1'}
+              placeholder={field.placeholder || ''}
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              required={field.is_required}
+              min={field.min_value}
+              max={field.max_value}
+            />
             {field.help_text && (
-              <p className="text-xs text-muted-foreground ml-2">{field.help_text}</p>
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
             )}
           </div>
         );
 
       case 'date':
         return (
-          <div key={field.id} className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit mb-0">
-                {field.field_label}
-                {field.is_required && <span className="text-destructive ml-1">*</span>}:
-              </Label>
-              <Input
-                id={`field-${field.id}`}
-                type="date"
-                value={value}
-                onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                required={field.is_required}
-                className="flex-1 m-0"
-              />
-            </div>
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={`field-${field.id}`}>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Input
+              id={`field-${field.id}`}
+              type="date"
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              required={field.is_required}
+            />
             {field.help_text && (
-              <p className="text-xs text-muted-foreground ml-2">{field.help_text}</p>
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
             )}
           </div>
         );
 
       case 'datetime':
         return (
-          <div key={field.id} className="space-y-1">
-            <div className="flex items-center gap-2">
-              <Label htmlFor={`field-${field.id}`} className="whitespace-nowrap min-w-fit mb-0">
-                {field.field_label}
-                {field.is_required && <span className="text-destructive ml-1">*</span>}:
-              </Label>
-              <Input
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={`field-${field.id}`}>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Input
+              id={`field-${field.id}`}
+              type="datetime-local"
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              required={field.is_required}
+            />
+            {field.help_text && (
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+            )}
+          </div>
+        );
+
+      case 'time':
+        return (
+          <div key={field.id} className="space-y-2">
+            <Label htmlFor={`field-${field.id}`}>
+              {field.field_label}
+              {field.is_required && <span className="text-destructive ml-1">*</span>}
+            </Label>
+            <Input
+              id={`field-${field.id}`}
+              type="time"
+              value={value}
+              onChange={(e) => handleFieldChange(field.id, e.target.value)}
+              required={field.is_required}
+            />
+            {field.help_text && (
+              <p className="text-xs text-muted-foreground">{field.help_text}</p>
+            )}
+          </div>
+        );
+
+      case 'boolean':
+        return (
+          <div key={field.id} className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
                 id={`field-${field.id}`}
-                type="datetime-local"
-                value={value}
-                onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                required={field.is_required}
-                className="flex-1 m-0"
+                checked={value || false}
+                onCheckedChange={(checked) => handleFieldChange(field.id, checked)}
               />
+              <Label htmlFor={`field-${field.id}`} className="cursor-pointer">
+                {field.field_label}
+                {field.is_required && <span className="text-destructive ml-1">*</span>}
+              </Label>
             </div>
             {field.help_text && (
               <p className="text-xs text-muted-foreground ml-2">{field.help_text}</p>
@@ -563,21 +604,21 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                   .filter(opt => opt.is_active)
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((option) => {
-                    const selectedValues = value || [];
-                    const isChecked = selectedValues.includes(option.option_value);
+                    const selectedValues = Array.isArray(value) ? value : [];
+                    const isChecked = selectedValues.includes(option.id);
                     return (
                       <div key={option.id} className="flex items-center space-x-2">
                         <Checkbox
-                          id={`field-${field.id}-${option.option_value}`}
+                          id={`field-${field.id}-${option.id}`}
                           checked={isChecked}
                           onCheckedChange={(checked) => {
                             const newValues = checked
-                              ? [...selectedValues, option.option_value]
-                              : selectedValues.filter((v: string) => v !== option.option_value);
+                              ? [...selectedValues, option.id]
+                              : selectedValues.filter((v: number) => v !== option.id);
                             handleFieldChange(field.id, newValues);
                           }}
                         />
-                        <Label htmlFor={`field-${field.id}-${option.option_value}`} className="cursor-pointer">
+                        <Label htmlFor={`field-${field.id}-${option.id}`} className="cursor-pointer">
                           {option.option_label}
                         </Label>
                       </div>
@@ -616,8 +657,8 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
               {field.is_required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <Select
-              value={value}
-              onValueChange={(val) => handleFieldChange(field.id, val)}
+              value={value ? String(value) : ''}
+              onValueChange={(val) => handleFieldChange(field.id, Number(val))}
             >
               <SelectTrigger id={`field-${field.id}`}>
                 <SelectValue placeholder={field.placeholder || 'Select an option'} />
@@ -628,7 +669,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                     .filter(opt => opt.is_active)
                     .sort((a, b) => a.display_order - b.display_order)
                     .map((option) => (
-                      <SelectItem key={option.id} value={option.option_value}>
+                      <SelectItem key={option.id} value={String(option.id)}>
                         {option.option_label}
                       </SelectItem>
                     ))
@@ -651,8 +692,8 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
               {field.is_required && <span className="text-destructive ml-1">*</span>}
             </Label>
             <RadioGroup
-              value={value}
-              onValueChange={(val) => handleFieldChange(field.id, val)}
+              value={value ? String(value) : ''}
+              onValueChange={(val) => handleFieldChange(field.id, Number(val))}
             >
               {field.options && field.options.length > 0 ? (
                 field.options
@@ -660,8 +701,8 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((option) => (
                     <div key={option.id} className="flex items-center space-x-2">
-                      <RadioGroupItem value={option.option_value} id={`field-${field.id}-${option.option_value}`} />
-                      <Label htmlFor={`field-${field.id}-${option.option_value}`} className="cursor-pointer">
+                      <RadioGroupItem value={String(option.id)} id={`field-${field.id}-${option.id}`} />
+                      <Label htmlFor={`field-${field.id}-${option.id}`} className="cursor-pointer">
                         {option.option_label}
                       </Label>
                     </div>
@@ -689,21 +730,21 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                   .filter(opt => opt.is_active)
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((option) => {
-                    const selectedValues = value || [];
-                    const isChecked = selectedValues.includes(option.option_value);
+                    const selectedValues = Array.isArray(value) ? value : [];
+                    const isChecked = selectedValues.includes(option.id);
                     return (
                       <div key={option.id} className="flex items-center space-x-2">
                         <Checkbox
-                          id={`field-${field.id}-${option.option_value}`}
+                          id={`field-${field.id}-${option.id}`}
                           checked={isChecked}
                           onCheckedChange={(checked) => {
                             const newValues = checked
-                              ? [...selectedValues, option.option_value]
-                              : selectedValues.filter((v: string) => v !== option.option_value);
+                              ? [...selectedValues, option.id]
+                              : selectedValues.filter((v: number) => v !== option.id);
                             handleFieldChange(field.id, newValues);
                           }}
                         />
-                        <Label htmlFor={`field-${field.id}-${option.option_value}`} className="cursor-pointer">
+                        <Label htmlFor={`field-${field.id}-${option.id}`} className="cursor-pointer">
                           {option.option_label}
                         </Label>
                       </div>
@@ -866,6 +907,25 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                         colSpan = 'col-span-4';
                       }
 
+                      // For fields with options, convert IDs to labels
+                      let displayValue = value;
+                      if (Array.isArray(value) && field.options && field.options.length > 0) {
+                        // Map option IDs to labels
+                        const labels = value
+                          .map((id: number) => {
+                            const option = field.options?.find(opt => opt.id === id);
+                            return option ? option.option_label : String(id);
+                          })
+                          .filter(Boolean);
+                        displayValue = labels.join(', ');
+                      } else if (typeof value === 'number' && field.options && field.options.length > 0) {
+                        // Single selection field (select/radio)
+                        const option = field.options.find(opt => opt.id === value);
+                        displayValue = option ? option.option_label : String(value);
+                      } else if (typeof value === 'boolean') {
+                        displayValue = value ? '✓ Yes' : 'No';
+                      }
+
                       return (
                         <div
                           key={field.id}
@@ -875,11 +935,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                             {field.field_label}:
                           </span>
                           <span className={`flex-1 border-b border-dotted border-gray-400 print:border-0 pb-0.5 text-sm min-w-0 ${colSpan === 'col-span-12' ? 'min-h-[40px]' : ''}`}>
-                            {Array.isArray(value)
-                              ? value.join(', ')
-                              : typeof value === 'boolean'
-                                ? (value ? '✓ Yes' : 'No')
-                                : value}
+                            {displayValue}
                           </span>
                         </div>
                       );
