@@ -431,6 +431,14 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
     }
   };
 
+  // Helper function to determine grid columns based on option count
+  const getGridColumns = (optionCount: number): string => {
+    if (optionCount <= 2) return 'grid-cols-1';
+    if (optionCount <= 4) return 'grid-cols-2';
+    if (optionCount <= 6) return 'grid-cols-3';
+    return 'grid-cols-4';
+  };
+
   const renderField = (field: TemplateField) => {
     const value = formData[field.id] || '';
 
@@ -593,15 +601,17 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
       case 'checkbox':
         // If field has options, render as checkbox group
         if (field.options && field.options.length > 0) {
+          const activeOptions = field.options.filter(opt => opt.is_active !== false);
+          const gridCols = getGridColumns(activeOptions.length);
+
           return (
             <div key={field.id} className="space-y-2">
               <Label>
                 {field.field_label}
                 {field.is_required && <span className="text-destructive ml-1">*</span>}
               </Label>
-              <div className="grid grid-cols-2 gap-2">
-                {field.options
-                  .filter(opt => opt.is_active !== false)
+              <div className={`grid ${gridCols} gap-2`}>
+                {activeOptions
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((option) => {
                     const selectedValues = Array.isArray(value) ? value : [];
@@ -718,16 +728,18 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
         );
 
       case 'multiselect':
+        const activeMultiOptions = field.options?.filter(opt => opt.is_active !== false) || [];
+        const multiGridCols = getGridColumns(activeMultiOptions.length);
+
         return (
           <div key={field.id} className="space-y-2">
             <Label>
               {field.field_label}
               {field.is_required && <span className="text-destructive ml-1">*</span>}
             </Label>
-            <div className="grid grid-cols-2 gap-2">
+            <div className={`grid ${multiGridCols} gap-2`}>
               {field.options && field.options.length > 0 ? (
-                field.options
-                  .filter(opt => opt.is_active !== false)
+                activeMultiOptions
                   .sort((a, b) => a.display_order - b.display_order)
                   .map((option) => {
                     const selectedValues = Array.isArray(value) ? value : [];
@@ -878,7 +890,7 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                   {templatesData?.results.find(t => t.id.toString() === selectedTemplate)?.name}
                 </h3>
 
-                <div className="grid grid-cols-12 gap-x-4 gap-y-2">
+                <div className="grid grid-cols-12 gap-x-4 gap-y-1">
                   {fieldsData
                     .sort((a, b) => a.display_order - b.display_order)
                     .map((field) => {
@@ -929,12 +941,12 @@ export const ConsultationTab: React.FC<ConsultationTabProps> = ({ visit }) => {
                       return (
                         <div
                           key={field.id}
-                          className={`${colSpan} flex items-end`}
+                          className={`${colSpan} flex items-baseline gap-1 py-1`}
                         >
-                          <span className="text-xs font-semibold text-gray-700 mr-2 flex-shrink-0 whitespace-nowrap">
+                          <span className="text-xs font-semibold text-gray-700 flex-shrink-0">
                             {field.field_label}:
                           </span>
-                          <span className={`flex-1 border-b border-dotted border-gray-400 print:border-0 pb-0.5 text-sm min-w-0 ${colSpan === 'col-span-12' ? 'min-h-[40px]' : ''}`}>
+                          <span className={`flex-1 border-b border-dotted border-gray-400 print:border-0 text-sm min-w-0 leading-tight ${colSpan === 'col-span-12' ? 'min-h-[32px]' : ''}`}>
                             {displayValue}
                           </span>
                         </div>
