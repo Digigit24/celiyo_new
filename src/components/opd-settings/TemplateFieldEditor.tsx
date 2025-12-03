@@ -41,29 +41,28 @@ interface TemplateFieldEditorProps {
 const FIELD_TYPES: { value: FieldType; label: string; description: string }[] = [
   { value: 'text', label: 'Text (Short)', description: 'Single line text input' },
   { value: 'textarea', label: 'Text Area (Long)', description: 'Multi-line text input' },
-  { value: 'number', label: 'Number', description: 'Integer numbers only' },
-  { value: 'decimal', label: 'Decimal', description: 'Decimal numbers with precision' },
-  { value: 'boolean', label: 'Boolean (Yes/No)', description: 'True/False toggle' },
+  { value: 'number', label: 'Number', description: 'Numeric input with validation' },
+  { value: 'email', label: 'Email', description: 'Email address with validation' },
+  { value: 'phone', label: 'Phone', description: 'Phone number input' },
+  { value: 'url', label: 'URL', description: 'Website URL with validation' },
   { value: 'date', label: 'Date', description: 'Date picker (YYYY-MM-DD)' },
   { value: 'datetime', label: 'Date & Time', description: 'Date and time picker' },
-  { value: 'time', label: 'Time', description: 'Time picker (HH:MM)' },
+  { value: 'checkbox', label: 'Checkboxes', description: 'Single or multiple choice checkboxes' },
   { value: 'select', label: 'Single Select', description: 'Dropdown with single selection' },
-  { value: 'multiselect', label: 'Multiple Select', description: 'Dropdown with multiple selections' },
   { value: 'radio', label: 'Radio Buttons', description: 'Single choice from options' },
-  { value: 'checkbox', label: 'Checkboxes', description: 'Multiple choice from options' },
+  { value: 'multiselect', label: 'Multiple Select', description: 'Multiple selection checkboxes' },
   { value: 'image', label: 'Image Upload', description: 'Upload image files' },
   { value: 'file', label: 'File Upload', description: 'Upload any file type' },
-  { value: 'json', label: 'JSON Data', description: 'Structured JSON data' },
 ];
 
 // Field types that support options
 const FIELD_TYPES_WITH_OPTIONS: FieldType[] = ['select', 'radio', 'multiselect', 'checkbox'];
 
 // Field types that support numeric validation
-const FIELD_TYPES_NUMERIC: FieldType[] = ['number', 'decimal'];
+const FIELD_TYPES_NUMERIC: FieldType[] = ['number'];
 
 // Field types that support text length validation
-const FIELD_TYPES_TEXT: FieldType[] = ['text', 'textarea'];
+const FIELD_TYPES_TEXT: FieldType[] = ['text', 'textarea', 'email', 'phone', 'url'];
 
 export function TemplateFieldEditor({
   open,
