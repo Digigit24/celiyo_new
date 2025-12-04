@@ -1290,36 +1290,21 @@ export default function OPDBilling() {
               >
                 {/* Hospital Header */}
                 <div className="text-center border-b-2 pb-4" style={{ borderColor: '#374151' }}>
-                  <h1 className="text-3xl font-bold mb-4" style={{ color: '#1f2937' }}>
+                  <h1 className="text-3xl font-bold mb-2" style={{ color: '#1f2937' }}>
                     {tenantData?.name || 'HOSPITAL'}
                   </h1>
 
-                  {/* Column Layout: Title | Address | Mail || Contact */}
-                  <div className="grid grid-cols-3 gap-4 text-left text-sm mt-4">
-                    {/* Title Column */}
-                    <div>
-                      <p className="font-semibold mb-1" style={{ color: '#374151' }}>Hospital</p>
-                      <p style={{ color: '#6b7280' }}>Healthcare Services</p>
-                    </div>
+                  {/* Address and Contact Info */}
+                  <div className="text-sm mt-2 space-y-1">
+                    {/* Address - single line, no label */}
+                    <p style={{ color: '#6b7280' }}>
+                      {tenantSettings?.address || 'Address not available'}
+                    </p>
 
-                    {/* Address Column */}
-                    <div>
-                      <p className="font-semibold mb-1" style={{ color: '#374151' }}>Address</p>
-                      <p style={{ color: '#6b7280' }}>
-                        {tenantSettings?.address || 'Address not available'}
-                      </p>
-                    </div>
-
-                    {/* Mail || Contact Column */}
-                    <div>
-                      <p className="font-semibold mb-1" style={{ color: '#374151' }}>Contact</p>
-                      <p style={{ color: '#6b7280' }}>
-                        {tenantSettings?.contact_email || 'N/A'}
-                      </p>
-                      <p style={{ color: '#6b7280' }}>
-                        {tenantSettings?.contact_phone || 'N/A'}
-                      </p>
-                    </div>
+                    {/* Email and Contact - single line */}
+                    <p style={{ color: '#6b7280' }}>
+                      mail id : {tenantSettings?.contact_email || 'N/A'} , Contact: {tenantSettings?.contact_phone || 'N/A'}
+                    </p>
                   </div>
                 </div>
 
