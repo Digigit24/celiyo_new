@@ -7,6 +7,7 @@ import { useOPDBill } from '@/hooks/useOPDBill';
 import { useProcedureMaster } from '@/hooks/useProcedureMaster';
 import { useProcedurePackage } from '@/hooks/useProcedurePackage';
 import { procedurePackageService } from '@/services/procedurePackage.service';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -251,6 +252,7 @@ const BillingDetailsPanel = memo(function BillingDetailsPanel({
 export default function OPDBilling() {
   const { visitId } = useParams<{ visitId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const { useOpdVisitById } = useOpdVisit();
   const { useOPDBills, createBill, updateBill } = useOPDBill();
@@ -1256,112 +1258,143 @@ export default function OPDBilling() {
             <Card className="lg:col-span-2">
               <div
                 ref={printAreaRef}
-                className="bg-white p-8 space-y-6"
+                className="p-8 space-y-6"
                 style={{
                   maxWidth: '210mm',
                   margin: '0 auto',
+                  backgroundColor: '#ffffff',
+                  color: '#000000',
                 }}
               >
                 {/* Hospital Header */}
-                <div className="text-center border-b-2 border-gray-300 pb-4">
-                  <h1 className="text-3xl font-bold text-gray-800">JEEVISHA</h1>
-                  <p className="text-sm text-gray-600 mt-1">Hospital</p>
+                <div className="text-center border-b-2 pb-4" style={{ borderColor: '#374151' }}>
+                  <h1 className="text-3xl font-bold mb-4" style={{ color: '#1f2937' }}>
+                    {user?.tenant?.name || 'HOSPITAL'}
+                  </h1>
+
+                  {/* Column Layout: Title | Address | Mail || Contact */}
+                  <div className="grid grid-cols-3 gap-4 text-left text-sm mt-4">
+                    {/* Title Column */}
+                    <div>
+                      <p className="font-semibold mb-1" style={{ color: '#374151' }}>Hospital</p>
+                      <p style={{ color: '#6b7280' }}>Healthcare Services</p>
+                    </div>
+
+                    {/* Address Column */}
+                    <div>
+                      <p className="font-semibold mb-1" style={{ color: '#374151' }}>Address</p>
+                      <p style={{ color: '#6b7280' }}>
+                        {user?.tenant?.settings?.address || 'Address not available'}
+                      </p>
+                    </div>
+
+                    {/* Mail || Contact Column */}
+                    <div>
+                      <p className="font-semibold mb-1" style={{ color: '#374151' }}>Contact</p>
+                      <p style={{ color: '#6b7280' }}>
+                        {user?.tenant?.settings?.contact_email || 'N/A'}
+                      </p>
+                      <p style={{ color: '#6b7280' }}>
+                        {user?.tenant?.settings?.contact_phone || 'N/A'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Bill Title */}
                 <div className="text-center">
-                  <h2 className="text-2xl font-bold text-gray-700">INVOICE</h2>
+                  <h2 className="text-2xl font-bold" style={{ color: '#374151' }}>INVOICE</h2>
                 </div>
 
                 {/* Top meta */}
                 <div className="grid grid-cols-2 gap-x-8 gap-y-2 text-sm">
-                  <div className="flex justify-between border-b pb-1">
-                    <span className="font-semibold">Patient Name</span>
-                    <span>{visit.patient_details?.full_name}</span>
+                  <div className="flex justify-between pb-1" style={{ borderBottom: '1px solid #d1d5db' }}>
+                    <span className="font-semibold" style={{ color: '#374151' }}>Patient Name</span>
+                    <span style={{ color: '#000000' }}>{visit.patient_details?.full_name}</span>
                   </div>
-                  <div className="flex justify-between border-b pb-1">
-                    <span className="font-semibold">Patient ID</span>
-                    <span>{visit.patient_details?.patient_id}</span>
+                  <div className="flex justify-between pb-1" style={{ borderBottom: '1px solid #d1d5db' }}>
+                    <span className="font-semibold" style={{ color: '#374151' }}>Patient ID</span>
+                    <span style={{ color: '#000000' }}>{visit.patient_details?.patient_id}</span>
                   </div>
-                  <div className="flex justify-between border-b pb-1">
-                    <span className="font-semibold">Age / Gender</span>
-                    <span>
+                  <div className="flex justify-between pb-1" style={{ borderBottom: '1px solid #d1d5db' }}>
+                    <span className="font-semibold" style={{ color: '#374151' }}>Age / Gender</span>
+                    <span style={{ color: '#000000' }}>
                       {visit.patient_details?.age} Yrs / {visit.patient_details?.gender}
                     </span>
                   </div>
-                  <div className="flex justify-between border-b pb-1">
-                    <span className="font-semibold">Mobile</span>
-                    <span>{visit.patient_details?.mobile_primary}</span>
+                  <div className="flex justify-between pb-1" style={{ borderBottom: '1px solid #d1d5db' }}>
+                    <span className="font-semibold" style={{ color: '#374151' }}>Mobile</span>
+                    <span style={{ color: '#000000' }}>{visit.patient_details?.mobile_primary}</span>
                   </div>
-                  <div className="flex justify-between border-b pb-1">
-                    <span className="font-semibold">Visit No</span>
-                    <span>{visit.visit_number}</span>
+                  <div className="flex justify-between pb-1" style={{ borderBottom: '1px solid #d1d5db' }}>
+                    <span className="font-semibold" style={{ color: '#374151' }}>Visit No</span>
+                    <span style={{ color: '#000000' }}>{visit.visit_number}</span>
                   </div>
-                  <div className="flex justify-between border-b pb-1">
-                    <span className="font-semibold">Visit Date</span>
-                    <span>{format(new Date(visit.visit_date), 'dd/MM/yyyy')}</span>
+                  <div className="flex justify-between pb-1" style={{ borderBottom: '1px solid #d1d5db' }}>
+                    <span className="font-semibold" style={{ color: '#374151' }}>Visit Date</span>
+                    <span style={{ color: '#000000' }}>{format(new Date(visit.visit_date), 'dd/MM/yyyy')}</span>
                   </div>
-                  <div className="flex justify-between border-b pb-1">
-                    <span className="font-semibold">Doctor</span>
-                    <span>{visit.doctor_details?.full_name}</span>
+                  <div className="flex justify-between pb-1" style={{ borderBottom: '1px solid #d1d5db' }}>
+                    <span className="font-semibold" style={{ color: '#374151' }}>Doctor</span>
+                    <span style={{ color: '#000000' }}>{visit.doctor_details?.full_name}</span>
                   </div>
-                  <div className="flex justify-between border-b pb-1">
-                    <span className="font-semibold">Bill No / Date</span>
-                    <span>
+                  <div className="flex justify-between pb-1" style={{ borderBottom: '1px solid #d1d5db' }}>
+                    <span className="font-semibold" style={{ color: '#374151' }}>Bill No / Date</span>
+                    <span style={{ color: '#000000' }}>
                       {opdFormData.receiptNo} • {format(new Date(opdFormData.billDate), 'dd/MM/yyyy')}
                     </span>
                   </div>
                 </div>
 
                 {/* Charges table */}
-                <table className="w-full text-sm border-collapse">
+                <table className="w-full text-sm" style={{ borderCollapse: 'collapse' }}>
                   <thead>
-                    <tr className="border-y-2 border-gray-300 bg-gray-50">
-                      <th className="text-left py-3 px-2 font-semibold">Description</th>
-                      <th className="text-center py-3 px-2 font-semibold w-16">Qty</th>
-                      <th className="text-right py-3 px-2 font-semibold w-24">Rate</th>
-                      <th className="text-right py-3 px-2 font-semibold w-28">Amount (₹)</th>
+                    <tr style={{ borderTop: '2px solid #9ca3af', borderBottom: '2px solid #9ca3af', backgroundColor: '#f9fafb' }}>
+                      <th className="text-left py-3 px-2 font-semibold" style={{ color: '#374151' }}>Description</th>
+                      <th className="text-center py-3 px-2 font-semibold w-16" style={{ color: '#374151' }}>Qty</th>
+                      <th className="text-right py-3 px-2 font-semibold w-24" style={{ color: '#374151' }}>Rate</th>
+                      <th className="text-right py-3 px-2 font-semibold w-28" style={{ color: '#374151' }}>Amount (₹)</th>
                     </tr>
                   </thead>
                   <tbody>
                     {parseFloat(opdFormData.opdAmount) > 0 && (
-                      <tr className="border-b border-gray-200">
-                        <td className="py-3 px-2">
+                      <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                        <td className="py-3 px-2" style={{ color: '#000000' }}>
                           <div>Consultation Fee</div>
-                          <div className="text-xs text-gray-500 capitalize">
+                          <div className="text-xs capitalize" style={{ color: '#6b7280' }}>
                             {opdFormData.chargeType.replace('_', ' ')}
                           </div>
                         </td>
-                        <td className="py-3 px-2 text-center">1</td>
-                        <td className="py-3 px-2 text-right">{Number(opdFormData.opdAmount).toFixed(2)}</td>
-                        <td className="py-3 px-2 text-right font-semibold">
+                        <td className="py-3 px-2 text-center" style={{ color: '#000000' }}>1</td>
+                        <td className="py-3 px-2 text-right" style={{ color: '#000000' }}>{Number(opdFormData.opdAmount).toFixed(2)}</td>
+                        <td className="py-3 px-2 text-right font-semibold" style={{ color: '#000000' }}>
                           {Number(opdFormData.opdAmount).toFixed(2)}
                         </td>
                       </tr>
                     )}
                     {procedureFormData.procedures.map((p) => (
-                      <tr key={p.id} className="border-b border-gray-200">
-                        <td className="py-3 px-2">
+                      <tr key={p.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                        <td className="py-3 px-2" style={{ color: '#000000' }}>
                           <div>{p.procedure_name}</div>
                           {p.procedure_code && (
-                            <div className="text-xs text-gray-500">Code: {p.procedure_code}</div>
+                            <div className="text-xs" style={{ color: '#6b7280' }}>Code: {p.procedure_code}</div>
                           )}
                         </td>
-                        <td className="py-3 px-2 text-center">{p.quantity}</td>
-                        <td className="py-3 px-2 text-right">{Number(p.unit_price).toFixed(2)}</td>
-                        <td className="py-3 px-2 text-right font-semibold">{Number(p.total_price).toFixed(2)}</td>
+                        <td className="py-3 px-2 text-center" style={{ color: '#000000' }}>{p.quantity}</td>
+                        <td className="py-3 px-2 text-right" style={{ color: '#000000' }}>{Number(p.unit_price).toFixed(2)}</td>
+                        <td className="py-3 px-2 text-right font-semibold" style={{ color: '#000000' }}>{Number(p.total_price).toFixed(2)}</td>
                       </tr>
                     ))}
                     {opdFormData.diagnosis && (
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <td className="py-2 px-2 text-xs" colSpan={4}>
+                      <tr style={{ borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
+                        <td className="py-2 px-2 text-xs" colSpan={4} style={{ color: '#374151' }}>
                           <span className="font-semibold">Diagnosis:</span> {opdFormData.diagnosis}
                         </td>
                       </tr>
                     )}
                     {opdFormData.remarks && (
-                      <tr className="border-b border-gray-200 bg-gray-50">
-                        <td className="py-2 px-2 text-xs" colSpan={4}>
+                      <tr style={{ borderBottom: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
+                        <td className="py-2 px-2 text-xs" colSpan={4} style={{ color: '#374151' }}>
                           <span className="font-semibold">Remarks:</span> {opdFormData.remarks}
                         </td>
                       </tr>
@@ -1370,26 +1403,26 @@ export default function OPDBilling() {
                 </table>
 
                 {/* Amounts */}
-                <div className="mt-6 space-y-3 text-sm bg-gray-50 p-4 rounded-lg">
+                <div className="mt-6 space-y-3 text-sm p-4 rounded-lg" style={{ backgroundColor: '#f9fafb' }}>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="font-semibold">₹ {billingData.subtotal}</span>
+                    <span style={{ color: '#4b5563' }}>Subtotal</span>
+                    <span className="font-semibold" style={{ color: '#000000' }}>₹ {billingData.subtotal}</span>
                   </div>
                   {parseFloat(billingData.discount) > 0 && (
-                    <div className="flex justify-between text-green-700">
+                    <div className="flex justify-between" style={{ color: '#15803d' }}>
                       <span>Discount ({billingData.discountPercent}%)</span>
                       <span className="font-semibold">- ₹ {billingData.discount}</span>
                     </div>
                   )}
-                  <div className="border-t-2 border-gray-300 pt-3 flex justify-between text-base font-bold">
+                  <div className="pt-3 flex justify-between text-base font-bold" style={{ borderTop: '2px solid #9ca3af', color: '#000000' }}>
                     <span>Total Amount</span>
                     <span>₹ {billingData.totalAmount}</span>
                   </div>
-                  <div className="flex justify-between text-green-700">
+                  <div className="flex justify-between" style={{ color: '#15803d' }}>
                     <span>Amount Received ({billingData.paymentMode.toUpperCase()})</span>
                     <span className="font-semibold">₹ {billingData.receivedAmount}</span>
                   </div>
-                  <div className="flex justify-between text-orange-700 text-base font-bold">
+                  <div className="flex justify-between text-base font-bold" style={{ color: '#c2410c' }}>
                     <span>Balance Due</span>
                     <span>₹ {billingData.balanceAmount}</span>
                   </div>
@@ -1398,16 +1431,16 @@ export default function OPDBilling() {
                 {/* Signatures & Terms */}
                 <div className="mt-8 grid grid-cols-2 gap-8">
                   <div>
-                    <p className="text-xs text-gray-600 mb-2">Patient Signature</p>
-                    <div className="border-b-2 border-gray-300 h-12" />
+                    <p className="text-xs mb-2" style={{ color: '#4b5563' }}>Patient Signature</p>
+                    <div className="h-12" style={{ borderBottom: '2px solid #9ca3af' }} />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600 mb-2">Authorized Signatory</p>
-                    <div className="border-b-2 border-gray-300 h-12" />
+                    <p className="text-xs mb-2" style={{ color: '#4b5563' }}>Authorized Signatory</p>
+                    <div className="h-12" style={{ borderBottom: '2px solid #9ca3af' }} />
                   </div>
                 </div>
 
-                <div className="mt-6 text-xs text-gray-600">
+                <div className="mt-6 text-xs" style={{ color: '#4b5563' }}>
                   <p className="font-semibold mb-2">Terms & Conditions</p>
                   <ul className="list-disc list-inside space-y-1">
                     <li>This is a computer generated bill; signature not required.</li>
@@ -1416,7 +1449,7 @@ export default function OPDBilling() {
                   </ul>
                 </div>
 
-                <div className="mt-4 text-center text-xs text-gray-500 border-t pt-4">
+                <div className="mt-4 text-center text-xs pt-4" style={{ borderTop: '1px solid #d1d5db', color: '#6b7280' }}>
                   Generated on: {format(new Date(), 'dd/MM/yyyy hh:mm a')}
                 </div>
               </div>
