@@ -186,6 +186,8 @@ const AppointmentBasicInfo = forwardRef<AppointmentBasicInfoHandle, AppointmentB
                 resolve(payload);
               } else {
                 const payload: AppointmentUpdateData = {
+                  patient_id: appointment?.patient?.id,
+                  doctor_id: appointment?.doctor?.id,
                   appointment_date: data.appointment_date,
                   appointment_time: data.appointment_time,
                   end_time: data.end_time || undefined, // Don't send empty string
