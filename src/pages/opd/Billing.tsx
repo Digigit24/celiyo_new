@@ -8,6 +8,7 @@ import { useProcedureMaster } from '@/hooks/useProcedureMaster';
 import { useProcedurePackage } from '@/hooks/useProcedurePackage';
 import { procedurePackageService } from '@/services/procedurePackage.service';
 import { useAuth } from '@/hooks/useAuth';
+import { useTenant } from '@/hooks/useTenant';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -252,7 +253,28 @@ const BillingDetailsPanel = memo(function BillingDetailsPanel({
 export default function OPDBilling() {
   const { visitId } = useParams<{ visitId: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, getTenant } = useAuth();
+  const { useTenantDetail } = useTenant();
+
+  // Get tenant from current session
+  const tenant = getTenant();
+  const tenantId = tenant?.id || null;
+
+  // Fetch tenant settings for branding
+  const { data: tenantData, isLoading: tenantLoading } = useTenantDetail(tenantId);
+  const tenantSettings = tenantData?.settings || {};
+
+  // Debug: Log tenant data
+  useEffect(() => {
+    console.log('Billing - Tenant data:', {
+      hasTenantData: !!tenantData,
+      tenantName: tenantData?.name,
+      hasSettings: !!tenantSettings,
+      address: tenantSettings?.address,
+      contactEmail: tenantSettings?.contact_email,
+      contactPhone: tenantSettings?.contact_phone,
+    });
+  }, [tenantData, tenantSettings]);
 
   const { useOpdVisitById } = useOpdVisit();
   const { useOPDBills, createBill, updateBill } = useOPDBill();
@@ -672,7 +694,7 @@ export default function OPDBilling() {
     }
   };
 
-  const isLoading = visitLoading || visitBillsLoading;
+  const isLoading = visitLoading || visitBillsLoading || tenantLoading;
 
   /* ------------------------------- Printing ------------------------------- */
 
@@ -1269,7 +1291,7 @@ export default function OPDBilling() {
                 {/* Hospital Header */}
                 <div className="text-center border-b-2 pb-4" style={{ borderColor: '#374151' }}>
                   <h1 className="text-3xl font-bold mb-4" style={{ color: '#1f2937' }}>
-                    {user?.tenant?.name || 'HOSPITAL'}
+                    {tenantData?.name || 'HOSPITAL'}
                   </h1>
 
                   {/* Column Layout: Title | Address | Mail || Contact */}
@@ -1284,7 +1306,7 @@ export default function OPDBilling() {
                     <div>
                       <p className="font-semibold mb-1" style={{ color: '#374151' }}>Address</p>
                       <p style={{ color: '#6b7280' }}>
-                        {user?.tenant?.settings?.address || 'Address not available'}
+                        {tenantSettings?.address || 'Address not available'}
                       </p>
                     </div>
 
@@ -1292,10 +1314,10 @@ export default function OPDBilling() {
                     <div>
                       <p className="font-semibold mb-1" style={{ color: '#374151' }}>Contact</p>
                       <p style={{ color: '#6b7280' }}>
-                        {user?.tenant?.settings?.contact_email || 'N/A'}
+                        {tenantSettings?.contact_email || 'N/A'}
                       </p>
                       <p style={{ color: '#6b7280' }}>
-                        {user?.tenant?.settings?.contact_phone || 'N/A'}
+                        {tenantSettings?.contact_phone || 'N/A'}
                       </p>
                     </div>
                   </div>
