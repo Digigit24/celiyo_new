@@ -33,6 +33,7 @@ import Groups from "./pages/Groups";
 import Templates from "./pages/Templates";
 import Campaigns from "./pages/Campaigns";
 import { useWhatsappSocket } from "@/hooks/whatsapp/useWhatsappSocket";
+import { ThemeSync } from "@/components/ThemeSync";
 import OPDVisits from "./pages/OPDVisits";  // ✅ Updated to new production page
 import OPDBilling from "./pages/opd/Billing";
 import OPDConsultation from "./pages/opd/Consultation";
@@ -59,8 +60,12 @@ const AppLayout = () => {
   const isMobile = useIsMobile();
   // Ensure WhatsApp socket stays connected app-wide (persists across route changes)
   useWhatsappSocket();
+
   return (
     <div className="h-screen flex bg-background text-foreground">
+      {/* Sync user theme preferences with next-themes */}
+      <ThemeSync />
+
       {/* Universal Sidebar */}
       {!isMobile && (
         <UniversalSidebar
