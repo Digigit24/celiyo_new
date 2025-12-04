@@ -196,15 +196,15 @@ export interface TemplateFieldsResponse {
 // ==================== TEMPLATE FIELD OPTION ====================
 export interface TemplateFieldOption {
   id: number;
-  tenant_id: string;
-  field: number; // Field ID
+  tenant_id?: string;
+  field?: number; // Field ID
   option_label: string;
   option_value: string;
   display_order: number;
-  is_active: boolean;
+  is_active?: boolean; // Optional since API may not return it
   metadata?: Record<string, any>;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CreateTemplateFieldOptionPayload {

@@ -11,6 +11,7 @@ import {
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "next-themes";
+import { authService } from "@/services/authService";
 // Map routes to titles
 const routeTitles: Record<string, string> = {
   "/": "Dashboard",
@@ -27,6 +28,18 @@ export const UniversalHeader = () => {
   const handleLogout = () => {
     logout();
   };
+
+  const handleThemeToggle = () => {
+    const newTheme = resolvedTheme === "dark" ? "light" : "dark";
+    console.log('🎨 Theme toggle:', { current: resolvedTheme, new: newTheme });
+
+    // Set theme in next-themes
+    setTheme(newTheme);
+
+    // Save to user preferences
+    authService.updateUserPreferences({ theme: newTheme });
+  };
+
   return (
     <header className="h-16 border-b border-border bg-background px-4 md:px-6 flex items-center justify-between">
       {/* Left Side - Logo and Title */}
@@ -55,7 +68,7 @@ export const UniversalHeader = () => {
           size="icon"
           className="relative rounded-full"
           aria-label="Toggle theme"
-          onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          onClick={handleThemeToggle}
         >
           <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />

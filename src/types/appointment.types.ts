@@ -92,6 +92,8 @@ export interface AppointmentCreateData {
 }
 
 export interface AppointmentUpdateData {
+  patient_id?: number;
+  doctor_id?: number;
   appointment_date?: string;
   appointment_time?: string;
   end_time?: string;
