@@ -241,8 +241,8 @@ class MessagesService {
 
         // Type fallback
         const type: 'text' | 'image' | 'video' | 'audio' | 'document' =
-          ['text', 'image', 'video', 'audio', 'document'].includes(m.type)
-            ? m.type
+          ['text', 'image', 'video', 'audio', 'document'].includes(m.message_type)
+            ? m.message_type
             : 'text';
 
         return {

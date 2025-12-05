@@ -10,7 +10,11 @@ export interface WhatsAppMessage {
   type: 'text' | 'image' | 'video' | 'audio' | 'document';
   direction: 'incoming' | 'outgoing';
   timestamp: string;
-  metadata?: Record<string, any>;
+  metadata?: {
+    file_preview_url?: string;
+    is_uploading?: boolean;
+    [key: string]: any;
+  };
 }
 
 export interface Conversation {

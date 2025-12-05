@@ -306,6 +306,8 @@ interface UniversalSidebarProps {
   onCollapse?: () => void;
   mobileOpen?: boolean;
   setMobileOpen?: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function UniversalSidebar({
@@ -313,6 +315,8 @@ export function UniversalSidebar({
   onCollapse,
   mobileOpen = false,
   setMobileOpen,
+  open,
+  onOpenChange,
 }: UniversalSidebarProps) {
   const location = useLocation();
   const { user } = useAuth();
