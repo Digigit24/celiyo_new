@@ -112,64 +112,47 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
         console.log('  Ready State:', socket.readyState);
         console.log('╚════════════════════════════════════════════════════════╝');
         setSocketStatus('open');
+    };
 
-        // Start heartbeat to keep connection alive
-        if (heartbeatIntervalRef.current) {
-          clearInterval(heartbeatIntervalRef.current);
+    socket.onmessage = (event) => {
+      try {
+        if (event.data === 'ping') {
+          setNewMessageCount((prevCount) => prevCount + 1);
+          return;
         }
 
-        heartbeatIntervalRef.current = setInterval(() => {
-          if (socket.readyState === WebSocket.OPEN) {
-            console.log('💓 Sending WebSocket heartbeat');
-            socket.send('ping');
-          }
-        }, 30000); // Send heartbeat every 30 seconds
-      };
+        const payload = JSON.parse(event.data);
 
-      socket.onmessage = (event) => {
-        try {
-          if (event.data === 'pong') {
-            console.log('💚 WebSocket heartbeat acknowledged');
-            return;
+        
+        console.log('📨 WebSocket message received:', payload);
+
+        if (payload.event === 'message_incoming' || payload.event === 'message_outgoing') {
+          const data = payload.data;
+
+          // Store the full payload with contact metadata
+          setPayloads((prevPayloads) => [...prevPayloads, data]);
+
+          // Also store just the message for backward compatibility
+          if (data.message) {
+            setMessages((prevMessages) => [...prevMessages, data.message]);
           }
 
-          if (event.data === 'ping') {
+          if (payload.event === 'message_incoming') {
             setNewMessageCount((prevCount) => prevCount + 1);
-            socket.send('pong');
-            return;
           }
 
-          const payload = JSON.parse(event.data);
-
-          console.log('📨 WebSocket message received:', payload);
-
-          if (payload.event === 'message_incoming' || payload.event === 'message_outgoing') {
-            const data = payload.data;
-
-            // Store the full payload with contact metadata
-            setPayloads((prevPayloads) => [...prevPayloads, data]);
-
-            // Also store just the message for backward compatibility
-            if (data.message) {
-              setMessages((prevMessages) => [...prevMessages, data.message]);
-            }
-
-            if (payload.event === 'message_incoming') {
-              setNewMessageCount((prevCount) => prevCount + 1);
-            }
-
-            console.log('✅ WebSocket message processed:', {
-              phone: data.phone,
-              name: data.name,
-              is_new: data.contact?.is_new,
-              exists: data.contact?.exists,
-              message: data.message?.text
-            });
-          }
-        } catch (error) {
-          console.error('❌ Failed to parse WebSocket message:', error);
+          console.log('✅ WebSocket message processed:', {
+            phone: data.phone,
+            name: data.name,
+            is_new: data.contact?.is_new,
+            exists: data.contact?.exists,
+            message: data.message?.text
+          });
         }
-      };
+      } catch (error) {
+        console.error('❌ Failed to parse WebSocket message:', error);
+      }
+    };
 
       socket.onerror = (error) => {
         console.log('╔════════════════════════════════════════════════════════╗');
