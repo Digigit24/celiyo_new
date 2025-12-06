@@ -128,7 +128,7 @@ export default function Chats() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen bg-background">
+      <div className="flex items-center justify-center h-full bg-background">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <div className="text-base font-medium mb-1">Loading Chats</div>
@@ -140,7 +140,7 @@ export default function Chats() {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen bg-background">
+      <div className="flex items-center justify-center h-full bg-background">
         <div className="text-center max-w-md px-4">
           <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
             <span className="text-3xl">⚠️</span>
@@ -177,7 +177,7 @@ export default function Chats() {
   if (isMobile) {
     if (selectedConversationId) {
       return (
-        <div className="h-screen w-full bg-background overflow-hidden">
+        <div className="h-full w-full bg-background overflow-hidden">
           <ChatWindow
             conversationId={selectedConversationId}
             selectedConversation={conversations?.find(c => c.phone === selectedConversationId)}
@@ -189,7 +189,7 @@ export default function Chats() {
     }
 
     return (
-      <div className="h-screen w-full bg-background overflow-hidden">
+      <div className="h-full w-full bg-background overflow-hidden">
         <ConversationList
           conversations={transformedConversations}
           selectedId={selectedConversationId}
@@ -202,7 +202,7 @@ export default function Chats() {
 
   // Desktop view: split layout
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden">
+    <div className="flex h-full w-full bg-background overflow-hidden">
       {/* Conversations Sidebar */}
       <div className="w-80 lg:w-96 h-full flex-shrink-0">
         <ConversationList
