@@ -30,7 +30,7 @@ import {
     Clock,
     User,
     Stethoscope,
-    DollarSign,
+    IndianRupee,
     Eye,
     Pencil,
     Trash2,
@@ -179,7 +179,7 @@ const SortableVisitCard = ({
                             }}
                             title="Billing"
                         >
-                            <DollarSign className="h-3.5 w-3.5" />
+                            <IndianRupee className="h-3.5 w-3.5" />
                         </Button>
                         <Button
                             variant="ghost"

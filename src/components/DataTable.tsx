@@ -22,7 +22,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { MoreHorizontal, Eye, Edit, Trash2, Stethoscope, DollarSign } from 'lucide-react';
+import { MoreHorizontal, Eye, Edit, Trash2, Stethoscope, IndianRupee } from 'lucide-react';
 
 // --------------------------------------
 // Types
@@ -369,7 +369,7 @@ export function DataTable<T>({
                             size="sm"
                             onClick={() => onBilling(row)}
                           >
-                            <DollarSign className="h-4 w-4 mr-1" />
+                            <IndianRupee className="h-4 w-4 mr-1" />
                             Billing
                           </Button>
                         )}

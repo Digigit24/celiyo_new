@@ -32,7 +32,7 @@ import {
   UserCog,
   ShieldCheck,
   Bug,
-  DollarSign,
+  IndianRupee,
   CreditCard,
   TrendingUp,
 } from "lucide-react";
@@ -246,7 +246,7 @@ const menuItems: MenuItem[] = [
   {
     id: "payments",
     label: "Payments",
-    icon: DollarSign,
+    icon: IndianRupee,
     children: [
       {
         id: "payment-transactions",

@@ -9,6 +9,7 @@ import { useProcedurePackage } from '@/hooks/useProcedurePackage';
 import { procedurePackageService } from '@/services/procedurePackage.service';
 import { useAuth } from '@/hooks/useAuth';
 import { useTenant } from '@/hooks/useTenant';
+import { CURRENCY_CONFIG } from '@/config/currency.config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -112,15 +113,15 @@ const BillingDetailsPanel = memo(function BillingDetailsPanel({
         <div className="space-y-3 pb-4">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">OPD Charges:</span>
-            <span className="font-semibold">₹{data.opdTotal}</span>
+            <span className="font-semibold">{CURRENCY_CONFIG.symbol}{data.opdTotal}</span>
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Procedure Charges:</span>
-            <span className="font-semibold">₹{data.procedureTotal}</span>
+            <span className="font-semibold">{CURRENCY_CONFIG.symbol}{data.procedureTotal}</span>
           </div>
           <div className="flex justify-between text-base font-semibold pt-2 border-t">
             <span>Subtotal:</span>
-            <span>₹{data.subtotal}</span>
+            <span>{CURRENCY_CONFIG.symbol}{data.subtotal}</span>
           </div>
         </div>
 

@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { DataTable, DataTableColumn } from '@/components/DataTable';
 import {
-    DollarSign,
+    IndianRupee,
     Stethoscope,
     Eye,
     Pencil,
@@ -172,7 +172,7 @@ export const VisitsList: React.FC<VisitsListProps> = ({
                         }}
                         className="h-8"
                     >
-                        <DollarSign className="h-3.5 w-3.5 mr-1.5" />
+                        <IndianRupee className="h-3.5 w-3.5 mr-1.5" />
                         Billing
                     </Button>
                     <Button
@@ -309,7 +309,7 @@ export const VisitsList: React.FC<VisitsListProps> = ({
                         }}
                         className="flex-1"
                     >
-                        <DollarSign className="h-3.5 w-3.5 mr-1.5" />
+                        <IndianRupee className="h-3.5 w-3.5 mr-1.5" />
                         Billing
                     </Button>
                     <Button
