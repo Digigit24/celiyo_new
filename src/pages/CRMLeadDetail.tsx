@@ -172,7 +172,7 @@ export const CRMLeadDetail: React.FC = () => {
   // Loading state
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-sm text-muted-foreground">Loading lead details...</p>
@@ -184,8 +184,8 @@ export const CRMLeadDetail: React.FC = () => {
   // Error state
   if (error || !lead) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Card className="max-w-md">
+      <div className="p-8">
+        <Card className="max-w-md mx-auto border-destructive">
           <CardContent className="p-6 text-center">
             <h2 className="text-xl font-semibold mb-2">Lead Not Found</h2>
             <p className="text-muted-foreground mb-4">
@@ -202,98 +202,98 @@ export const CRMLeadDetail: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      {/* Header */}
-      <div className="flex-shrink-0 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 sm:px-6 py-4">
-          {/* Back Button & Actions */}
-          <div className="flex items-center justify-between mb-4">
-            <Button variant="ghost" size="sm" onClick={handleBack}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Leads
-            </Button>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={handleEdit}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </Button>
-              <Button
-                variant="destructive"
-                size="sm"
-                onClick={handleDelete}
-                disabled={isDeleting}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </Button>
+    <div className="p-6 max-w-8xl mx-auto space-y-6">
+      {/* Header Section */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleBack}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold">{lead.name}</h1>
+              {getPriorityBadge(lead.priority)}
+              {getStatusBadge(currentStatus)}
             </div>
-          </div>
-
-          {/* Lead Header Info */}
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold tracking-tight truncate">{lead.name}</h1>
-                {getPriorityBadge(lead.priority)}
-                {getStatusBadge(currentStatus)}
-              </div>
-              {lead.title && <p className="text-sm text-muted-foreground">{lead.title}</p>}
+            <div className="flex items-center gap-3 mt-1">
+              {lead.title && <p className="text-muted-foreground">{lead.title}</p>}
               {lead.company && (
-                <div className="flex items-center gap-2 mt-2 text-sm">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <span>{lead.company}</span>
-                </div>
+                <>
+                  <span className="text-muted-foreground">•</span>
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Building2 className="h-4 w-4" />
+                    <span>{lead.company}</span>
+                  </div>
+                </>
               )}
             </div>
-            {lead.value_amount && (
-              <div className="flex items-center gap-2 text-2xl font-bold text-green-600">
-                <IndianRupee className="h-6 w-6" />
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          {lead.value_amount && (
+            <div className="text-right mr-4">
+              <p className="text-sm text-muted-foreground">Lead Value</p>
+              <div className="flex items-center gap-1 text-2xl font-bold text-green-600 mt-1">
+                <IndianRupee className="h-5 w-5" />
                 <span>{formatCurrency(lead.value_amount, lead.value_currency)}</span>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+          <Button variant="outline" size="sm" onClick={handleEdit}>
+            <Edit className="h-4 w-4 mr-2" />
+            Edit
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            {isDeleting ? 'Deleting...' : 'Delete'}
+          </Button>
         </div>
       </div>
 
-      {/* Tabs */}
-      <div className="flex-1 overflow-hidden">
-        <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)} className="h-full flex flex-col">
-          <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-            <div className="container mx-auto px-4 sm:px-6">
-              <TabsList className="w-full sm:w-auto">
-                <TabsTrigger value="details" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  Details
-                </TabsTrigger>
-                <TabsTrigger value="activities" className="flex items-center gap-2">
-                  <Activity className="h-4 w-4" />
-                  Activities
-                  {activitiesData?.results && (
-                    <Badge variant="secondary" className="ml-1">
-                      {activitiesData.count}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-                <TabsTrigger value="status" className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Status
-                </TabsTrigger>
-                <TabsTrigger value="meetings" className="flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Meetings
-                  {meetingsData?.results && (
-                    <Badge variant="secondary" className="ml-1">
-                      {meetingsData.count}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-              </TabsList>
-            </div>
-          </div>
+      <Separator />
 
-          {/* Tab Content */}
-          <div className="flex-1 overflow-auto">
-            <div className="container mx-auto px-4 sm:px-6 py-6">
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as TabValue)} className="space-y-6">
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="details" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Details
+          </TabsTrigger>
+          <TabsTrigger value="activities" className="flex items-center gap-2">
+            <Activity className="h-4 w-4" />
+            Activities
+            {activitiesData?.results && (
+              <Badge variant="secondary" className="ml-1">
+                {activitiesData.count}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="status" className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4" />
+            Status
+          </TabsTrigger>
+          <TabsTrigger value="meetings" className="flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Meetings
+            {meetingsData?.results && (
+              <Badge variant="secondary" className="ml-1">
+                {meetingsData.count}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Tab Content */}
+        <div>
               {/* Details Tab */}
               <TabsContent value="details" className="mt-0">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -656,9 +656,7 @@ export const CRMLeadDetail: React.FC = () => {
                 </Card>
               </TabsContent>
             </div>
-          </div>
         </Tabs>
-      </div>
     </div>
   );
 };
