@@ -101,13 +101,39 @@ class AuthService {
         }
       }
 
+      // Fetch tenant details including settings (logo, etc.) if not in login response
+      if (!user.tenant.settings || Object.keys(user.tenant.settings).length === 0) {
+        try {
+          console.log('🔄 Fetching tenant details (including logo)...');
+          const tenantDetailUrl = API_CONFIG.ADMIN.TENANTS.DETAIL.replace(':id', user.tenant.id);
+          const tenantResponse = await authClient.get(tenantDetailUrl);
+          console.log('✅ Tenant details response:', tenantResponse.data);
+
+          // Update tenant with full details including settings
+          user.tenant = {
+            ...user.tenant,
+            settings: tenantResponse.data?.settings || {},
+            gallery_images: tenantResponse.data?.gallery_images || []
+          };
+
+          console.log('✅ Tenant settings fetched:', {
+            settings: user.tenant.settings,
+            hasLogo: !!user.tenant.settings?.logo,
+            logoPreview: user.tenant.settings?.logo?.substring(0, 100)
+          });
+        } catch (tenantError) {
+          console.warn('⚠️ Failed to fetch tenant details:', tenantError);
+          user.tenant.settings = {};
+        }
+      }
+
       // Apply theme preference
       if (user.preferences?.theme) {
         console.log('🎨 Applying theme preference:', user.preferences.theme);
         this.applyThemePreference(user.preferences.theme);
       }
 
-      // Store user with preferences
+      // Store user with preferences and tenant details
       this.setUser(user);
 
       // Verify storage
