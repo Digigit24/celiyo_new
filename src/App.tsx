@@ -17,6 +17,7 @@ import Dashboard from "./pages/Dashboard";
 import Inbox from "./pages/Inbox";
 import NotFound from "./pages/NotFound";
 import { CRMLeads } from "./pages/CRMLeads";
+import { CRMLeadDetail } from "./pages/CRMLeadDetail";
 import { CRMActivities } from "./pages/CRMActivities"; // ⬅️ ADDED
 import { CRMLeadStatuses } from "./pages/CRMLeadStatuses";
 import { CRMFieldConfigurations } from "./pages/CRMFieldConfigurations";
@@ -74,6 +75,7 @@ const AppLayout = () => {
 
               {/* CRM Routes */}
               <Route path="/crm/leads" element={<CRMLeads />} />
+              <Route path="/crm/leads/:id" element={<CRMLeadDetail />} />
               <Route path="/crm/activities" element={<CRMActivities />} />
               <Route path="/crm/statuses" element={<CRMLeadStatuses />} />
               <Route path="/crm/settings" element={<CRMFieldConfigurations />} />
