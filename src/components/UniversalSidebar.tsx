@@ -330,13 +330,33 @@ export function UniversalSidebar({
     : undefined;
   const tenantName = user?.tenant?.name || 'HMS';
 
+  // Debug: Log tenant data to console (temporary for debugging)
+  useEffect(() => {
+    if (user?.tenant) {
+      console.log('🔍 Tenant Debug Info:', {
+        tenantName: user.tenant.name,
+        hasSettings: !!user.tenant.settings,
+        hasLogo: !!user.tenant.settings?.logo,
+        logoLength: user.tenant.settings?.logo?.length,
+        logoPreview: user.tenant.settings?.logo?.substring(0, 50) + '...',
+        isBase64: user.tenant.settings?.logo?.startsWith('data:image'),
+        isURL: user.tenant.settings?.logo?.startsWith('http'),
+      });
+    }
+  }, [user?.tenant]);
+
   // Reset logo error when logo changes
   useEffect(() => {
     setLogoError(false);
   }, [tenantLogo]);
 
-  const handleLogoError = () => {
-    // Silently fallback to default icon if logo fails to load
+  const handleLogoError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    // Log error details for debugging
+    console.error('❌ Logo failed to load:', {
+      src: e.currentTarget.src,
+      logoLength: tenantLogo?.length,
+      logoStart: tenantLogo?.substring(0, 50),
+    });
     setLogoError(true);
   };
 

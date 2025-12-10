@@ -44,6 +44,13 @@ class AuthService {
       );
 
       console.log('✅ Login API response:', response.data);
+      console.log('🔍 Full API response data:', {
+        hasTokens: !!response.data.tokens,
+        hasUser: !!response.data.user,
+        userData: response.data.user,
+        hasTenantSettings: !!response.data.user?.tenant_settings,
+        tenantSettings: response.data.user?.tenant_settings
+      });
 
       // Handle the actual API response structure
       const { tokens, user: userData } = response.data;
@@ -67,7 +74,8 @@ class AuthService {
           id: userData.tenant || decoded?.tenant_id || '',
           name: userData.tenant_name || '',
           slug: decoded?.tenant_slug || '',
-          enabled_modules: decoded?.enabled_modules || []
+          enabled_modules: decoded?.enabled_modules || [],
+          settings: userData.tenant_settings || decoded?.tenant_settings || {}
         },
         roles: userData.roles || [],
         preferences: userData.preferences || {}
@@ -112,8 +120,11 @@ class AuthService {
         refreshTokenStored: storedRefresh ? 'Yes ✓' : 'No ✗',
         userStored: storedUser ? 'Yes ✓' : 'No ✗',
         tenantId: storedUser?.tenant?.id,
+        tenantName: storedUser?.tenant?.name,
         modules: storedUser?.tenant?.enabled_modules,
-        preferences: storedUser?.preferences
+        preferences: storedUser?.preferences,
+        tenantSettings: storedUser?.tenant?.settings,
+        hasLogo: !!storedUser?.tenant?.settings?.logo
       });
 
       return user;
