@@ -102,12 +102,26 @@ class AuthService {
       }
 
       // Fetch tenant details including settings (logo, etc.) if not in login response
-      if (!user.tenant.settings || Object.keys(user.tenant.settings).length === 0) {
+      const hasSettings = user.tenant.settings && Object.keys(user.tenant.settings).length > 0;
+      console.log('🔍 Checking if tenant fetch needed:', {
+        hasSettings,
+        settingsObject: user.tenant.settings,
+        settingsKeys: Object.keys(user.tenant.settings || {}),
+        willFetch: !hasSettings
+      });
+
+      if (!hasSettings) {
         try {
           console.log('🔄 Fetching tenant details (including logo)...');
           const tenantDetailUrl = API_CONFIG.ADMIN.TENANTS.DETAIL.replace(':id', user.tenant.id);
+          console.log('🔗 Tenant detail URL:', tenantDetailUrl);
+          console.log('🆔 Tenant ID:', user.tenant.id);
+
           const tenantResponse = await authClient.get(tenantDetailUrl);
-          console.log('✅ Tenant details response:', tenantResponse.data);
+          console.log('✅ Tenant details API response:', tenantResponse);
+          console.log('✅ Tenant details response data:', tenantResponse.data);
+          console.log('✅ Settings from response:', tenantResponse.data?.settings);
+          console.log('✅ Logo from response:', tenantResponse.data?.settings?.logo);
 
           // Update tenant with full details including settings
           user.tenant = {
@@ -116,15 +130,21 @@ class AuthService {
             gallery_images: tenantResponse.data?.gallery_images || []
           };
 
-          console.log('✅ Tenant settings fetched:', {
+          console.log('✅ Tenant settings fetched and updated:', {
             settings: user.tenant.settings,
+            settingsKeys: Object.keys(user.tenant.settings),
             hasLogo: !!user.tenant.settings?.logo,
+            logoLength: user.tenant.settings?.logo?.length,
             logoPreview: user.tenant.settings?.logo?.substring(0, 100)
           });
-        } catch (tenantError) {
-          console.warn('⚠️ Failed to fetch tenant details:', tenantError);
+        } catch (tenantError: any) {
+          console.error('❌ Failed to fetch tenant details:', tenantError);
+          console.error('❌ Error response:', tenantError.response);
+          console.error('❌ Error message:', tenantError.message);
           user.tenant.settings = {};
         }
+      } else {
+        console.log('✅ Tenant settings already present, skipping fetch');
       }
 
       // Apply theme preference
