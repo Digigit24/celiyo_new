@@ -332,18 +332,51 @@ export function UniversalSidebar({
 
   // Debug: Log tenant data to console (temporary for debugging)
   useEffect(() => {
+    console.log('🔍 === TENANT LOGO DEBUG START ===');
+    console.log('1️⃣ User object exists:', !!user);
+    console.log('2️⃣ User.tenant exists:', !!user?.tenant);
+    console.log('3️⃣ User.tenant.settings exists:', !!user?.tenant?.settings);
+    console.log('4️⃣ Full user object:', user);
+    console.log('5️⃣ Tenant object:', user?.tenant);
+    console.log('6️⃣ Settings object:', user?.tenant?.settings);
+    console.log('7️⃣ Logo value:', user?.tenant?.settings?.logo);
+
     if (user?.tenant) {
-      console.log('🔍 Tenant Debug Info:', {
+      console.log('8️⃣ Tenant Debug Info:', {
+        tenantId: user.tenant.id,
         tenantName: user.tenant.name,
+        tenantSlug: user.tenant.slug,
         hasSettings: !!user.tenant.settings,
+        settingsKeys: user.tenant.settings ? Object.keys(user.tenant.settings) : [],
         hasLogo: !!user.tenant.settings?.logo,
+        logoType: typeof user.tenant.settings?.logo,
         logoLength: user.tenant.settings?.logo?.length,
-        logoPreview: user.tenant.settings?.logo?.substring(0, 50) + '...',
+        logoPreview: user.tenant.settings?.logo?.substring(0, 100),
         isBase64: user.tenant.settings?.logo?.startsWith('data:image'),
         isURL: user.tenant.settings?.logo?.startsWith('http'),
       });
     }
-  }, [user?.tenant]);
+
+    // Check localStorage directly
+    const storedUser = localStorage.getItem('celiyo_user');
+    console.log('9️⃣ localStorage celiyo_user raw:', storedUser ? 'EXISTS' : 'NOT FOUND');
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        console.log('🔟 Parsed user from localStorage:', parsed);
+        console.log('1️⃣1️⃣ Parsed tenant.settings:', parsed?.tenant?.settings);
+        console.log('1️⃣2️⃣ Parsed logo exists:', !!parsed?.tenant?.settings?.logo);
+        console.log('1️⃣3️⃣ Parsed logo preview:', parsed?.tenant?.settings?.logo?.substring(0, 100));
+      } catch (e) {
+        console.error('❌ Failed to parse localStorage user:', e);
+      }
+    }
+
+    console.log('1️⃣4️⃣ tenantLogo variable:', tenantLogo ? 'EXISTS' : 'UNDEFINED');
+    console.log('1️⃣5️⃣ tenantLogo preview:', tenantLogo?.substring(0, 100));
+    console.log('1️⃣6️⃣ logoError state:', logoError);
+    console.log('🔍 === TENANT LOGO DEBUG END ===\n\n');
+  }, [user, tenantLogo, logoError]);
 
   // Reset logo error when logo changes
   useEffect(() => {
